@@ -39,6 +39,8 @@ void ProjectManager::onParseRequest(const QString &file)
     FileParser parser(file);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
+    connect(&parser, &FileParser::targetName, this, [=](const QString &targetName)
+        { mTargetName = targetName; });
     const bool result = parser.parse();
 
     // TODO: stop when result is false
@@ -76,7 +78,7 @@ bool ProjectManager::link()
 {
     qInfo() << "Linking:" << mObjectFiles;
     const QString compiler("g++");
-    QStringList arguments { "-o", mProjectName };
+    QStringList arguments { "-o", mTargetName };
 
     for (const auto &file : mObjectFiles) {
         arguments.append(file);

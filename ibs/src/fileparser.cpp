@@ -1,4 +1,5 @@
 #include "fileparser.h"
+#include "tags.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -26,14 +27,16 @@ bool FileParser::parse() const
 
     qInfo() << "Parsing:" << mFile;
 
+    bool isCommentScope = false;
     QString source;
 
     QTextStream in(&file);
     while (!in.atEnd()) {
-        const QString line(in.readLine());
+        // We remove any leading and trailing whitespace for simplicity
+        const QString line(in.readLine().trimmed());
         // TODO: add comment and scope detection
         // TODO: add ifdef detection
-        if (line.contains("#include")) {
+        if (line.startsWith("#include")) {
             if (line.contains('<')) {
                 // Library include - skip it
             } else if (line.contains('"')) {
@@ -45,10 +48,21 @@ bool FileParser::parse() const
             }
         }
 
-        // Override default source file location or name
-        const QString sourceString("source ");
-        if (line.contains(sourceString)) {
-            source = line.mid(line.indexOf(sourceString) + sourceString.length());
+        // Detect IBS comment scope
+        if (line.startsWith(Tags::scopeBegin))
+            isCommentScope = true;
+        if (isCommentScope and line.contains(Tags::scopeEnd))
+            isCommentScope = false;
+
+        // Handle IBS comments (commands)
+        if (line.startsWith(Tags::scopeOneLine) or isCommentScope) {
+            // Override default source file location or name
+            if (line.contains(Tags::source))
+                source = line.mid(line.indexOf(Tags::source) + Tags::source.size());
+
+            // TODO: handle spaces in target name
+            if (line.contains(Tags::targetName))
+                emit targetName(line.mid(line.indexOf(Tags::targetName) + Tags::targetName.size()));
         }
     }
 

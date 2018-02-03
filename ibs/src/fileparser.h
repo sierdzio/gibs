@@ -12,6 +12,9 @@ signals:
     void parsed(const QString &file, const QString &sourceFile) const;
     void parseRequest(const QString &file) const;
 
+    // IBS syntax detection:
+    void targetName(const QString &target) const;
+
 public slots:
     bool parse() const;
 

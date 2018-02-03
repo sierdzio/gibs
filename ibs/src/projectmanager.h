@@ -25,7 +25,7 @@ protected:
     bool link();
 
 private:
-    QString mProjectName = "default";
+    QString mTargetName = "default";
     const QString mInputFile;
     QVector<QString> mParsedFiles;
     QVector<QString> mObjectFiles;
