@@ -44,8 +44,8 @@ int main(int argc, char *argv[]) {
     // Set up basic application data. Modify this to your needs
     QCoreApplication app(argc, argv);
     app.setApplicationVersion(APP_VERSION);
-    app.setOrganizationName("Milo Solutions");
-    app.setOrganizationDomain("milosolutions.com");
+    app.setOrganizationName("");
+    app.setOrganizationDomain("sierdzio.com");
     app.setApplicationName("ibs");
     //logger()->enableLogToFile(app.applicationName());
     qCInfo(coreMain) << "Application data set."
