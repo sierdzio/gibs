@@ -1,6 +1,7 @@
 #include "fileparser.h"
 
 #include <QFile>
+#include <QFileInfo>
 
 // TODO: add categorized logging!
 #include <QDebug>
@@ -25,6 +26,8 @@ bool FileParser::parse() const
 
     qInfo() << "Parsing:" << mFile;
 
+    QString source;
+
     QTextStream in(&file);
     while (!in.atEnd()) {
         const QString line(in.readLine());
@@ -38,13 +41,36 @@ bool FileParser::parse() const
                 QString include(line.mid(line.indexOf('"') + 1));
                 include.chop(1);
 
-                FileParser parser(include);
-                connect(&parser, &FileParser::parsed, this, &FileParser::parsed);
-                parser.parse();
+                emit parseRequest(include);
             }
+        }
+
+        // Override default source file location or name
+        const QString sourceString("source ");
+        if (line.contains(sourceString)) {
+            source = line.mid(line.indexOf(sourceString) + sourceString.length());
         }
     }
 
-    emit parsed(mFile);
+    const QFileInfo header(mFile);
+    if (source.isEmpty() and header.suffix() == "cpp") {
+        source = mFile;
+    }
+
+    // Guess source file name (.cpp)
+    if (source.isEmpty()) {
+        if (header.suffix() == "h" or header.suffix() == "hpp") {
+            source = header.baseName() + ".cpp";
+        }
+    }
+
+    // Important: this emit needs to be sent before parseRequest()
+    emit parsed(mFile, source);
+
+    // Parse source file, only when we are not parsing it already
+    if (!source.isEmpty() and source != mFile) {
+        emit parseRequest(source);
+    }
+
     return true;
 }

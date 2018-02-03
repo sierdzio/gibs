@@ -7,6 +7,7 @@ build-*
 *.user*
 *.pdb
 *.obj
+*.o
 *.manifest
 *.res
 *.autosave

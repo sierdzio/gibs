@@ -85,6 +85,7 @@ int main(int argc, char *argv[]) {
     const QString file = args.at(0);
 
     ProjectManager manager(file);
+    QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
     QTimer::singleShot(1, &manager, &ProjectManager::start);
 
     if (run) {
