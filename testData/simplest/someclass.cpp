@@ -1,6 +1,6 @@
 #include "someclass.h"
 
-char *SomeClass::text() const
+const char *SomeClass::text() const
 {
     return "simple!";
 }

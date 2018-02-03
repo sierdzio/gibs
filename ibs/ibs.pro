@@ -15,9 +15,13 @@ TEMPLATE = app
 CONFIG += c++14
 TARGET = ibs
 
-HEADERS += src/globals.h
+HEADERS += src/globals.h \
+    src/fileparser.h \
+    src/projectmanager.h
 
-SOURCES += src/main.cpp 
+SOURCES += src/main.cpp \ 
+    src/fileparser.cpp \
+    src/projectmanager.cpp
 
 RESOURCES +=  \
     qml/qml.qrc \

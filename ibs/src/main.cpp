@@ -29,7 +29,13 @@ SOFTWARE.
 #include <QCoreApplication>
 #include <QLoggingCategory>
 
+#include <QString>
+#include <QCommandLineParser>
+#include <QTimer>
+#include <QDebug>
+
 #include "globals.h"
+#include "projectmanager.h"
 
 // Prepare logging categories. Modify these to your needs
 //Q_DECLARE_LOGGING_CATEGORY(core) // already declared in MLog header
@@ -54,6 +60,38 @@ int main(int argc, char *argv[]) {
                      << "\n\tDomain:" << app.organizationDomain()
                      << "\n\tVersion:" << app.applicationVersion()
                      << "\n\tSHA:" << GIT_COMMIT_ID;
+
+
+    QCommandLineParser parser;
+    parser.setApplicationDescription("Test helper");
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.addPositionalArgument("source", QCoreApplication::translate("main", "Source file to copy."));
+    parser.addPositionalArgument("destination", QCoreApplication::translate("main", "Destination directory."));
+
+    const char *scope = "main";
+
+    parser.addOptions({
+        {{"r", "run"},
+        QCoreApplication::translate(scope, "Run the executable immediately after building")}
+    });
+
+    // Process the actual command line arguments given by the user
+    parser.process(app);
+
+    const QStringList args = parser.positionalArguments();
+
+    qDebug() << "Arguments:" << args;
+
+    const bool run = parser.isSet("run");
+    const QString file = args.at(1);
+
+    ProjectManager manager(file);
+    QTimer::singleShot(1, &manager, &ProjectManager::start);
+
+    if (run) {
+        qInfo() << "Running compiled binary";
+    }
 
     return app.exec();
 }

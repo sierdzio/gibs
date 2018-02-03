@@ -3,5 +3,5 @@
 class SomeClass
 {
 public:
-    char *text() const;
+    const char *text() const;
 };
