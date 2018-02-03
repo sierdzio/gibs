@@ -33,10 +33,12 @@ bool ProjectManager::compile(const QString &file)
     qInfo() << "Compiling:" << file;
     const QFileInfo info(file);
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
-    QStringList arguments { "-o", info.baseName() + ".o" };
+    QStringList arguments { "-o", info.baseName() + ".o", file };
 
     QProcess process;
+    process.setProcessChannelMode(QProcess::ForwardedChannels);
     process.start("g++", arguments);
+    process.waitForFinished(5000);
     const QString errorString(process.errorString());
     if (errorString.isEmpty()) {
         return true;
@@ -52,8 +54,14 @@ bool ProjectManager::link()
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
     QStringList arguments { "-l" };
 
+    for (const auto &file : mParsedFiles) {
+        arguments.append(file);
+    }
+
     QProcess process;
+    process.setProcessChannelMode(QProcess::ForwardedChannels);
     process.start("g++", arguments);
+    process.waitForFinished(5000);
     const QString errorString(process.errorString());
     if (errorString.isEmpty()) {
         return true;

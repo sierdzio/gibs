@@ -54,8 +54,7 @@ int main(int argc, char *argv[]) {
     app.setOrganizationDomain("sierdzio.com");
     app.setApplicationName("ibs");
     //logger()->enableLogToFile(app.applicationName());
-    qCInfo(coreMain) << "Application data set."
-                     << "\n\tName:" << app.applicationName()
+    qCInfo(coreMain) << "\n\tName:" << app.applicationName()
                      << "\n\tOrganisation:" << app.organizationName()
                      << "\n\tDomain:" << app.organizationDomain()
                      << "\n\tVersion:" << app.applicationVersion()
@@ -66,10 +65,9 @@ int main(int argc, char *argv[]) {
     parser.setApplicationDescription("Test helper");
     parser.addHelpOption();
     parser.addVersionOption();
-    parser.addPositionalArgument("source", QCoreApplication::translate("main", "Source file to copy."));
-    parser.addPositionalArgument("destination", QCoreApplication::translate("main", "Destination directory."));
 
     const char *scope = "main";
+    parser.addPositionalArgument("input", QCoreApplication::translate(scope, "Input file, usually main.cpp"));
 
     parser.addOptions({
         {{"r", "run"},
@@ -84,7 +82,7 @@ int main(int argc, char *argv[]) {
     qDebug() << "Arguments:" << args;
 
     const bool run = parser.isSet("run");
-    const QString file = args.at(1);
+    const QString file = args.at(0);
 
     ProjectManager manager(file);
     QTimer::singleShot(1, &manager, &ProjectManager::start);

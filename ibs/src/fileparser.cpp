@@ -35,7 +35,7 @@ bool FileParser::parse() const
                 // Library include - skip it
             } else if (line.contains('"')) {
                 // Local include - parse it!
-                QString include(line.mid(line.indexOf('"')));
+                QString include(line.mid(line.indexOf('"') + 1));
                 include.chop(1);
 
                 FileParser parser(include);
