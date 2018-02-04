@@ -12,6 +12,11 @@ ProjectManager::ProjectManager(const QString &inputFile, QObject *parent)
 {
 }
 
+void ProjectManager::setQtDir(const QString &qtDir)
+{
+    mQtDir = qtDir;
+}
+
 void ProjectManager::start()
 {
     onParseRequest(mInputFile);

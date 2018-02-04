@@ -71,7 +71,9 @@ int main(int argc, char *argv[]) {
 
     parser.addOptions({
         {{"r", "run"},
-        QCoreApplication::translate(scope, "Run the executable immediately after building")}
+        QCoreApplication::translate(scope, "Run the executable immediately after building")},
+        {"qt-dir",
+        QCoreApplication::translate(scope, "Specify Qt directory for Qt apps")}
     });
 
     // Process the actual command line arguments given by the user
@@ -82,9 +84,11 @@ int main(int argc, char *argv[]) {
     qDebug() << "Arguments:" << args;
 
     const bool run = parser.isSet("run");
+    const QString qtDir(parser.value("qt-dir"));
     const QString file = args.at(0);
 
     ProjectManager manager(file);
+    manager.setQtDir(qtDir);
     QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
     QTimer::singleShot(1, &manager, &ProjectManager::start);
 
