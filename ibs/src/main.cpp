@@ -32,6 +32,7 @@ SOFTWARE.
 #include <QString>
 #include <QCommandLineParser>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QDebug>
 
 #include "globals.h"
@@ -49,6 +50,10 @@ int main(int argc, char *argv[]) {
     //MiloLog::instance();
     // Set up basic application data. Modify this to your needs
     QCoreApplication app(argc, argv);
+
+    QElapsedTimer timer;
+    timer.start();
+
     app.setApplicationVersion(APP_VERSION);
     app.setOrganizationName("");
     app.setOrganizationDomain("sierdzio.com");
@@ -73,7 +78,8 @@ int main(int argc, char *argv[]) {
         {{"r", "run"},
         QCoreApplication::translate(scope, "Run the executable immediately after building")},
         {"qt-dir",
-        QCoreApplication::translate(scope, "Specify Qt directory for Qt apps")}
+        QCoreApplication::translate(scope, "Specify Qt directory for Qt apps"),
+        QCoreApplication::translate(scope, "Qt dir")}
     });
 
     // Process the actual command line arguments given by the user
@@ -96,5 +102,9 @@ int main(int argc, char *argv[]) {
         qInfo() << "Running compiled binary";
     }
 
-    return app.exec();
+    int result = app.exec();
+
+    qInfo() << "Build took:" << timer.elapsed() << "ms";
+
+    return result;
 }

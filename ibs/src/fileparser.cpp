@@ -58,11 +58,17 @@ bool FileParser::parse() const
         if (line.startsWith(Tags::scopeOneLine) or isCommentScope) {
             // Override default source file location or name
             if (line.contains(Tags::source))
-                source = line.mid(line.indexOf(Tags::source) + Tags::source.size());
+                source = extractArguments(line, Tags::source);
 
             // TODO: handle spaces in target name
             if (line.contains(Tags::targetName))
-                emit targetName(line.mid(line.indexOf(Tags::targetName) + Tags::targetName.size()));
+                emit targetName(extractArguments(line, Tags::targetName));
+
+            if (line.contains(Tags::qtModules)) {
+                const QStringList args(extractArguments(line, Tags::qtModules).split(" "));
+                qDebug() << "Enabling Qt modules:" << args;
+                emit qtModules(args);
+            }
         }
     }
 
@@ -87,4 +93,9 @@ bool FileParser::parse() const
     }
 
     return true;
+}
+
+QString FileParser::extractArguments(const QString &line, const QLatin1String &tag) const
+{
+    return line.mid(line.indexOf(tag) + tag.size());
 }

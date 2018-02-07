@@ -14,10 +14,13 @@ signals:
 
     // IBS syntax detection:
     void targetName(const QString &target) const;
+    void qtModules(const QStringList &modules) const;
 
 public slots:
     bool parse() const;
 
 protected:
+    QString extractArguments(const QString &line, const QLatin1String &tag) const;
+
     const QString mFile;
 };

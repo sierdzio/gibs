@@ -14,6 +14,7 @@ ProjectManager::ProjectManager(const QString &inputFile, QObject *parent)
 
 void ProjectManager::setQtDir(const QString &qtDir)
 {
+    qInfo() << "Setting Qt directory to:" << qtDir;
     mQtDir = qtDir;
 }
 
@@ -44,6 +45,7 @@ void ProjectManager::onParseRequest(const QString &file)
     FileParser parser(file);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
+    connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
     connect(&parser, &FileParser::targetName, this, [=](const QString &targetName)
         { mTargetName = targetName; });
     const bool result = parser.parse();
@@ -52,20 +54,50 @@ void ProjectManager::onParseRequest(const QString &file)
     Q_UNUSED(result);
 }
 
+void ProjectManager::onQtModules(const QStringList &modules)
+{
+    mQtModules += modules;
+    mQtModules.removeDuplicates();
+    qInfo() << "Updating required Qt module list:" << mQtModules;
+}
+
 bool ProjectManager::compile(const QString &file)
 {
     const QFileInfo info(file);
     const QString objectFile(info.baseName() + ".o");
     const QString compiler("g++");
 
+    if (!mQtModules.isEmpty()) {
+        if (mQtDir.isEmpty()) {
+            qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
+                   "with --qt-dir argument");
+        }
+    }
+
     qInfo() << "Compiling:" << file << "into:" << objectFile;
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
-    QStringList arguments { "-c", "-pipe", "-g", "-fPIC", "-Wall", "-W",
-        "-o", objectFile, file };
+    QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W" };
+
+    for(const QString &module : mQtModules) {
+        arguments.append("-DQT_" + module.toUpper() + "_LIB");
+    }
+
+    // TODO: use correct mkspecs
+    // TODO: use qmake -query to get good paths
+    arguments.append("-I" + mQtDir + "/include");
+    arguments.append("-I" + mQtDir + "/mkspecs/linux-g++");
+
+    for(const QString &module : mQtModules) {
+        QString Module(module);
+        Module[0] = Module.at(0).toUpper();
+        arguments.append("-I" + mQtDir + "/include/Qt" + Module);
+    }
+
+    arguments.append({ "-o", objectFile, file });
 
     QProcess process;
     process.setProcessChannelMode(QProcess::ForwardedChannels);
-    qDebug() << "Compiling:" << compiler << arguments;
+    qDebug() << "Compiling:" << compiler << arguments.join(" ");
     process.start(compiler, arguments);
     process.waitForFinished(5000);
 
@@ -89,9 +121,30 @@ bool ProjectManager::link()
         arguments.append(file);
     }
 
+    if (!mQtModules.isEmpty()) {
+        if (mQtDir.isEmpty()) {
+            qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
+                   "with --qt-dir argument");
+        }
+
+        arguments.append("-Wl,-rpath," + mQtDir + "/lib");
+        arguments.append("-L" + mQtDir + "/lib");
+
+        for(const QString &module : mQtModules) {
+            // TODO: use correct mkspecs
+            // TODO: use qmake -query to get good paths
+            // Capitalize first letter. Horrible solution, but will do for now
+            QString Module(module);
+            Module[0] = Module.at(0).toUpper();
+            arguments.append("-lQt5" + Module);
+        }
+
+        arguments.append("-lpthread");
+    }
+
     QProcess process;
     process.setProcessChannelMode(QProcess::ForwardedChannels);
-    qDebug() << "Compiling:" << compiler << arguments;
+    qDebug() << "Linking:" << compiler << arguments.join(" ");
     process.start(compiler, arguments);
     process.waitForFinished(5000);
 
