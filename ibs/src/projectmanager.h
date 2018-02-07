@@ -21,7 +21,10 @@ public slots:
 protected slots:
     void onParsed(const QString &file, const QString &source);
     void onParseRequest(const QString &file);
+    void onTarget(const QString &target);
     void onQtModules(const QStringList &modules);
+    void onIncludes(const QStringList &includes);
+    void onLibs(const QStringList &libs);
 
 protected:
     bool compile(const QString &file);
@@ -31,6 +34,8 @@ private:
     const QString mInputFile;
     QString mQtDir;
     QStringList mQtModules;
+    QStringList mCustomIncludes;
+    QStringList mCustomLibs;
 
     QString mTargetName = "default";
     QVector<QString> mParsedFiles;

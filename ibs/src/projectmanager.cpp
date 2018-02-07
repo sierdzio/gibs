@@ -45,13 +45,21 @@ void ProjectManager::onParseRequest(const QString &file)
     FileParser parser(file);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
+    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTarget);
     connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
-    connect(&parser, &FileParser::targetName, this, [=](const QString &targetName)
-        { mTargetName = targetName; });
+    connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
+    connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
+
     const bool result = parser.parse();
 
-    // TODO: stop when result is false
+    // TODO: stop if result is false
     Q_UNUSED(result);
+}
+
+void ProjectManager::onTarget(const QString &target)
+{
+    qInfo() << "Setting target name:" << target;
+    mTargetName = target;
 }
 
 void ProjectManager::onQtModules(const QStringList &modules)
@@ -59,6 +67,20 @@ void ProjectManager::onQtModules(const QStringList &modules)
     mQtModules += modules;
     mQtModules.removeDuplicates();
     qInfo() << "Updating required Qt module list:" << mQtModules;
+}
+
+void ProjectManager::onIncludes(const QStringList &includes)
+{
+    mCustomIncludes += includes;
+    mCustomIncludes.removeDuplicates();
+    qInfo() << "Updating custom includes:" << mCustomIncludes;
+}
+
+void ProjectManager::onLibs(const QStringList &libs)
+{
+    mCustomLibs += libs;
+    mCustomLibs.removeDuplicates();
+    qInfo() << "Updating custom libs:" << mCustomLibs;
 }
 
 bool ProjectManager::compile(const QString &file)
@@ -78,7 +100,7 @@ bool ProjectManager::compile(const QString &file)
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
     QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W" };
 
-    for(const QString &module : mQtModules) {
+    for(const QString &module : qAsConst(mQtModules)) {
         arguments.append("-DQT_" + module.toUpper() + "_LIB");
     }
 
@@ -87,10 +109,14 @@ bool ProjectManager::compile(const QString &file)
     arguments.append("-I" + mQtDir + "/include");
     arguments.append("-I" + mQtDir + "/mkspecs/linux-g++");
 
-    for(const QString &module : mQtModules) {
+    for(const QString &module : qAsConst(mQtModules)) {
         QString Module(module);
         Module[0] = Module.at(0).toUpper();
         arguments.append("-I" + mQtDir + "/include/Qt" + Module);
+    }
+
+    for(const QString &incl : qAsConst(mCustomIncludes)) {
+        arguments.append("-I" + incl);
     }
 
     arguments.append({ "-o", objectFile, file });
@@ -117,7 +143,7 @@ bool ProjectManager::link()
     const QString compiler("g++");
     QStringList arguments { "-o", mTargetName };
 
-    for (const auto &file : mObjectFiles) {
+    for (const auto &file : qAsConst(mObjectFiles)) {
         arguments.append(file);
     }
 
@@ -130,7 +156,7 @@ bool ProjectManager::link()
         arguments.append("-Wl,-rpath," + mQtDir + "/lib");
         arguments.append("-L" + mQtDir + "/lib");
 
-        for(const QString &module : mQtModules) {
+        for(const QString &module : qAsConst(mQtModules)) {
             // TODO: use correct mkspecs
             // TODO: use qmake -query to get good paths
             // Capitalize first letter. Horrible solution, but will do for now
@@ -141,6 +167,8 @@ bool ProjectManager::link()
 
         arguments.append("-lpthread");
     }
+
+    arguments.append(mCustomLibs);
 
     QProcess process;
     process.setProcessChannelMode(QProcess::ForwardedChannels);

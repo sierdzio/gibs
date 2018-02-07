@@ -10,6 +10,7 @@ const QLatin1String scopeEnd("*/");
 // IBS commands
 const QLatin1String source("source ");
 const QLatin1String targetName("target name ");
+const QLatin1String includes("includes ");
 const QLatin1String libs("libs ");
 // Qt support
 const QLatin1String qtModules("qt ");

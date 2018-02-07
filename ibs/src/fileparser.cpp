@@ -61,13 +61,28 @@ bool FileParser::parse() const
                 source = extractArguments(line, Tags::source);
 
             // TODO: handle spaces in target name
-            if (line.contains(Tags::targetName))
-                emit targetName(extractArguments(line, Tags::targetName));
+            if (line.contains(Tags::targetName)) {
+                const QString arg(extractArguments(line, Tags::targetName));
+                qDebug() << "Target name:" << arg;
+                emit targetName(arg);
+            }
 
             if (line.contains(Tags::qtModules)) {
                 const QStringList args(extractArguments(line, Tags::qtModules).split(" "));
                 qDebug() << "Enabling Qt modules:" << args;
                 emit qtModules(args);
+            }
+
+            if (line.contains(Tags::includes)) {
+                const QStringList args(extractArguments(line, Tags::includes).split(" "));
+                qDebug() << "Adding includes:" << args;
+                emit includes(args);
+            }
+
+            if (line.contains(Tags::libs)) {
+                const QStringList args(extractArguments(line, Tags::libs).split(" "));
+                qDebug() << "Adding libs:" << args;
+                emit libs(args);
             }
         }
     }
