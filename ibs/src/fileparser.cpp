@@ -49,7 +49,7 @@ bool FileParser::parse() const
         }
 
         // Detect IBS comment scope
-        if (line.startsWith(Tags::scopeBegin))
+        if (line == Tags::scopeBegin or line.startsWith(Tags::scopeBegin + " "))
             isCommentScope = true;
         if (isCommentScope and line.contains(Tags::scopeEnd))
             isCommentScope = false;
