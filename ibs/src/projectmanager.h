@@ -23,6 +23,8 @@ public slots:
 protected slots:
     void onParsed(const QString &file, const QString &source);
     void onParseRequest(const QString &file);
+    void onRunMoc(const QString &file);
+    // ibs commands
     void onTargetName(const QString &target);
     void onTargetType(const QString &type);
     void onQtModules(const QStringList &modules);

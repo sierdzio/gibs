@@ -48,6 +48,10 @@ bool FileParser::parse() const
             }
         }
 
+        if (line.startsWith("Q_OBJECT") or line.startsWith("Q_GADGET")) {
+            emit runMoc(mFile);
+        }
+
         // Detect IBS comment scope
         if (line == Tags::scopeBegin or line.startsWith(Tags::scopeBegin + " "))
             isCommentScope = true;

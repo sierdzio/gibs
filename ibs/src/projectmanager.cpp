@@ -45,6 +45,7 @@ void ProjectManager::onParseRequest(const QString &file)
     FileParser parser(file);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
+    connect(&parser, &FileParser::runMoc, this, &ProjectManager::onRunMoc);
     connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
     connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
     connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
@@ -55,6 +56,26 @@ void ProjectManager::onParseRequest(const QString &file)
 
     // TODO: stop if result is false
     Q_UNUSED(result);
+}
+
+void ProjectManager::onRunMoc(const QString &file)
+{
+    if (mQtDir.isEmpty()) {
+        qFatal("Cant run MOC because Qt dir is not set. See 'ibs --help' for "
+               "more info.");
+    }
+
+    QFileInfo header(file);
+
+    const QString mocFile("moc_" + header.baseName() + ".cpp");
+    const QString compiler(mQtDir + "/bin/moc");
+    QStringList arguments;
+
+    QProcess process;
+    process.setProcessChannelMode(QProcess::ForwardedChannels);
+    qDebug() << "Running MOC:" << compiler << arguments.join(" ");
+    process.start(compiler, arguments);
+    process.waitForFinished(5000);
 }
 
 void ProjectManager::onTargetName(const QString &target)

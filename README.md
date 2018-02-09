@@ -46,12 +46,17 @@ given header.
 Target command can be used to define 3 things:
 
 * executable / library name
+
     //i target name MyAwesomeApp
+
 * target type: either a library or an application
+
     //i target type app
     //i target type lib
+
 * libraries can additionally be marked as static or dynamic. Dynamic libraries
 are the default value, it can be skipped
+
     //i target type lib static
     //i target type lib dynamic
 
