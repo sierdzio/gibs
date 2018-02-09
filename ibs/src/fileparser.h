@@ -14,6 +14,7 @@ signals:
 
     // IBS syntax detection:
     void targetName(const QString &target) const;
+    void targetType(const QString &type) const;
     void qtModules(const QStringList &modules) const;
     void includes(const QStringList &includes) const;
     void libs(const QStringList &libs) const;

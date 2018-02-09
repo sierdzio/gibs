@@ -45,7 +45,8 @@ void ProjectManager::onParseRequest(const QString &file)
     FileParser parser(file);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
-    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTarget);
+    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
+    connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
     connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
     connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
     connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
@@ -56,10 +57,16 @@ void ProjectManager::onParseRequest(const QString &file)
     Q_UNUSED(result);
 }
 
-void ProjectManager::onTarget(const QString &target)
+void ProjectManager::onTargetName(const QString &target)
 {
     qInfo() << "Setting target name:" << target;
     mTargetName = target;
+}
+
+void ProjectManager::onTargetType(const QString &type)
+{
+    qInfo() << "Setting target type:" << type;
+    mTargetType = type;
 }
 
 void ProjectManager::onQtModules(const QStringList &modules)
@@ -141,7 +148,16 @@ bool ProjectManager::link()
 {
     qInfo() << "Linking:" << mObjectFiles;
     const QString compiler("g++");
-    QStringList arguments { "-o", mTargetName };
+    QStringList arguments;
+
+    if (mTargetType == Tags::targetLib) {
+        if (mTargetLibType == Tags::targetLibDynamic) {
+            arguments.append({ "-shared", "-Wl,-soname,lib" + mTargetName + ".so.1",
+                               "-o", "lib" + mTargetName + ".so.1.0.0"});
+        }
+    } else {
+        arguments.append({ "-o", mTargetName });
+    }
 
     for (const auto &file : qAsConst(mObjectFiles)) {
         arguments.append(file);

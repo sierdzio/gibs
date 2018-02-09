@@ -8,12 +8,18 @@ const QLatin1String scopeOneLine("//i ");
 const QLatin1String scopeBegin("/*i");
 const QLatin1String scopeEnd("*/");
 // IBS commands
-const QLatin1String source("source ");
-const QLatin1String targetName("target name ");
+const QLatin1String source("source");
+const QLatin1String targetCommand("target");
+const QLatin1String targetName("name");
+const QLatin1String targetType("type");
+const QLatin1String targetApp("app");
+const QLatin1String targetLib("lib");
+const QLatin1String targetLibStatic("static");
+const QLatin1String targetLibDynamic("dynamic");
 const QLatin1String includes("includes ");
 const QLatin1String libs("libs ");
 // Qt support
-const QLatin1String qtModules("qt ");
+const QLatin1String qtModules("qt");
 const QLatin1String core("core");
 const QLatin1String gui("gui");
 const QLatin1String network("network");

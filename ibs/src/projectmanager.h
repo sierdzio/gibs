@@ -4,6 +4,8 @@
 #include <QVector>
 #include <QHash>
 
+#include "tags.h"
+
 class ProjectManager : public QObject
 {
     Q_OBJECT
@@ -21,7 +23,8 @@ public slots:
 protected slots:
     void onParsed(const QString &file, const QString &source);
     void onParseRequest(const QString &file);
-    void onTarget(const QString &target);
+    void onTargetName(const QString &target);
+    void onTargetType(const QString &type);
     void onQtModules(const QStringList &modules);
     void onIncludes(const QStringList &includes);
     void onLibs(const QStringList &libs);
@@ -38,6 +41,8 @@ private:
     QStringList mCustomLibs;
 
     QString mTargetName = "default";
+    QString mTargetType = Tags::targetApp;
+    QString mTargetLibType = Tags::targetLibDynamic;
     QVector<QString> mParsedFiles;
     QVector<QString> mObjectFiles;
 };

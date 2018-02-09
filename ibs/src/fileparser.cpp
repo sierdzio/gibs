@@ -61,10 +61,23 @@ bool FileParser::parse() const
                 source = extractArguments(line, Tags::source);
 
             // TODO: handle spaces in target name
-            if (line.contains(Tags::targetName)) {
-                const QString arg(extractArguments(line, Tags::targetName));
-                qDebug() << "Target name:" << arg;
-                emit targetName(arg);
+            if(line.contains(Tags::targetCommand)) {
+                if (line.contains(Tags::targetName)) {
+                    const QString arg(extractArguments(line, Tags::targetName));
+                    qDebug() << "Target name:" << arg;
+                    emit targetName(arg);
+                }
+
+                if (line.contains(Tags::targetType)) {
+                    const QString arg(extractArguments(line, Tags::targetType));
+
+                    if (arg == Tags::targetApp || arg == Tags::targetLib) {
+                        qDebug() << "Target type:" << arg;
+                        emit targetType(arg);
+                    } else {
+                        qFatal("Invalid target type: %s", qPrintable(arg));
+                    }
+                }
             }
 
             if (line.contains(Tags::qtModules)) {
@@ -112,5 +125,5 @@ bool FileParser::parse() const
 
 QString FileParser::extractArguments(const QString &line, const QLatin1String &tag) const
 {
-    return line.mid(line.indexOf(tag) + tag.size());
+    return line.mid(line.indexOf(tag) + tag.size() + 1);
 }
