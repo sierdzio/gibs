@@ -29,8 +29,6 @@ void ProjectManager::start()
 
 void ProjectManager::onParsed(const QString &file, const QString &source)
 {
-    mParsedFiles.append(file);
-
     if (!source.isEmpty() and source == file) {
         compile(source);
     }
@@ -41,6 +39,9 @@ void ProjectManager::onParseRequest(const QString &file)
     // Skip files which we have parsed already
     if (mParsedFiles.contains(file))
         return;
+
+    // Prevent file from being parsed twice
+    mParsedFiles.append(file);
 
     FileParser parser(file);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
@@ -61,7 +62,7 @@ void ProjectManager::onParseRequest(const QString &file)
 bool ProjectManager::onRunMoc(const QString &file)
 {
     if (mQtDir.isEmpty()) {
-        qFatal("Cant run MOC because Qt dir is not set. See 'ibs --help' for "
+        qFatal("Can't run MOC because Qt dir is not set. See 'ibs --help' for "
                "more info.");
     }
 
@@ -81,11 +82,8 @@ bool ProjectManager::onRunMoc(const QString &file)
     // TODO: GCC includes!
     arguments.append({ file, "-o", mocFile });
 
-    if (runProcess(compiler, arguments)) {
-        if (compile(mocFile)) {
-            mObjectFiles.append(header.baseName() + ".o");
-            return true;
-        }
+    if (runProcess(compiler, arguments) and compile(mocFile)) {
+        return true;
     }
 
     return false;
@@ -155,7 +153,12 @@ bool ProjectManager::compile(const QString &file)
 
     arguments.append({ "-o", objectFile, file });
 
-    return runProcess(compiler, arguments);
+    if (runProcess(compiler, arguments)) {
+        mObjectFiles.append(objectFile);
+        return true;
+    }
+
+    return false;
 }
 
 bool ProjectManager::link() const
@@ -222,9 +225,10 @@ void ProjectManager::updateQtModules(const QStringList &modules)
 
 bool ProjectManager::initializeMoc()
 {
+    qInfo() << "Initializig MOC";
     const QString compiler("g++");
     const QStringList arguments({ "-pipe", "-g", "-Wall", "-W", "-dM", "-E",
-                            "-o", "../build/moc_predefs.h",
+                            "-o", "moc_predefs.h",
                             mQtDir + "/mkspecs/features/data/dummy.cpp" });
     mQtIsMocInitialized = runProcess(compiler, arguments);
     return mQtIsMocInitialized;
