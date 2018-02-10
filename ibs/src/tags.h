@@ -18,7 +18,9 @@ const QLatin1String targetLibStatic("static");
 const QLatin1String targetLibDynamic("dynamic");
 const QLatin1String includes("includes ");
 const QLatin1String libs("libs ");
+const QLatin1String tool("tool");
 // Qt support
+//    modules
 const QLatin1String qtModules("qt");
 const QLatin1String core("core");
 const QLatin1String gui("gui");
@@ -38,4 +40,7 @@ const QLatin1String multimedia("multimedia");
 const QLatin1String location("location");
 const QLatin1String gamepad("gamepad");
 const QLatin1String bluetooth("bluetooth");
+//    tools
+const QLatin1String rcc("rcc");
+const QLatin1String uic("uic");
 }

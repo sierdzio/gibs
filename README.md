@@ -81,3 +81,20 @@ your application or library, you need to specify Qt modules which should be
 loaded.
 
     //i qt core network
+
+To run Qt tools, use the `tools` command:
+
+    //i tool rcc myResource.qrc
+
+You do not need to run MOC manually, ibs will run it automatically when needed.
+
+### Tools
+
+IBS can run external tools, applications and processes. To do this, use the `tool`
+command, followed by executable path and any necessary arguments.
+
+There are some tools which are pre-configured (like Qt's tools: `rcc` and `uic`)
+and you don't need to specify their paths.
+
+    //i tool myexecutable.exe --some -a -r -g -s
+
