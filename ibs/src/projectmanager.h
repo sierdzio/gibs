@@ -1,8 +1,6 @@
 #pragma once
 
 #include <QObject>
-#include <QVector>
-#include <QHash>
 
 #include "tags.h"
 
@@ -23,7 +21,7 @@ public slots:
 protected slots:
     void onParsed(const QString &file, const QString &source);
     void onParseRequest(const QString &file);
-    void onRunMoc(const QString &file);
+    bool onRunMoc(const QString &file);
     // ibs commands
     void onTargetName(const QString &target);
     void onTargetType(const QString &type);
@@ -33,18 +31,28 @@ protected slots:
 
 protected:
     bool compile(const QString &file);
-    bool link();
+    bool link() const;
 
 private:
+    void updateQtModules(const QStringList &modules);
+    bool initializeMoc();
+    bool runProcess(const QString &app, const QStringList &arguments) const;
+    QString capitalizeFirstLetter(const QString &string) const;
+
     const QString mInputFile;
     QString mQtDir;
     QStringList mQtModules;
+    bool mQtIsMocInitialized = false;
+    QStringList mQtIncludes;
+    QStringList mQtLibs;
+    QStringList mQtDefines;
+
     QStringList mCustomIncludes;
     QStringList mCustomLibs;
 
     QString mTargetName = "default";
     QString mTargetType = Tags::targetApp;
     QString mTargetLibType = Tags::targetLibDynamic;
-    QVector<QString> mParsedFiles;
-    QVector<QString> mObjectFiles;
+    QStringList mParsedFiles;
+    QStringList mObjectFiles;
 };

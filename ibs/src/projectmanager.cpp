@@ -58,24 +58,34 @@ void ProjectManager::onParseRequest(const QString &file)
     Q_UNUSED(result);
 }
 
-void ProjectManager::onRunMoc(const QString &file)
+bool ProjectManager::onRunMoc(const QString &file)
 {
     if (mQtDir.isEmpty()) {
         qFatal("Cant run MOC because Qt dir is not set. See 'ibs --help' for "
                "more info.");
     }
 
-    QFileInfo header(file);
+    if (mQtIsMocInitialized == false) {
+        if (initializeMoc() == false)
+            return false;
+    }
 
+    const QFileInfo header(file);
     const QString mocFile("moc_" + header.baseName() + ".cpp");
     const QString compiler(mQtDir + "/bin/moc");
-    QStringList arguments;
 
-    QProcess process;
-    process.setProcessChannelMode(QProcess::ForwardedChannels);
-    qDebug() << "Running MOC:" << compiler << arguments.join(" ");
-    process.start(compiler, arguments);
-    process.waitForFinished(5000);
+    QStringList arguments;
+    arguments.append(mQtDefines);
+    arguments.append({ "--include", "moc_predefs.h" });
+    arguments.append(mQtIncludes);
+    // TODO: GCC includes!
+    arguments.append({ file, "-o", mocFile });
+
+    if (runProcess(compiler, arguments)) {
+        return compile(mocFile);
+    }
+
+    return false;
 }
 
 void ProjectManager::onTargetName(const QString &target)
@@ -92,9 +102,14 @@ void ProjectManager::onTargetType(const QString &type)
 
 void ProjectManager::onQtModules(const QStringList &modules)
 {
-    mQtModules += modules;
-    mQtModules.removeDuplicates();
-    qInfo() << "Updating required Qt module list:" << mQtModules;
+    QStringList mod(mQtModules);
+    mod += modules;
+    mod.removeDuplicates();
+
+    if (mod != mQtModules) {
+        qInfo() << "Updating required Qt module list:" << mod;
+        updateQtModules(mod);
+    }
 }
 
 void ProjectManager::onIncludes(const QStringList &includes)
@@ -128,20 +143,8 @@ bool ProjectManager::compile(const QString &file)
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
     QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W" };
 
-    for(const QString &module : qAsConst(mQtModules)) {
-        arguments.append("-DQT_" + module.toUpper() + "_LIB");
-    }
-
-    // TODO: use correct mkspecs
-    // TODO: use qmake -query to get good paths
-    arguments.append("-I" + mQtDir + "/include");
-    arguments.append("-I" + mQtDir + "/mkspecs/linux-g++");
-
-    for(const QString &module : qAsConst(mQtModules)) {
-        QString Module(module);
-        Module[0] = Module.at(0).toUpper();
-        arguments.append("-I" + mQtDir + "/include/Qt" + Module);
-    }
+    arguments.append(mQtDefines);
+    arguments.append(mQtIncludes);
 
     for(const QString &incl : qAsConst(mCustomIncludes)) {
         arguments.append("-I" + incl);
@@ -149,23 +152,10 @@ bool ProjectManager::compile(const QString &file)
 
     arguments.append({ "-o", objectFile, file });
 
-    QProcess process;
-    process.setProcessChannelMode(QProcess::ForwardedChannels);
-    qDebug() << "Compiling:" << compiler << arguments.join(" ");
-    process.start(compiler, arguments);
-    process.waitForFinished(5000);
-
-    const int exitCode = process.exitCode();
-    if (exitCode == 0) {
-        mObjectFiles.append(objectFile);
-        return true;
-    }
-
-    qDebug() << "Process error:" << process.errorString() << exitCode;
-    return false;
+    return runProcess(compiler, arguments);
 }
 
-bool ProjectManager::link()
+bool ProjectManager::link() const
 {
     qInfo() << "Linking:" << mObjectFiles;
     const QString compiler("g++");
@@ -180,9 +170,7 @@ bool ProjectManager::link()
         arguments.append({ "-o", mTargetName });
     }
 
-    for (const auto &file : qAsConst(mObjectFiles)) {
-        arguments.append(file);
-    }
+    arguments.append(mObjectFiles);
 
     if (!mQtModules.isEmpty()) {
         if (mQtDir.isEmpty()) {
@@ -190,29 +178,65 @@ bool ProjectManager::link()
                    "with --qt-dir argument");
         }
 
-        arguments.append("-Wl,-rpath," + mQtDir + "/lib");
-        arguments.append("-L" + mQtDir + "/lib");
-
-        for(const QString &module : qAsConst(mQtModules)) {
-            // TODO: use correct mkspecs
-            // TODO: use qmake -query to get good paths
-            // Capitalize first letter. Horrible solution, but will do for now
-            QString Module(module);
-            Module[0] = Module.at(0).toUpper();
-            arguments.append("-lQt5" + Module);
-        }
-
-        arguments.append("-lpthread");
+        arguments.append(mQtLibs);
     }
 
     arguments.append(mCustomLibs);
 
+    return runProcess(compiler, arguments);
+}
+
+void ProjectManager::updateQtModules(const QStringList &modules)
+{
+    mQtModules = modules;
+    mQtIncludes.clear();
+    mQtLibs.clear();
+    mQtDefines.clear();
+
+    for(const QString &module : qAsConst(mQtModules)) {
+        mQtDefines.append("-DQT_" + module.toUpper() + "_LIB");
+    }
+
+    mQtIncludes.append("-I" + mQtDir + "/include");
+    mQtIncludes.append("-I" + mQtDir + "/mkspecs/linux-g++");
+
+    for(const QString &module : qAsConst(mQtModules)) {
+        mQtIncludes.append("-I" + mQtDir + "/include/Qt"
+                           + capitalizeFirstLetter(module));
+    }
+
+    mQtLibs.append("-Wl,-rpath," + mQtDir + "/lib");
+    mQtLibs.append("-L" + mQtDir + "/lib");
+
+    for(const QString &module : qAsConst(mQtModules)) {
+        // TODO: use correct mkspecs
+        // TODO: use qmake -query to get good paths
+        mQtLibs.append("-lQt5" + capitalizeFirstLetter(module));
+    }
+
+    mQtLibs.append("-lpthread");
+}
+
+bool ProjectManager::initializeMoc()
+{
+    const QString compiler("g++");
+    const QStringList arguments({ "-pipe", "-g", "-Wall", "-W", "-dM", "-E",
+                            "-o", "../build/moc_predefs.h",
+                            mQtDir + "/mkspecs/features/data/dummy.cpp" });
+    mQtIsMocInitialized = runProcess(compiler, arguments);
+    return mQtIsMocInitialized;
+}
+
+/*!
+ * TODO: run asynchronously in a thread pool.
+ */
+bool ProjectManager::runProcess(const QString &app, const QStringList &arguments) const
+{
     QProcess process;
     process.setProcessChannelMode(QProcess::ForwardedChannels);
-    qDebug() << "Linking:" << compiler << arguments.join(" ");
-    process.start(compiler, arguments);
+    qDebug() << "Running:" << app << arguments.join(" ");
+    process.start(app, arguments);
     process.waitForFinished(5000);
-
     const int exitCode = process.exitCode();
     if (exitCode == 0) {
         return true;
@@ -220,4 +244,9 @@ bool ProjectManager::link()
 
     qDebug() << "Process error:" << process.errorString() << exitCode;
     return false;
+}
+
+QString ProjectManager::capitalizeFirstLetter(const QString &string) const
+{
+    return (string[0].toUpper() + string.mid(1));
 }
