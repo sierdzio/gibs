@@ -19,6 +19,7 @@ signals:
     void qtModules(const QStringList &modules) const;
     void includes(const QStringList &includes) const;
     void libs(const QStringList &libs) const;
+    void runTool(const QString &tool, const QStringList &args) const;
 
 public slots:
     bool parse() const;

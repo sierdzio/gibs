@@ -52,6 +52,7 @@ void ProjectManager::onParseRequest(const QString &file)
     connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
     connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
     connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
+    connect(&parser, &FileParser::runTool, this, &ProjectManager::onRunTool);
 
     const bool result = parser.parse();
 
@@ -125,6 +126,15 @@ void ProjectManager::onLibs(const QStringList &libs)
     mCustomLibs += libs;
     mCustomLibs.removeDuplicates();
     qInfo() << "Updating custom libs:" << mCustomLibs;
+}
+
+void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
+{
+    if (tool == Tags::rcc or tool == Tags::uic) {
+        runProcess(mQtDir + "/" + tool, args);
+    } else {
+        // TODO: add any tool support
+    }
 }
 
 bool ProjectManager::compile(const QString &file)

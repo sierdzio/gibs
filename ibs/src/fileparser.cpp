@@ -101,6 +101,14 @@ bool FileParser::parse() const
                 qDebug() << "Adding libs:" << args;
                 emit libs(args);
             }
+
+            if (line.contains(Tags::tool)) {
+                const QStringList args(extractArguments(line, Tags::tool).split(" "));
+                qDebug() << "Running tool:" << args;
+                if (args.size() > 0) {
+                    emit runTool(args.at(0), args.mid(1));
+                }
+            }
         }
     }
 

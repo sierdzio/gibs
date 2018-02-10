@@ -28,6 +28,7 @@ protected slots:
     void onQtModules(const QStringList &modules);
     void onIncludes(const QStringList &includes);
     void onLibs(const QStringList &libs);
+    void onRunTool(const QString &tool, const QStringList &args);
 
 protected:
     bool compile(const QString &file);
