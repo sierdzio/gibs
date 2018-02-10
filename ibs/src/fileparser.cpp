@@ -116,6 +116,8 @@ bool FileParser::parse() const
         }
     }
 
+    // TODO: check if source exists!
+
     // Important: this emit needs to be sent before parseRequest()
     emit parsed(mFile, source);
 

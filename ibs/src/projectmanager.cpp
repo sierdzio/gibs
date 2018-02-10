@@ -82,7 +82,10 @@ bool ProjectManager::onRunMoc(const QString &file)
     arguments.append({ file, "-o", mocFile });
 
     if (runProcess(compiler, arguments)) {
-        return compile(mocFile);
+        if (compile(mocFile)) {
+            mObjectFiles.append(header.baseName() + ".o");
+            return true;
+        }
     }
 
     return false;
