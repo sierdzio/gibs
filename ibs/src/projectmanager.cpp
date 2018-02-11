@@ -130,8 +130,19 @@ void ProjectManager::onLibs(const QStringList &libs)
 
 void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
 {
-    if (tool == Tags::rcc or tool == Tags::uic) {
-        runProcess(mQtDir + "/" + tool, args);
+    if (tool == Tags::rcc) {
+        // -name qml qml.qrc -o qrc_qml.cpp
+        for (const auto &qrcFile : qAsConst(args)) {
+            const QFileInfo file(qrcFile);
+            const QString cppFile("qrc_" + file.baseName() + ".cpp");
+            const QStringList arguments { "-name", file.baseName(), qrcFile,
+                                        "-o", cppFile };
+
+            runProcess(mQtDir + "/bin/" + tool, arguments);
+            compile(cppFile);
+        }
+    } else if (tool == Tags::uic) {
+        // TODO: add uic support
     } else {
         // TODO: add any tool support
     }
@@ -216,9 +227,16 @@ void ProjectManager::updateQtModules(const QStringList &modules)
     mQtIncludes.append("-I" + mQtDir + "/include");
     mQtIncludes.append("-I" + mQtDir + "/mkspecs/linux-g++");
 
+    // TODO: pre-capitalize module letters to do both loops faster
     for(const QString &module : qAsConst(mQtModules)) {
-        mQtIncludes.append("-I" + mQtDir + "/include/Qt"
-                           + capitalizeFirstLetter(module));
+        const QString dir("-I" + mQtDir + "/include/Qt");
+        if (module == Tags::quickcontrols2) {
+            mQtIncludes.append(dir + "QuickControls2");
+        } else if (module == Tags::quickwidgets) {
+            mQtIncludes.append(dir + "QuickWidgets");
+        } else {
+            mQtIncludes.append(dir + capitalizeFirstLetter(module));
+        }
     }
 
     mQtLibs.append("-Wl,-rpath," + mQtDir + "/lib");
@@ -227,7 +245,14 @@ void ProjectManager::updateQtModules(const QStringList &modules)
     for(const QString &module : qAsConst(mQtModules)) {
         // TODO: use correct mkspecs
         // TODO: use qmake -query to get good paths
-        mQtLibs.append("-lQt5" + capitalizeFirstLetter(module));
+        const QString lib("-lQt5");
+        if (module == Tags::quickcontrols2) {
+            mQtLibs.append(lib + "QuickControls2");
+        } else if (module == Tags::quickwidgets) {
+            mQtLibs.append(lib + "QuickWidgets");
+        } else {
+            mQtLibs.append(lib + capitalizeFirstLetter(module));
+        }
     }
 
     mQtLibs.append("-lpthread");

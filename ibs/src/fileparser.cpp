@@ -121,6 +121,10 @@ bool FileParser::parse() const
     if (source.isEmpty()) {
         if (header.suffix() == "h" or header.suffix() == "hpp") {
             source = header.baseName() + ".cpp";
+
+            //if (!QFileInfo(source).exists()) {
+            //    source = header.path() + "/" + header.baseName() + ".cpp";
+            //}
         }
     }
 

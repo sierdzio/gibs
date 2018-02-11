@@ -16,8 +16,8 @@ const QLatin1String targetApp("app");
 const QLatin1String targetLib("lib");
 const QLatin1String targetLibStatic("static");
 const QLatin1String targetLibDynamic("dynamic");
-const QLatin1String includes("includes ");
-const QLatin1String libs("libs ");
+const QLatin1String includes("includes");
+const QLatin1String libs("libs");
 const QLatin1String tool("tool");
 // Qt support
 //    modules

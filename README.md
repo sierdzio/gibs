@@ -84,7 +84,7 @@ loaded.
 
 To run Qt tools, use the `tools` command:
 
-    //i tool rcc myResource.qrc
+    //i tool rcc myResource.qrc myOtherResource.qrc
 
 You do not need to run MOC manually, ibs will run it automatically when needed.
 
