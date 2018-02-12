@@ -40,10 +40,22 @@ void ProjectManager::onParseRequest(const QString &file)
     if (mParsedFiles.contains(file))
         return;
 
-    // Prevent file from being parsed twice
-    mParsedFiles.append(file);
+    // Find file in include dirs
+    const QString selectedFile(findFile(file, mCustomIncludes));
 
-    FileParser parser(file);
+    if (selectedFile.isEmpty()) {
+        qWarning() << "Could not find file:" << file;
+        return;
+    }
+
+    // Skip again, because name could have changed
+    if (mParsedFiles.contains(selectedFile))
+        return;
+
+    // Prevent file from being parsed twice
+    mParsedFiles.append(selectedFile);
+
+    FileParser parser(selectedFile, mCustomIncludes);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
     connect(&parser, &FileParser::runMoc, this, &ProjectManager::onRunMoc);
@@ -163,7 +175,7 @@ bool ProjectManager::compile(const QString &file)
 
     qInfo() << "Compiling:" << file << "into:" << objectFile;
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
-    QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W" };
+    QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", "-DNOCRYPT" };
 
     arguments.append(mQtDefines);
     arguments.append(mQtIncludes);
@@ -291,4 +303,24 @@ bool ProjectManager::runProcess(const QString &app, const QStringList &arguments
 QString ProjectManager::capitalizeFirstLetter(const QString &string) const
 {
     return (string[0].toUpper() + string.mid(1));
+}
+
+QString ProjectManager::findFile(const QString &file, const QStringList &includeDirs) const
+{
+    QString result;
+    const QFileInfo fileInfo(file);
+    result = fileInfo.path() + "/" + fileInfo.fileName();
+
+    // Search through include paths
+    if (!QFileInfo(result).exists()) {
+        for (const QString &inc : qAsConst(includeDirs)) {
+            result = inc + "/" + fileInfo.fileName();
+            if (QFileInfo(result).exists()) {
+                qDebug() << "Found file in include paths!" << result;
+                break;
+            }
+        }
+    }
+
+    return result;
 }

@@ -98,3 +98,8 @@ and you don't need to specify their paths.
 
     //i tool myexecutable.exe --some -a -r -g -s
 
+# Recommendations
+
+It's best to put ibs commands early in .cpp or .h file, so that they can be
+parsed before the rest of includes. Otherwise it may happen that you define
+include folder after it was needed.

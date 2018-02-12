@@ -7,8 +7,9 @@
 // TODO: add categorized logging!
 #include <QDebug>
 
-FileParser::FileParser(const QString &file, QObject *parent) : QObject(parent),
-    mFile(file)
+FileParser::FileParser(const QString &file, const QStringList &includeDirs, QObject *parent) : QObject(parent),
+    mFile(file),
+    mIncludeDirs(includeDirs)
 {    
 }
 
@@ -113,25 +114,39 @@ bool FileParser::parse() const
     }
 
     const QFileInfo header(mFile);
-    if (source.isEmpty() and header.suffix() == "cpp") {
+    if (source.isEmpty() and (header.suffix() == "cpp" or header.suffix() == "c"
+                              or header.suffix() == "cc")) {
         source = mFile;
     }
 
     // Guess source file name (.cpp)
     if (source.isEmpty()) {
         if (header.suffix() == "h" or header.suffix() == "hpp") {
-            source = header.baseName() + ".cpp";
+            const QString base(header.path() + "/" + header.baseName());
+            QString ext(findFileExtension(base));
 
-            //if (!QFileInfo(source).exists()) {
-            //    source = header.path() + "/" + header.baseName() + ".cpp";
-            //}
+            // Search through include paths
+            if (ext.isEmpty()) {
+                for (const QString &inc : qAsConst(mIncludeDirs)) {
+                    const QString incBase(inc + "/" + header.baseName());
+                    ext = findFileExtension(incBase);
+                    if (!ext.isEmpty()) {
+                        qDebug() << "Found source file in include paths!" << source;
+                        source = incBase + ext;
+                        break;
+                    }
+                }
+            } else {
+                source = base + ext;
+            }
         }
     }
 
-    // TODO: check if source exists!
-
     // Important: this emit needs to be sent before parseRequest()
-    emit parsed(mFile, source);
+    if (QFileInfo(source).exists())
+        emit parsed(mFile, source);
+    else
+        emit parsed(mFile, QString());
 
     // Parse source file, only when we are not parsing it already
     if (!source.isEmpty() and source != mFile) {
@@ -144,4 +159,12 @@ bool FileParser::parse() const
 QString FileParser::extractArguments(const QString &line, const QLatin1String &tag) const
 {
     return line.mid(line.indexOf(tag) + tag.size() + 1);
+}
+
+QString FileParser::findFileExtension(const QString &filePath) const
+{
+    if (QFileInfo(filePath + ".cpp").exists()) return ".cpp";
+    if (QFileInfo(filePath + ".c").exists()) return ".c";
+    if (QFileInfo(filePath + ".cc").exists()) return ".cc";
+    return QString();
 }

@@ -39,6 +39,7 @@ private:
     bool initializeMoc();
     bool runProcess(const QString &app, const QStringList &arguments) const;
     QString capitalizeFirstLetter(const QString &string) const;
+    QString findFile(const QString &file, const QStringList &includeDirs) const;
 
     const QString mInputFile;
     QString mQtDir;

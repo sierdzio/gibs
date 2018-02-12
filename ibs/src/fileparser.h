@@ -6,7 +6,9 @@ class FileParser : public QObject
 {
     Q_OBJECT
 public:
-    explicit FileParser(const QString &file, QObject *parent = nullptr);
+    explicit FileParser(const QString &file,
+                        const QStringList &includeDirs = QStringList(),
+                        QObject *parent = nullptr);
 
 signals:
     void parsed(const QString &file, const QString &sourceFile) const;
@@ -26,6 +28,8 @@ public slots:
 
 protected:
     QString extractArguments(const QString &line, const QLatin1String &tag) const;
+    QString findFileExtension(const QString &filePath) const;
 
     const QString mFile;
+    QStringList mIncludeDirs;
 };
