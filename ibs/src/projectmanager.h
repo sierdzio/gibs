@@ -4,23 +4,26 @@
 
 #include "tags.h"
 
+class QJsonArray;
+
 class ProjectManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit ProjectManager(const QString &inputFile, QObject *parent = nullptr);
+    explicit ProjectManager(const QString &inputFile = QString(), QObject *parent = nullptr);
 
     void setQtDir(const QString &qtDir);
+    void loadCache();
 
 signals:
     void finished() const;
 
 public slots:
     void start();
+    void clean();
 
 protected slots:
     void saveCache() const;
-    void loadCache();
 
     void onParsed(const QString &file, const QString &source);
     void onParseRequest(const QString &file);
@@ -44,8 +47,9 @@ private:
     bool runProcess(const QString &app, const QStringList &arguments) const;
     QString capitalizeFirstLetter(const QString &string) const;
     QString findFile(const QString &file, const QStringList &includeDirs) const;
+    QStringList jsonArrayToStringList(const QJsonArray &array) const;
 
-    const QString mInputFile;
+    QString mInputFile;
     QString mQtDir;
     QStringList mQtModules;
     bool mQtIsMocInitialized = false;
@@ -64,4 +68,6 @@ private:
     QString mTargetLibType = Tags::targetLibDynamic;
     QStringList mParsedFiles;
     QStringList mObjectFiles;
+    QStringList mMocFiles;
+    QStringList mQrcFiles;
 };

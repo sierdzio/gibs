@@ -3,6 +3,10 @@
 
 #include <QProcess>
 #include <QFileInfo>
+#include <QFile>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonDocument>
 
 // TODO: add categorized logging!
 #include <QDebug>
@@ -20,9 +24,44 @@ void ProjectManager::setQtDir(const QString &qtDir)
 
 void ProjectManager::start()
 {
+    // TODO: add support for loading cache
+    // TODO: add support for incremental builds
     onParseRequest(mInputFile);
     // Parsing done, link it!
-    link();
+    link();    
+    saveCache();
+
+    emit finished();
+}
+
+void ProjectManager::clean()
+{
+    if (!mQtModules.isEmpty()) {
+        qInfo() << "Cleaning MOC and QRC files";
+        const QString moc("moc_predefs.h");
+        if (QFile::exists(moc)) {
+            QFile::remove(moc);
+        }
+
+        for (const auto &file : qAsConst(mMocFiles)) {
+            if (QFile::exists(file)) {
+                QFile::remove(file);
+            }
+        }
+
+        for (const auto &file : qAsConst(mQrcFiles)) {
+            if (QFile::exists(file)) {
+                QFile::remove(file);
+            }
+        }
+    }
+
+    qInfo() << "Cleaning object files";
+    for (const auto &file : qAsConst(mObjectFiles)) {
+        if (QFile::exists(file)) {
+            QFile::remove(file);
+        }
+    }
 
     emit finished();
 }
@@ -32,7 +71,43 @@ void ProjectManager::start()
  */
 void ProjectManager::saveCache() const
 {
+    QFile file(Tags::ibsCacheFileName);
 
+    if (file.exists())
+        file.remove();
+
+    if (!file.open(QFile::WriteOnly | QFile::Text)) {
+        qFatal("Could not open IBS cache file for writing!");
+    }
+
+    QJsonObject mainObject;
+
+    mainObject.insert(Tags::targetName, mTargetName);
+    mainObject.insert(Tags::targetType, mTargetType);
+    mainObject.insert(Tags::targetLib, mTargetLibType);
+    mainObject.insert(Tags::qtDir, mQtDir);
+    mainObject.insert(Tags::inputFile, mInputFile);
+    mainObject.insert(Tags::qtModules, QJsonArray::fromStringList(mQtModules));
+    mainObject.insert(Tags::defines, QJsonArray::fromStringList(mCustomDefines));
+    mainObject.insert(Tags::includes, QJsonArray::fromStringList(mCustomIncludes));
+    mainObject.insert(Tags::libs, QJsonArray::fromStringList(mCustomLibs));
+    mainObject.insert(Tags::parsedFiles, QJsonArray::fromStringList(mParsedFiles));
+    mainObject.insert(Tags::objectFiles, QJsonArray::fromStringList(mObjectFiles));
+    mainObject.insert(Tags::mocFiles, QJsonArray::fromStringList(mMocFiles));
+    mainObject.insert(Tags::qrcFiles, QJsonArray::fromStringList(mQrcFiles));
+
+    // TODO: save also all tools that need to be run!
+
+    const QJsonDocument document(mainObject);
+    // TODO: switch back to binary format after testing
+    //const auto data = document.toBinaryData();
+    const auto data = document.toJson();
+    const auto result = file.write(data);
+
+    if (data.size() != result) {
+        qWarning() << "Not all cache data has been saved." << data.size()
+                   << "vs" << result;
+    }
 }
 
 /*!
@@ -40,7 +115,34 @@ void ProjectManager::saveCache() const
  */
 void ProjectManager::loadCache()
 {
+    QFile file(Tags::ibsCacheFileName);
 
+    if (!file.exists()) {
+        qInfo("Cannot find IBS cache file");
+        return;
+    }
+
+    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+        qFatal("Could not open IBS cache file for reading!");
+    }
+
+    //const auto document = QJsonDocument::fromBinaryData(file.readAll());
+    const auto document = QJsonDocument::fromJson(file.readAll());
+    const QJsonObject mainObject(document.object());
+
+    onTargetName(mainObject.value(Tags::targetName).toString());
+    onTargetType(mainObject.value(Tags::targetType).toString());
+    mTargetLibType = mainObject.value(Tags::targetLib).toString();
+    mQtDir = mainObject.value(Tags::qtDir).toString();
+    mInputFile = mainObject.value(Tags::inputFile).toString();
+    onQtModules(jsonArrayToStringList(mainObject.value(Tags::qtModules).toArray()));
+    onDefines(jsonArrayToStringList(mainObject.value(Tags::defines).toArray()));
+    onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));
+    onLibs(jsonArrayToStringList(mainObject.value(Tags::libs).toArray()));
+    mParsedFiles = jsonArrayToStringList(mainObject.value(Tags::parsedFiles).toArray());
+    mObjectFiles = jsonArrayToStringList(mainObject.value(Tags::objectFiles).toArray());
+    mMocFiles = jsonArrayToStringList(mainObject.value(Tags::mocFiles).toArray());
+    mQrcFiles = jsonArrayToStringList(mainObject.value(Tags::qrcFiles).toArray());
 }
 
 void ProjectManager::onParsed(const QString &file, const QString &source)
@@ -113,6 +215,7 @@ bool ProjectManager::onRunMoc(const QString &file)
     arguments.append({ file, "-o", mocFile });
 
     if (runProcess(compiler, arguments) and compile(mocFile)) {
+        mMocFiles.append(mocFile);
         return true;
     }
 
@@ -188,6 +291,7 @@ void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
 
             runProcess(mQtDir + "/bin/" + tool, arguments);
             compile(cppFile);
+            mQrcFiles.append(cppFile);
         }
     } else if (tool == Tags::uic) {
         // TODO: add uic support
@@ -211,7 +315,7 @@ bool ProjectManager::compile(const QString &file)
 
     qInfo() << "Compiling:" << file << "into:" << objectFile;
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
-    QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", "-DNOCRYPT" };
+    QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
 
     arguments.append(mCustomDefineFlags);
     arguments.append(mQtDefines);
@@ -354,6 +458,17 @@ QString ProjectManager::findFile(const QString &file, const QStringList &include
                 break;
             }
         }
+    }
+
+    return result;
+}
+
+QStringList ProjectManager::jsonArrayToStringList(const QJsonArray &array) const
+{
+    QStringList result;
+
+    for (const auto &value : array) {
+        result.append(value.toString());
     }
 
     return result;

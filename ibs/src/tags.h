@@ -3,6 +3,9 @@
 #include <QLatin1String>
 
 namespace Tags {
+// General
+const QLatin1String ibsCacheFileName(".ibs.cache");
+const QLatin1String inputFile("inputFile");
 // IBS comment scope
 const QLatin1String scopeOneLine("//i ");
 const QLatin1String scopeBegin("/*i");
@@ -21,7 +24,8 @@ const QLatin1String includes("include");
 const QLatin1String libs("lib");
 const QLatin1String tool("tool");
 // Qt support
-//    modules
+const QLatin1String qtDir("qtDir");
+// Qt modules
 const QLatin1String qtModules("qt");
 const QLatin1String core("core");
 const QLatin1String gui("gui");
@@ -41,7 +45,12 @@ const QLatin1String multimedia("multimedia");
 const QLatin1String location("location");
 const QLatin1String gamepad("gamepad");
 const QLatin1String bluetooth("bluetooth");
-//    tools
+// Qt tools
 const QLatin1String rcc("rcc");
 const QLatin1String uic("uic");
+// Cache file tags
+const QLatin1String parsedFiles("parsedFiles");
+const QLatin1String objectFiles("objectFiles");
+const QLatin1String mocFiles("mocFiles");
+const QLatin1String qrcFiles("qrcFiles");
 }

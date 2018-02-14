@@ -72,14 +72,16 @@ int main(int argc, char *argv[]) {
     parser.addVersionOption();
 
     const char *scope = "main";
-    parser.addPositionalArgument("input", QCoreApplication::translate(scope, "Input file, usually main.cpp"));
+    parser.addPositionalArgument("input", QCoreApplication::translate(scope, "Input file, usually main.cpp"), "[input]");
 
     parser.addOptions({
         {{"r", "run"},
         QCoreApplication::translate(scope, "Run the executable immediately after building")},
         {"qt-dir",
         QCoreApplication::translate(scope, "Specify Qt directory for Qt apps"),
-        QCoreApplication::translate(scope, "Qt dir")}
+        QCoreApplication::translate(scope, "Qt dir")},
+        {"clean",
+        QCoreApplication::translate(scope, "Clear build directory")}
     });
 
     // Process the actual command line arguments given by the user
@@ -90,21 +92,35 @@ int main(int argc, char *argv[]) {
     qDebug() << "Arguments:" << args;
 
     const bool run = parser.isSet("run");
+    const bool clean = parser.isSet("clean");
     const QString qtDir(parser.value("qt-dir"));
-    const QString file = args.at(0);
+    QString file;
 
-    ProjectManager manager(file);
-    manager.setQtDir(qtDir);
-    QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
-    QTimer::singleShot(1, &manager, &ProjectManager::start);
+    if (!args.isEmpty())
+        file = args.at(0);
 
-    if (run) {
-        qInfo() << "Running compiled binary";
+    if (clean) {
+        ProjectManager manager(file);
+        manager.loadCache();
+        QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
+        QTimer::singleShot(1, &manager, &ProjectManager::clean);
+        int result = app.exec();
+        qInfo() << "Cleaning took:" << timer.elapsed() << "ms";
+        return result;
+    } else {
+        ProjectManager manager(file);
+        manager.setQtDir(qtDir);
+        QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
+        QTimer::singleShot(1, &manager, &ProjectManager::start);
+
+        if (run) {
+            qInfo() << "Running compiled binary";
+        }
+
+        int result = app.exec();
+        qInfo() << "Build took:" << timer.elapsed() << "ms";
+        return result;
     }
 
-    int result = app.exec();
-
-    qInfo() << "Build took:" << timer.elapsed() << "ms";
-
-    return result;
+    return 1;
 }
