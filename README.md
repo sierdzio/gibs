@@ -12,6 +12,20 @@ Instead of "the old way":
     qmake project.pro
     make
 
+# Usage
+
+A typical usage of ibs would be to call it on your main source file (of your
+app or libary):
+
+    ibs main.cpp
+
+To clean the project, run:
+
+    ibs --clean
+
+Specifying the source file is not necessary - it will be extracted from ibs
+cache file generated during compilation.
+
 # Commands
 
 ## Syntax
