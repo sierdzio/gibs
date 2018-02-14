@@ -185,10 +185,15 @@ bool ProjectManager::compile(const QString &file)
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
     QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", "-DNOCRYPT" };
 
-    arguments.append(mCustomDefines);
+    // TODO: pre-compute defines
+    for (const auto &define : qAsConst(mCustomDefines)) {
+        arguments.append("-D" + define);
+    }
+
     arguments.append(mQtDefines);
     arguments.append(mQtIncludes);
 
+    // TODO: pre-compute includes
     for(const QString &incl : qAsConst(mCustomIncludes)) {
         arguments.append("-I" + incl);
     }

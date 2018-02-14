@@ -60,13 +60,25 @@ are the default value, it can be skipped
     //i target type lib static
     //i target type lib dynamic
 
+### Defines
+
+To pass custom defines to the compiler, use the following command:
+
+    //i define MY_DEFINE
+
+### Include paths
+
+Include paths are specified using `include` command:
+
+    //i include some/path
+
 ### Libraries
 
 To include and link to an external library, you need to specify both the include
 and libs commands.
 
-    //i includes some/path/
-    //i libs -Lsome/path -llibrary1 -llibrary2
+    //i include some/path
+    //i lib -Lsome/path -llibrary1 -llibrary2
 
 ### Qt support
 
