@@ -19,6 +19,7 @@ signals:
     void targetName(const QString &target) const;
     void targetType(const QString &type) const;
     void qtModules(const QStringList &modules) const;
+    void defines(const QStringList &defines) const;
     void includes(const QStringList &includes) const;
     void libs(const QStringList &libs) const;
     void runTool(const QString &tool, const QStringList &args) const;

@@ -26,6 +26,7 @@ protected slots:
     void onTargetName(const QString &target);
     void onTargetType(const QString &type);
     void onQtModules(const QStringList &modules);
+    void onDefines(const QStringList &defines);
     void onIncludes(const QStringList &includes);
     void onLibs(const QStringList &libs);
     void onRunTool(const QString &tool, const QStringList &args);
@@ -49,6 +50,7 @@ private:
     QStringList mQtLibs;
     QStringList mQtDefines;
 
+    QStringList mCustomDefines;
     QStringList mCustomIncludes;
     QStringList mCustomLibs;
 

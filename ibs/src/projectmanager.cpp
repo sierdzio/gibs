@@ -62,6 +62,7 @@ void ProjectManager::onParseRequest(const QString &file)
     connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
     connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
     connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
+    connect(&parser, &FileParser::defines, this, &ProjectManager::onDefines);
     connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
     connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
     connect(&parser, &FileParser::runTool, this, &ProjectManager::onRunTool);
@@ -126,6 +127,13 @@ void ProjectManager::onQtModules(const QStringList &modules)
     }
 }
 
+void ProjectManager::onDefines(const QStringList &defines)
+{
+    mCustomDefines += defines;
+    mCustomDefines.removeDuplicates();
+    qInfo() << "Updating custom defines:" << mCustomDefines;
+}
+
 void ProjectManager::onIncludes(const QStringList &includes)
 {
     mCustomIncludes += includes;
@@ -177,6 +185,7 @@ bool ProjectManager::compile(const QString &file)
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
     QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", "-DNOCRYPT" };
 
+    arguments.append(mCustomDefines);
     arguments.append(mQtDefines);
     arguments.append(mQtIncludes);
 

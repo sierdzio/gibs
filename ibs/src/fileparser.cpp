@@ -91,6 +91,12 @@ bool FileParser::parse() const
                 emit qtModules(args);
             }
 
+            if (line.contains(Tags::defines)) {
+                const QStringList args(extractArguments(line, Tags::defines).split(" "));
+                qDebug() << "Adding defines:" << args;
+                emit defines(args);
+            }
+
             if (line.contains(Tags::includes)) {
                 const QStringList args(extractArguments(line, Tags::includes).split(" "));
                 qDebug() << "Adding includes:" << args;
