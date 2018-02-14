@@ -27,6 +27,22 @@ void ProjectManager::start()
     emit finished();
 }
 
+/*!
+ * Save necessary build info into IBS cache file
+ */
+void ProjectManager::saveCache() const
+{
+
+}
+
+/*!
+ * Load necessary build info from IBS cache file
+ */
+void ProjectManager::loadCache()
+{
+
+}
+
 void ProjectManager::onParsed(const QString &file, const QString &source)
 {
     if (!source.isEmpty() and source == file) {
@@ -131,6 +147,12 @@ void ProjectManager::onDefines(const QStringList &defines)
 {
     mCustomDefines += defines;
     mCustomDefines.removeDuplicates();
+    for (const auto &define : qAsConst(mCustomDefines)) {
+        const QString def("-D" + define);
+        if (!mCustomDefineFlags.contains(def)) {
+            mCustomDefineFlags.append(def);
+        }
+    }
     qInfo() << "Updating custom defines:" << mCustomDefines;
 }
 
@@ -138,6 +160,12 @@ void ProjectManager::onIncludes(const QStringList &includes)
 {
     mCustomIncludes += includes;
     mCustomIncludes.removeDuplicates();
+    for(const auto &incl : qAsConst(mCustomIncludes)) {
+        const QString &inc("-I" + incl);
+        if (!mCustomIncludeFlags.contains(inc)) {
+            mCustomIncludeFlags.append(inc);
+        }
+    }
     qInfo() << "Updating custom includes:" << mCustomIncludes;
 }
 
@@ -185,18 +213,10 @@ bool ProjectManager::compile(const QString &file)
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
     QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", "-DNOCRYPT" };
 
-    // TODO: pre-compute defines
-    for (const auto &define : qAsConst(mCustomDefines)) {
-        arguments.append("-D" + define);
-    }
-
+    arguments.append(mCustomDefineFlags);
     arguments.append(mQtDefines);
     arguments.append(mQtIncludes);
-
-    // TODO: pre-compute includes
-    for(const QString &incl : qAsConst(mCustomIncludes)) {
-        arguments.append("-I" + incl);
-    }
+    arguments.append(mCustomIncludeFlags);
 
     arguments.append({ "-o", objectFile, file });
 

@@ -19,6 +19,9 @@ public slots:
     void start();
 
 protected slots:
+    void saveCache() const;
+    void loadCache();
+
     void onParsed(const QString &file, const QString &source);
     void onParseRequest(const QString &file);
     bool onRunMoc(const QString &file);
@@ -51,7 +54,9 @@ private:
     QStringList mQtDefines;
 
     QStringList mCustomDefines;
+    QStringList mCustomDefineFlags;
     QStringList mCustomIncludes;
+    QStringList mCustomIncludeFlags;
     QStringList mCustomLibs;
 
     QString mTargetName = "default";
