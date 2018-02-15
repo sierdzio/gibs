@@ -109,7 +109,9 @@ int main(int argc, char *argv[]) {
         return result;
     } else {
         ProjectManager manager(file);
-        manager.setQtDir(qtDir);
+        manager.loadCache();
+        if (qtDir != manager.qtDir())
+            manager.setQtDir(qtDir);
         QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
         QTimer::singleShot(1, &manager, &ProjectManager::start);
 

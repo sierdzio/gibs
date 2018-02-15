@@ -1,18 +1,33 @@
 #pragma once
 
 #include <QObject>
+#include <QHash>
+#include <QDateTime>
 
 #include "tags.h"
 
 class QJsonArray;
 
+struct FileInfo {
+    QString path;
+    QDateTime dateModified;
+    QDateTime dateCreated;
+    QByteArray checksum;
+
+    QJsonArray toJsonArray() const;
+    void fromJsonArray(const QJsonArray &array);
+};
+
 class ProjectManager : public QObject
 {
     Q_OBJECT
+
 public:
     explicit ProjectManager(const QString &inputFile = QString(), QObject *parent = nullptr);
 
     void setQtDir(const QString &qtDir);
+    QString qtDir() const;
+
     void loadCache();
 
 signals:
@@ -24,8 +39,12 @@ public slots:
 
 protected slots:
     void saveCache() const;
+    void checkCache();
 
-    void onParsed(const QString &file, const QString &source);
+    void onParsed(const QString &file, const QString &source,
+                  const QByteArray &checksum,
+                  const QDateTime &modified,
+                  const QDateTime &created);
     void onParseRequest(const QString &file);
     bool onRunMoc(const QString &file);
     // ibs commands
@@ -66,7 +85,7 @@ private:
     QString mTargetName = "default";
     QString mTargetType = Tags::targetApp;
     QString mTargetLibType = Tags::targetLibDynamic;
-    QStringList mParsedFiles;
+    QHash<QString, FileInfo> mParsedFiles;
     QStringList mObjectFiles;
     QStringList mMocFiles;
     QStringList mQrcFiles;

@@ -11,7 +11,10 @@ public:
                         QObject *parent = nullptr);
 
 signals:
-    void parsed(const QString &file, const QString &sourceFile) const;
+    void parsed(const QString &file, const QString &sourceFile,
+                const QByteArray &checksum,
+                const QDateTime &modified,
+                const QDateTime &created) const;
     void parseRequest(const QString &file) const;
     void runMoc(const QString &file) const;
 

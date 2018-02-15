@@ -18,13 +18,25 @@ ProjectManager::ProjectManager(const QString &inputFile, QObject *parent)
 
 void ProjectManager::setQtDir(const QString &qtDir)
 {
+    if (qtDir == mQtDir) {
+        return;
+    }
+
     qInfo() << "Setting Qt directory to:" << qtDir;
     mQtDir = qtDir;
+
+    // TODO: upgrade mQtLibs and mQtIncludes
+}
+
+QString ProjectManager::qtDir() const
+{
+    return mQtDir;
 }
 
 void ProjectManager::start()
 {
     // TODO: add support for loading cache
+    checkCache();
     // TODO: add support for incremental builds
     onParseRequest(mInputFile);
     // Parsing done, link it!
@@ -91,10 +103,15 @@ void ProjectManager::saveCache() const
     mainObject.insert(Tags::defines, QJsonArray::fromStringList(mCustomDefines));
     mainObject.insert(Tags::includes, QJsonArray::fromStringList(mCustomIncludes));
     mainObject.insert(Tags::libs, QJsonArray::fromStringList(mCustomLibs));
-    mainObject.insert(Tags::parsedFiles, QJsonArray::fromStringList(mParsedFiles));
     mainObject.insert(Tags::objectFiles, QJsonArray::fromStringList(mObjectFiles));
     mainObject.insert(Tags::mocFiles, QJsonArray::fromStringList(mMocFiles));
     mainObject.insert(Tags::qrcFiles, QJsonArray::fromStringList(mQrcFiles));
+
+    QJsonArray filesArray;
+    for (const auto &file : mParsedFiles.keys()) {
+        filesArray.append(mParsedFiles.value(file).toJsonArray());
+    }
+    mainObject.insert(Tags::parsedFiles, filesArray);
 
     // TODO: save also all tools that need to be run!
 
@@ -108,6 +125,14 @@ void ProjectManager::saveCache() const
         qWarning() << "Not all cache data has been saved." << data.size()
                    << "vs" << result;
     }
+}
+
+/*!
+ * Checks if any of cached mParsedFiles has changed. If yes, it will be recompiled.
+ */
+void ProjectManager::checkCache()
+{
+    // TODO: implement
 }
 
 /*!
@@ -139,14 +164,32 @@ void ProjectManager::loadCache()
     onDefines(jsonArrayToStringList(mainObject.value(Tags::defines).toArray()));
     onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));
     onLibs(jsonArrayToStringList(mainObject.value(Tags::libs).toArray()));
-    mParsedFiles = jsonArrayToStringList(mainObject.value(Tags::parsedFiles).toArray());
     mObjectFiles = jsonArrayToStringList(mainObject.value(Tags::objectFiles).toArray());
     mMocFiles = jsonArrayToStringList(mainObject.value(Tags::mocFiles).toArray());
     mQrcFiles = jsonArrayToStringList(mainObject.value(Tags::qrcFiles).toArray());
+
+    const QJsonArray filesArray = mainObject.value(Tags::parsedFiles).toArray();
+    for (const auto &file : filesArray) {
+        FileInfo fileInfo;
+        fileInfo.fromJsonArray(file.toArray());
+        mParsedFiles.insert(fileInfo.path, fileInfo);
+    }
 }
 
-void ProjectManager::onParsed(const QString &file, const QString &source)
+void ProjectManager::onParsed(const QString &file, const QString &source,
+                              const QByteArray &checksum,
+                              const QDateTime &modified,
+                              const QDateTime &created)
 {
+    // Update parsed file info
+    FileInfo fileInfo;
+    fileInfo.path = file;
+    fileInfo.checksum = checksum;
+    fileInfo.dateModified = modified;
+    fileInfo.dateCreated = created;
+    mParsedFiles.insert(file, fileInfo);
+
+    // Compile source file, if present
     if (!source.isEmpty() and source == file) {
         compile(source);
     }
@@ -171,7 +214,7 @@ void ProjectManager::onParseRequest(const QString &file)
         return;
 
     // Prevent file from being parsed twice
-    mParsedFiles.append(selectedFile);
+    mParsedFiles.insert(selectedFile, FileInfo());
 
     FileParser parser(selectedFile, mCustomIncludes);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
@@ -472,4 +515,24 @@ QStringList ProjectManager::jsonArrayToStringList(const QJsonArray &array) const
     }
 
     return result;
+}
+
+QJsonArray FileInfo::toJsonArray() const
+{
+    QJsonArray result;
+    int i = 0;
+    result.insert(i++, path);
+    result.insert(i++, QString(checksum.toHex()));
+    result.insert(i++, dateModified.toString(Qt::ISODate));
+    result.insert(i, dateCreated.toString(Qt::ISODate));
+    return result;
+}
+
+void FileInfo::fromJsonArray(const QJsonArray &array)
+{
+    int i = 0;
+    path = array.at(i++).toString();
+    checksum = QByteArray::fromHex(array.at(i++).toString().toLatin1());
+    dateModified = QDateTime::fromString(array.at(i++).toString(), Qt::ISODate);
+    dateCreated = QDateTime::fromString(array.at(i).toString(), Qt::ISODate);
 }

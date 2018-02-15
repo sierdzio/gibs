@@ -1,8 +1,10 @@
 #include "fileparser.h"
 #include "tags.h"
 
+#include <QDateTime>
 #include <QFile>
 #include <QFileInfo>
+#include <QCryptographicHash>
 
 // TODO: add categorized logging!
 #include <QDebug>
@@ -30,11 +32,16 @@ bool FileParser::parse() const
 
     bool isCommentScope = false;
     QString source;
+    QCryptographicHash checksum(QCryptographicHash::Sha1);
 
     QTextStream in(&file);
     while (!in.atEnd()) {
         // We remove any leading and trailing whitespace for simplicity
-        const QString line(in.readLine().trimmed());
+        const QString rawLine(in.readLine());
+        const QString line(rawLine.trimmed());
+
+        checksum.addData(rawLine.toUtf8());
+
         // TODO: add comment and scope detection
         // TODO: add ifdef detection
         if (line.startsWith("#include")) {
@@ -150,9 +157,9 @@ bool FileParser::parse() const
 
     // Important: this emit needs to be sent before parseRequest()
     if (QFileInfo(source).exists())
-        emit parsed(mFile, source);
+        emit parsed(mFile, source, checksum.result(), header.lastModified(), header.created());
     else
-        emit parsed(mFile, QString());
+        emit parsed(mFile, QString(), checksum.result(), header.lastModified(), header.created());
 
     // Parse source file, only when we are not parsing it already
     if (!source.isEmpty() and source != mFile) {
