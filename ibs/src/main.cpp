@@ -81,7 +81,9 @@ int main(int argc, char *argv[]) {
         QCoreApplication::translate(scope, "Specify Qt directory for Qt apps"),
         QCoreApplication::translate(scope, "Qt dir")},
         {"clean",
-        QCoreApplication::translate(scope, "Clear build directory")}
+        QCoreApplication::translate(scope, "Clear build directory")},
+        {{"q", "quick"},
+        QCoreApplication::translate(scope, "'Convention over configuration' mode - parse files only up to first line of 'concrete code'. Do not check file checksums when doing incremental builds.")},
     });
 
     // Process the actual command line arguments given by the user
@@ -93,6 +95,7 @@ int main(int argc, char *argv[]) {
 
     const bool run = parser.isSet("run");
     const bool clean = parser.isSet("clean");
+    const bool quick = parser.isSet("quick");
     const QString qtDir(parser.value("qt-dir"));
     QString file;
 
@@ -100,7 +103,7 @@ int main(int argc, char *argv[]) {
         file = args.at(0);
 
     if (clean) {
-        ProjectManager manager(file);
+        ProjectManager manager(file, quick);
         manager.loadCache();
         QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
         QTimer::singleShot(1, &manager, &ProjectManager::clean);
@@ -108,7 +111,7 @@ int main(int argc, char *argv[]) {
         qInfo() << "Cleaning took:" << timer.elapsed() << "ms";
         return result;
     } else {
-        ProjectManager manager(file);
+        ProjectManager manager(file, quick);
         manager.loadCache();
         if (qtDir != manager.qtDir())
             manager.setQtDir(qtDir);

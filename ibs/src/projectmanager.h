@@ -23,7 +23,9 @@ class ProjectManager : public QObject
     Q_OBJECT
 
 public:
-    explicit ProjectManager(const QString &inputFile = QString(), QObject *parent = nullptr);
+    explicit ProjectManager(const QString &inputFile = QString(),
+                            const bool isQuickMode = false,
+                            QObject *parent = nullptr);
 
     void setQtDir(const QString &qtDir);
     QString qtDir() const;
@@ -39,7 +41,7 @@ public slots:
 
 protected slots:
     void saveCache() const;
-    void checkCache();
+    bool isFileDirty(const QString &file, const bool isQuickMode);
 
     void onParsed(const QString &file, const QString &source,
                   const QByteArray &checksum,
@@ -59,6 +61,7 @@ protected slots:
 protected:
     bool compile(const QString &file);
     bool link() const;
+    void parseFile(const QString &file);
 
 private:
     void updateQtModules(const QStringList &modules);
@@ -67,6 +70,9 @@ private:
     QString capitalizeFirstLetter(const QString &string) const;
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;
+
+    const bool mQuickMode = false;
+    bool mCacheEnabled = false;
 
     QString mInputFile;
     QString mQtDir;

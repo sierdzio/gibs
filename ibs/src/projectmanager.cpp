@@ -7,12 +7,15 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QCryptographicHash>
 
 // TODO: add categorized logging!
 #include <QDebug>
 
-ProjectManager::ProjectManager(const QString &inputFile, QObject *parent)
-    : QObject(parent), mInputFile(inputFile)
+ProjectManager::ProjectManager(const QString &inputFile,
+                               const bool isQuickMode,
+                               QObject *parent)
+    : QObject(parent), mQuickMode(isQuickMode), mInputFile(inputFile)
 {
 }
 
@@ -35,8 +38,17 @@ QString ProjectManager::qtDir() const
 
 void ProjectManager::start()
 {
-    // TODO: add support for loading cache
-    checkCache();
+    // First, check if any files need to be recompiled
+    if (mCacheEnabled) {
+        for (const auto &cached : mParsedFiles.values()) {
+            if (isFileDirty(cached.path, mQuickMode)) {
+                // TODO: recompile
+                // TODO: check if this file is referenced by any others. Recompile
+                //       them, too
+            }
+        }
+    }
+
     // TODO: add support for incremental builds
     onParseRequest(mInputFile);
     // Parsing done, link it!
@@ -128,11 +140,45 @@ void ProjectManager::saveCache() const
 }
 
 /*!
- * Checks if any of cached mParsedFiles has changed. If yes, it will be recompiled.
+ * Checks if \a file has changed since last compilation. Returns true if it has,
+ * or if it is not in cache.
+ *
+ * If returns true, \a file will be recompiled.
  */
-void ProjectManager::checkCache()
+bool ProjectManager::isFileDirty(const QString &file, const bool isQuickMode)
 {
-    // TODO: implement
+    const QFileInfo realFile(file);
+
+    if (!realFile.exists()) {
+        qInfo() << "File has vanished!" << file;
+    }
+
+    const FileInfo cachedFile(mParsedFiles.value(file));
+
+    if (realFile.created() != cachedFile.dateCreated) {
+        qDebug() << "Different creation date. Recompiling."
+                 << file << realFile.created() << cachedFile.dateCreated;
+        return true;
+    }
+
+    if (realFile.lastModified() != cachedFile.dateModified) {
+        qDebug() << "Different modification date. Recompiling."
+                 << file << realFile.lastModified() << cachedFile.dateModified;
+        return true;
+    }
+
+    if (!isQuickMode) {
+        QFile fileData(file);
+        fileData.open(QFile::ReadOnly | QFile::Text);
+        const auto checksum = QCryptographicHash::hash(fileData.readAll(), QCryptographicHash::Sha1);
+        if (checksum != cachedFile.checksum) {
+            qDebug() << "Different checksum. Recompiling."
+                     << file << checksum << cachedFile.checksum;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /*!
@@ -174,6 +220,8 @@ void ProjectManager::loadCache()
         fileInfo.fromJsonArray(file.toArray());
         mParsedFiles.insert(fileInfo.path, fileInfo);
     }
+
+    mCacheEnabled = true;
 }
 
 void ProjectManager::onParsed(const QString &file, const QString &source,
@@ -216,22 +264,7 @@ void ProjectManager::onParseRequest(const QString &file)
     // Prevent file from being parsed twice
     mParsedFiles.insert(selectedFile, FileInfo());
 
-    FileParser parser(selectedFile, mCustomIncludes);
-    connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
-    connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
-    connect(&parser, &FileParser::runMoc, this, &ProjectManager::onRunMoc);
-    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
-    connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
-    connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
-    connect(&parser, &FileParser::defines, this, &ProjectManager::onDefines);
-    connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
-    connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
-    connect(&parser, &FileParser::runTool, this, &ProjectManager::onRunTool);
-
-    const bool result = parser.parse();
-
-    // TODO: stop if result is false
-    Q_UNUSED(result);
+    parseFile(selectedFile);
 }
 
 bool ProjectManager::onRunMoc(const QString &file)
@@ -404,6 +437,26 @@ bool ProjectManager::link() const
     arguments.append(mCustomLibs);
 
     return runProcess(compiler, arguments);
+}
+
+void ProjectManager::parseFile(const QString &file)
+{
+    FileParser parser(file, mCustomIncludes);
+    connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
+    connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
+    connect(&parser, &FileParser::runMoc, this, &ProjectManager::onRunMoc);
+    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
+    connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
+    connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
+    connect(&parser, &FileParser::defines, this, &ProjectManager::onDefines);
+    connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
+    connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
+    connect(&parser, &FileParser::runTool, this, &ProjectManager::onRunTool);
+
+    const bool result = parser.parse();
+
+    // TODO: stop if result is false
+    Q_UNUSED(result);
 }
 
 void ProjectManager::updateQtModules(const QStringList &modules)
