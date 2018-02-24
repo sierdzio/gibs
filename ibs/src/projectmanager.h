@@ -14,6 +14,7 @@ struct FileInfo {
     QDateTime dateCreated;
     QByteArray checksum;
 
+    bool isEmpty() const;
     QJsonArray toJsonArray() const;
     void fromJsonArray(const QJsonArray &array);
 };

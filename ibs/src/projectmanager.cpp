@@ -42,15 +42,12 @@ void ProjectManager::start()
     if (mCacheEnabled) {
         for (const auto &cached : mParsedFiles.values()) {
             if (isFileDirty(cached.path, mQuickMode)) {
-                // TODO: recompile
-                // TODO: check if this file is referenced by any others. Recompile
-                //       them, too
+                parseFile(cached.path);
             }
         }
+    } else {
+        onParseRequest(mInputFile);
     }
-
-    // TODO: add support for incremental builds
-    onParseRequest(mInputFile);
     // Parsing done, link it!
     link();    
     saveCache();
@@ -121,7 +118,9 @@ void ProjectManager::saveCache() const
 
     QJsonArray filesArray;
     for (const auto &file : mParsedFiles.keys()) {
-        filesArray.append(mParsedFiles.value(file).toJsonArray());
+        const FileInfo &fi = mParsedFiles.value(file);
+        if (!fi.isEmpty())
+            filesArray.append(fi.toJsonArray());
     }
     mainObject.insert(Tags::parsedFiles, filesArray);
 
@@ -568,6 +567,11 @@ QStringList ProjectManager::jsonArrayToStringList(const QJsonArray &array) const
     }
 
     return result;
+}
+
+bool FileInfo::isEmpty() const
+{
+    return (path.isEmpty() and checksum.isEmpty());
 }
 
 QJsonArray FileInfo::toJsonArray() const
