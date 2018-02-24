@@ -15,7 +15,7 @@ signals:
                 const QByteArray &checksum,
                 const QDateTime &modified,
                 const QDateTime &created) const;
-    void parseRequest(const QString &file) const;
+    void parseRequest(const QString &file, const bool force) const;
     void runMoc(const QString &file) const;
 
     // IBS syntax detection:

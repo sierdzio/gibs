@@ -34,13 +34,13 @@ bool FileParser::parse() const
     QString source;
     QCryptographicHash checksum(QCryptographicHash::Sha1);
 
-    QTextStream in(&file);
-    while (!in.atEnd()) {
+    //QTextStream in(&file);
+    while (!file.atEnd()) {
         // We remove any leading and trailing whitespace for simplicity
-        const QString rawLine(in.readLine());
+        const QByteArray rawLine(file.readLine());
         const QString line(rawLine.trimmed());
 
-        checksum.addData(rawLine.toUtf8());
+        checksum.addData(rawLine);
 
         // TODO: add comment and scope detection
         // TODO: add ifdef detection
@@ -52,7 +52,7 @@ bool FileParser::parse() const
                 QString include(line.mid(line.indexOf('"') + 1));
                 include.chop(1);
 
-                emit parseRequest(include);
+                emit parseRequest(include, false);
             }
         }
 
@@ -163,7 +163,7 @@ bool FileParser::parse() const
 
     // Parse source file, only when we are not parsing it already
     if (!source.isEmpty() and source != mFile) {
-        emit parseRequest(source);
+        emit parseRequest(source, true);
     }
 
     return true;

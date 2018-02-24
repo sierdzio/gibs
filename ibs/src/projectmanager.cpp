@@ -41,6 +41,8 @@ void ProjectManager::start()
     // First, check if any files need to be recompiled
     if (mCacheEnabled) {
         for (const auto &cached : mParsedFiles.values()) {
+            // TODO: check if object file exists! If somebody removed it,
+            //       or used --clean, then we have to recompile!
             if (isFileDirty(cached.path, mQuickMode)) {
                 parseFile(cached.path);
             }
@@ -144,7 +146,7 @@ void ProjectManager::saveCache() const
  *
  * If returns true, \a file will be recompiled.
  */
-bool ProjectManager::isFileDirty(const QString &file, const bool isQuickMode)
+bool ProjectManager::isFileDirty(const QString &file, const bool isQuickMode) const
 {
     const QFileInfo realFile(file);
 
@@ -196,6 +198,8 @@ void ProjectManager::loadCache()
         qFatal("Could not open IBS cache file for reading!");
     }
 
+    qInfo() << "Loading ibs cache file" << Tags::ibsCacheFileName;
+
     //const auto document = QJsonDocument::fromBinaryData(file.readAll());
     const auto document = QJsonDocument::fromJson(file.readAll());
     const QJsonObject mainObject(document.object());
@@ -242,10 +246,10 @@ void ProjectManager::onParsed(const QString &file, const QString &source,
     }
 }
 
-void ProjectManager::onParseRequest(const QString &file)
+void ProjectManager::onParseRequest(const QString &file, const bool force)
 {
     // Skip files which we have parsed already
-    if (mParsedFiles.contains(file))
+    if (!force and mParsedFiles.contains(file))
         return;
 
     // Find file in include dirs
@@ -257,12 +261,11 @@ void ProjectManager::onParseRequest(const QString &file)
     }
 
     // Skip again, because name could have changed
-    if (mParsedFiles.contains(selectedFile))
+    if (!force and mParsedFiles.contains(selectedFile))
         return;
 
     // Prevent file from being parsed twice
     mParsedFiles.insert(selectedFile, FileInfo());
-
     parseFile(selectedFile);
 }
 
@@ -290,7 +293,8 @@ bool ProjectManager::onRunMoc(const QString &file)
     arguments.append({ file, "-o", mocFile });
 
     if (runProcess(compiler, arguments) and compile(mocFile)) {
-        mMocFiles.append(mocFile);
+        if (!mMocFiles.contains(mocFile))
+            mMocFiles.append(mocFile);
         return true;
     }
 
@@ -400,7 +404,8 @@ bool ProjectManager::compile(const QString &file)
     arguments.append({ "-o", objectFile, file });
 
     if (runProcess(compiler, arguments)) {
-        mObjectFiles.append(objectFile);
+        if (!mObjectFiles.contains(objectFile))
+            mObjectFiles.append(objectFile);
         return true;
     }
 
@@ -580,8 +585,8 @@ QJsonArray FileInfo::toJsonArray() const
     int i = 0;
     result.insert(i++, path);
     result.insert(i++, QString(checksum.toHex()));
-    result.insert(i++, dateModified.toString(Qt::ISODate));
-    result.insert(i, dateCreated.toString(Qt::ISODate));
+    result.insert(i++, dateModified.toString(Qt::ISODateWithMs));
+    result.insert(i, dateCreated.toString(Qt::ISODateWithMs));
     return result;
 }
 
@@ -590,6 +595,6 @@ void FileInfo::fromJsonArray(const QJsonArray &array)
     int i = 0;
     path = array.at(i++).toString();
     checksum = QByteArray::fromHex(array.at(i++).toString().toLatin1());
-    dateModified = QDateTime::fromString(array.at(i++).toString(), Qt::ISODate);
-    dateCreated = QDateTime::fromString(array.at(i).toString(), Qt::ISODate);
+    dateModified = QDateTime::fromString(array.at(i++).toString(), Qt::ISODateWithMs);
+    dateCreated = QDateTime::fromString(array.at(i).toString(), Qt::ISODateWithMs);
 }

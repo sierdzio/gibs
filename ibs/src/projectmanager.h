@@ -42,13 +42,13 @@ public slots:
 
 protected slots:
     void saveCache() const;
-    bool isFileDirty(const QString &file, const bool isQuickMode);
+    bool isFileDirty(const QString &file, const bool isQuickMode) const;
 
     void onParsed(const QString &file, const QString &source,
                   const QByteArray &checksum,
                   const QDateTime &modified,
                   const QDateTime &created);
-    void onParseRequest(const QString &file);
+    void onParseRequest(const QString &file, const bool force = false);
     bool onRunMoc(const QString &file);
     // ibs commands
     void onTargetName(const QString &target);
