@@ -36,6 +36,8 @@ SOFTWARE.
 #include <QDebug>
 
 #include "globals.h"
+#include "tags.h"
+#include "flags.h"
 #include "projectmanager.h"
 
 // Prepare logging categories. Modify these to your needs
@@ -72,17 +74,17 @@ int main(int argc, char *argv[]) {
     parser.addVersionOption();
 
     const char *scope = "main";
-    parser.addPositionalArgument("input", QCoreApplication::translate(scope, "Input file, usually main.cpp"), "[input]");
+    parser.addPositionalArgument(Tags::inputFile, QCoreApplication::translate(scope, "Input file, usually main.cpp"), "[input]");
 
     parser.addOptions({
-        {{"r", "run"},
+        {{"r", Tags::run},
         QCoreApplication::translate(scope, "Run the executable immediately after building")},
-        {"qt-dir",
+        {Tags::qt_dir_flag,
         QCoreApplication::translate(scope, "Specify Qt directory for Qt apps"),
         QCoreApplication::translate(scope, "Qt dir")},
-        {"clean",
+        {Tags::clean,
         QCoreApplication::translate(scope, "Clear build directory")},
-        {{"q", "quick"},
+        {{"q", Tags::quick_flag},
         QCoreApplication::translate(scope, "'Convention over configuration' mode - parse files only up to first line of 'concrete code'. Do not check file checksums when doing incremental builds.")},
     });
 
@@ -90,20 +92,19 @@ int main(int argc, char *argv[]) {
     parser.process(app);
 
     const QStringList args = parser.positionalArguments();
+    if (args.isEmpty())
+        qFatal("Input file is not set. Cannot continue. Please set the input file to your main c++ file");
 
     qDebug() << "Arguments:" << args;
 
-    const bool run = parser.isSet("run");
-    const bool clean = parser.isSet("clean");
-    const bool quick = parser.isSet("quick");
-    const QString qtDir(parser.value("qt-dir"));
-    QString file;
+    const Flags flags(parser.isSet(Tags::run),
+                      parser.isSet(Tags::clean),
+                      parser.isSet(Tags::quick_flag),
+                      parser.value(Tags::qt_dir_flag),
+                      args.at(0));
 
-    if (!args.isEmpty())
-        file = args.at(0);
-
-    if (clean) {
-        ProjectManager manager(file, quick);
+    if (flags.clean) {
+        ProjectManager manager(flags);
         manager.loadCache();
         QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
         QTimer::singleShot(1, &manager, &ProjectManager::clean);
@@ -111,14 +112,14 @@ int main(int argc, char *argv[]) {
         qInfo() << "Cleaning took:" << timer.elapsed() << "ms";
         return result;
     } else {
-        ProjectManager manager(file, quick);
+        ProjectManager manager(flags);
         manager.loadCache();
-        if (qtDir != manager.qtDir())
-            manager.setQtDir(qtDir);
+        if (flags.qtDir != manager.qtDir())
+            manager.setQtDir(flags.qtDir);
         QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
         QTimer::singleShot(1, &manager, &ProjectManager::start);
 
-        if (run) {
+        if (flags.run) {
             qInfo() << "Running compiled binary";
         }
 

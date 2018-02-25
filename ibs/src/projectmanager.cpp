@@ -12,11 +12,10 @@
 // TODO: add categorized logging!
 #include <QDebug>
 
-ProjectManager::ProjectManager(const QString &inputFile,
-                               const bool isQuickMode,
-                               QObject *parent)
-    : QObject(parent), mQuickMode(isQuickMode), mInputFile(inputFile)
+ProjectManager::ProjectManager(const Flags &flags, QObject *parent)
+    : QObject(parent), mFlags(flags)
 {
+    mQtDir = mFlags.qtDir;
 }
 
 void ProjectManager::setQtDir(const QString &qtDir)
@@ -43,12 +42,12 @@ void ProjectManager::start()
         for (const auto &cached : mParsedFiles.values()) {
             // TODO: check if object file exists! If somebody removed it,
             //       or used --clean, then we have to recompile!
-            if (isFileDirty(cached.path, mQuickMode)) {
+            if (isFileDirty(cached.path, mFlags.quickMode)) {
                 parseFile(cached.path);
             }
         }
     } else {
-        onParseRequest(mInputFile);
+        onParseRequest(mFlags.inputFile);
     }
     // Parsing done, link it!
     link();    
@@ -109,7 +108,7 @@ void ProjectManager::saveCache() const
     mainObject.insert(Tags::targetType, mTargetType);
     mainObject.insert(Tags::targetLib, mTargetLibType);
     mainObject.insert(Tags::qtDir, mQtDir);
-    mainObject.insert(Tags::inputFile, mInputFile);
+    mainObject.insert(Tags::inputFile, mFlags.inputFile);
     mainObject.insert(Tags::qtModules, QJsonArray::fromStringList(mQtModules));
     mainObject.insert(Tags::defines, QJsonArray::fromStringList(mCustomDefines));
     mainObject.insert(Tags::includes, QJsonArray::fromStringList(mCustomIncludes));
@@ -208,7 +207,7 @@ void ProjectManager::loadCache()
     onTargetType(mainObject.value(Tags::targetType).toString());
     mTargetLibType = mainObject.value(Tags::targetLib).toString();
     mQtDir = mainObject.value(Tags::qtDir).toString();
-    mInputFile = mainObject.value(Tags::inputFile).toString();
+    //mFlags.inputFile = mainObject.value(Tags::inputFile).toString();
     onQtModules(jsonArrayToStringList(mainObject.value(Tags::qtModules).toArray()));
     onDefines(jsonArrayToStringList(mainObject.value(Tags::defines).toArray()));
     onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));

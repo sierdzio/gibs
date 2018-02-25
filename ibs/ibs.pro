@@ -18,7 +18,8 @@ TARGET = ibs
 HEADERS += src/globals.h \
     src/fileparser.h \
     src/projectmanager.h \
-    src/tags.h
+    src/tags.h \
+    src/flags.h
 
 SOURCES += src/main.cpp \ 
     src/fileparser.cpp \

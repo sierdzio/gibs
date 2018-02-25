@@ -5,6 +5,7 @@
 #include <QDateTime>
 
 #include "tags.h"
+#include "flags.h"
 
 class QJsonArray;
 
@@ -24,9 +25,7 @@ class ProjectManager : public QObject
     Q_OBJECT
 
 public:
-    explicit ProjectManager(const QString &inputFile = QString(),
-                            const bool isQuickMode = false,
-                            QObject *parent = nullptr);
+    explicit ProjectManager(const Flags &flags, QObject *parent = nullptr);
 
     void setQtDir(const QString &qtDir);
     QString qtDir() const;
@@ -72,10 +71,11 @@ private:
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;
 
-    const bool mQuickMode = false;
+
+    const Flags mFlags;
+
     bool mCacheEnabled = false;
 
-    QString mInputFile;
     QString mQtDir;
     QStringList mQtModules;
     bool mQtIsMocInitialized = false;
