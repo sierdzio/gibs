@@ -19,11 +19,13 @@ HEADERS += src/globals.h \
     src/fileparser.h \
     src/projectmanager.h \
     src/tags.h \
-    src/flags.h
+    src/flags.h \
+    src/fileinfo.h
 
 SOURCES += src/main.cpp \ 
     src/fileparser.cpp \
-    src/projectmanager.cpp
+    src/projectmanager.cpp \
+    src/fileinfo.cpp
 
 RESOURCES +=  \
     qml/qml.qrc \

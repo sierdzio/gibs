@@ -55,9 +55,6 @@ const QLatin1String rcc("rcc");
 const QLatin1String uic("uic");
 // Cache file tags
 const QLatin1String parsedFiles("parsedFiles");
-const QLatin1String objectFiles("objectFiles");
-const QLatin1String mocFiles("mocFiles");
-const QLatin1String qrcFiles("qrcFiles");
 const QLatin1String fileChecksum("fileChecksum");
 const QLatin1String fileModificationDate("fileModificationDate");
 }

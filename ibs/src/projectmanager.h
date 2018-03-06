@@ -6,28 +6,9 @@
 
 #include "tags.h"
 #include "flags.h"
+#include "fileinfo.h"
 
 class QJsonArray;
-
-struct FileInfo {
-    enum FileType {
-        Cpp,
-        QRC
-    };
-
-    QString path;
-    QDateTime dateModified;
-    QDateTime dateCreated;
-    QByteArray checksum;
-    QString objectFile;
-    QString mocFile;
-    QString mocObjectFile;
-    FileType type;
-
-    bool isEmpty() const;
-    QJsonArray toJsonArray() const;
-    void fromJsonArray(const QJsonArray &array);
-};
 
 class ProjectManager : public QObject
 {
@@ -35,6 +16,7 @@ class ProjectManager : public QObject
 
 public:
     explicit ProjectManager(const Flags &flags, QObject *parent = nullptr);
+    virtual ~ProjectManager();
 
     void setQtDir(const QString &qtDir);
     QString qtDir() const;
@@ -68,7 +50,7 @@ protected slots:
     void onRunTool(const QString &tool, const QStringList &args);
 
 protected:
-    bool compile(const QString &file);
+    QString compile(const QString &file);
     bool link() const;
     void parseFile(const QString &file);
 
@@ -79,7 +61,7 @@ private:
     QString capitalizeFirstLetter(const QString &string) const;
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;
-
+    void removeFile(const QString &path) const;
 
     const Flags mFlags;
 
@@ -102,7 +84,4 @@ private:
     QString mTargetType = Tags::targetApp;
     QString mTargetLibType = Tags::targetLibDynamic;
     QHash<QString, FileInfo> mParsedFiles;
-    QStringList mObjectFiles;
-    QStringList mMocFiles;
-    QStringList mQrcFiles;
 };
