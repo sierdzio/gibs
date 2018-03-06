@@ -40,10 +40,21 @@ void ProjectManager::start()
     // First, check if any files need to be recompiled
     if (mCacheEnabled) {
         for (const auto &cached : mParsedFiles.values()) {
-            // TODO: check if object file exists! If somebody removed it,
-            //       or used --clean, then we have to recompile!
+            // Check if object file exists. If somebody removed it, or used
+            // --clean, then we have to recompile!
+
+            // TODO: handle MOC and QRC this way, too. Maybe unify everything
+            // under mParsedFiles?
+
             if (isFileDirty(cached.path, mFlags.quickMode)) {
                 parseFile(cached.path);
+            } else if (!cached.objectFile.isEmpty()) {
+                // There should be an object file on disk - let's check
+                const QFileInfo objFile(cached.objectFile);
+                if (!objFile.exists()) {
+                    qDebug() << "Object file missing - recompiling";
+                    compile(cached.path);
+                }
             }
         }
     } else {
@@ -168,14 +179,15 @@ bool ProjectManager::isFileDirty(const QString &file, const bool isQuickMode) co
     }
 
     if (!isQuickMode) {
-        QFile fileData(file);
-        fileData.open(QFile::ReadOnly | QFile::Text);
-        const auto checksum = QCryptographicHash::hash(fileData.readAll(), QCryptographicHash::Sha1);
-        if (checksum != cachedFile.checksum) {
-            qDebug() << "Different checksum. Recompiling."
-                     << file << checksum << cachedFile.checksum;
-            return true;
-        }
+        // Deep verification is off - for now
+//        QFile fileData(file);
+//        fileData.open(QFile::ReadOnly | QFile::Text);
+//        const auto checksum = QCryptographicHash::hash(fileData.readAll(), QCryptographicHash::Sha1);
+//        if (checksum != cachedFile.checksum) {
+//            qDebug() << "Different checksum. Recompiling."
+//                     << file << checksum << cachedFile.checksum;
+//            return true;
+//        }
     }
 
     return false;
@@ -405,6 +417,11 @@ bool ProjectManager::compile(const QString &file)
     if (runProcess(compiler, arguments)) {
         if (!mObjectFiles.contains(objectFile))
             mObjectFiles.append(objectFile);
+
+        FileInfo info = mParsedFiles.value(file);
+        info.objectFile = objectFile;
+        mParsedFiles.insert(file, info);
+
         return true;
     }
 
@@ -585,7 +602,8 @@ QJsonArray FileInfo::toJsonArray() const
     result.insert(i++, path);
     result.insert(i++, QString(checksum.toHex()));
     result.insert(i++, dateModified.toString(Qt::ISODateWithMs));
-    result.insert(i, dateCreated.toString(Qt::ISODateWithMs));
+    result.insert(i++, dateCreated.toString(Qt::ISODateWithMs));
+    result.insert(i, objectFile);
     return result;
 }
 
@@ -595,5 +613,6 @@ void FileInfo::fromJsonArray(const QJsonArray &array)
     path = array.at(i++).toString();
     checksum = QByteArray::fromHex(array.at(i++).toString().toLatin1());
     dateModified = QDateTime::fromString(array.at(i++).toString(), Qt::ISODateWithMs);
-    dateCreated = QDateTime::fromString(array.at(i).toString(), Qt::ISODateWithMs);
+    dateCreated = QDateTime::fromString(array.at(i++).toString(), Qt::ISODateWithMs);
+    objectFile = array.at(i++).toString();
 }

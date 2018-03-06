@@ -10,10 +10,19 @@
 class QJsonArray;
 
 struct FileInfo {
+    enum FileType {
+        Cpp,
+        QRC
+    };
+
     QString path;
     QDateTime dateModified;
     QDateTime dateCreated;
     QByteArray checksum;
+    QString objectFile;
+    QString mocFile;
+    QString mocObjectFile;
+    FileType type;
 
     bool isEmpty() const;
     QJsonArray toJsonArray() const;
