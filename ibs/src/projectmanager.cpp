@@ -47,8 +47,8 @@ void ProjectManager::start()
             // Check if object file exists. If somebody removed it, or used
             // --clean, then we have to recompile!
 
-            // TODO: handle MOC and QRC this way, too. Maybe unify everything
-            // under mParsedFiles?
+            if (mIsError)
+                return;
 
             if (isFileDirty(cached.path, mFlags.quickMode)) {
                 if (cached.type == FileInfo::Cpp) {
@@ -117,6 +117,12 @@ void ProjectManager::clean()
     }
 
     emit finished();
+}
+
+void ProjectManager::onError(const QString &error)
+{
+    qCritical() << error;
+    mIsError = true;
 }
 
 /*!
@@ -275,6 +281,9 @@ void ProjectManager::onParsed(const QString &file, const QString &source,
 
 void ProjectManager::onParseRequest(const QString &file, const bool force)
 {
+    if (mIsError)
+        return;
+
     // Skip files which we have parsed already
     if (!force and mParsedFiles.contains(file))
         return;
@@ -298,9 +307,12 @@ void ProjectManager::onParseRequest(const QString &file, const bool force)
 
 bool ProjectManager::onRunMoc(const QString &file)
 {
+    if (mIsError)
+        return false;
+
     if (mQtDir.isEmpty()) {
-        qFatal("Can't run MOC because Qt dir is not set. See 'ibs --help' for "
-               "more info.");
+        emit error("Can't run MOC because Qt dir is not set. See 'ibs --help' for "
+                   "more info.");
     }
 
     if (mQtIsMocInitialized == false) {
@@ -390,6 +402,9 @@ void ProjectManager::onLibs(const QStringList &libs)
 
 void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
 {
+    if (mIsError)
+        return;
+
     if (tool == Tags::rcc) {
         // -name qml qml.qrc -o qrc_qml.cpp
         for (const auto &qrcFile : qAsConst(args)) {
@@ -421,6 +436,9 @@ void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
  */
 QString ProjectManager::compile(const QString &file)
 {
+    if (mIsError)
+        return QString();
+
     const QFileInfo info(file);
     const QString objectFile(info.baseName() + ".o");
     const QString compiler("g++");
@@ -442,15 +460,15 @@ QString ProjectManager::compile(const QString &file)
     arguments.append(mCustomIncludeFlags);
     arguments.append({ "-o", objectFile, file });
 
-    if (runProcess(compiler, arguments)) {
-        return objectFile;
-    }
-
-    return QString();
+    runProcess(compiler, arguments);
+    return objectFile;
 }
 
-bool ProjectManager::link() const
+void ProjectManager::link() const
 {
+    if (mIsError)
+        return;
+
     QStringList objectFiles;
 
     for (const auto &info : mParsedFiles.values()) {
@@ -486,12 +504,13 @@ bool ProjectManager::link() const
 
     arguments.append(mCustomLibs);
 
-    return runProcess(compiler, arguments);
+    runProcess(compiler, arguments);
 }
 
 void ProjectManager::parseFile(const QString &file)
 {
     FileParser parser(file, mCustomIncludes);
+    connect(&parser, &FileParser::error, this, &ProjectManager::error);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
     connect(&parser, &FileParser::runMoc, this, &ProjectManager::onRunMoc);
@@ -503,10 +522,7 @@ void ProjectManager::parseFile(const QString &file)
     connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
     connect(&parser, &FileParser::runTool, this, &ProjectManager::onRunTool);
 
-    const bool result = parser.parse();
-
-    // TODO: stop if result is false
-    Q_UNUSED(result);
+    parser.parse();
 }
 
 void ProjectManager::updateQtModules(const QStringList &modules)

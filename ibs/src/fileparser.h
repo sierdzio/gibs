@@ -11,6 +11,7 @@ public:
                         QObject *parent = nullptr);
 
 signals:
+    void error(const QString &error) const;
     void parsed(const QString &file, const QString &sourceFile,
                 const QByteArray &checksum,
                 const QDateTime &modified,

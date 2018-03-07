@@ -24,6 +24,7 @@ public:
     void loadCache();
 
 signals:
+    void error(const QString &error) const;
     void finished() const;
 
 public slots:
@@ -31,6 +32,7 @@ public slots:
     void clean();
 
 protected slots:
+    void onError(const QString &error);
     void saveCache() const;
     bool isFileDirty(const QString &file, const bool isQuickMode) const;
 
@@ -51,7 +53,7 @@ protected slots:
 
 protected:
     QString compile(const QString &file);
-    bool link() const;
+    void link() const;
     void parseFile(const QString &file);
 
 private:
@@ -65,6 +67,7 @@ private:
 
     const Flags mFlags;
 
+    bool mIsError = false;
     bool mCacheEnabled = false;
 
     QString mQtDir;

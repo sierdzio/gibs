@@ -19,12 +19,12 @@ bool FileParser::parse() const
 {
     QFile file(mFile);
     if (mFile.isEmpty() or !file.exists()) {
-        qWarning() << "File" << mFile << "does not exist";
+        emit error(QString("File %1 does not exist").arg(mFile));
         return false;
     }
 
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        qWarning() << "File" << mFile << "could not be opened for reading!";
+        emit error(QString("File %1 could not be opened for reading!").arg(mFile));
         return false;
     }
 
