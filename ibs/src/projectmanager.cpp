@@ -97,7 +97,6 @@ void ProjectManager::start()
 
     // Check if we can exit.
     while (mProcessQueue.count() != 0) {
-        // TODO: wait for finished
         QCoreApplication::instance()->processEvents();
     }
 
@@ -331,18 +330,25 @@ bool ProjectManager::onRunMoc(const QString &file)
     const QFileInfo header(file);
     const QString mocFile("moc_" + header.baseName() + ".cpp");
     const QString compiler(mQtDir + "/bin/moc");
+    const QString predefs("moc_predefs.h");
 
     QStringList arguments;
     arguments.append(mQtDefines);
-    arguments.append({ "--include", "moc_predefs.h" });
+    arguments.append({ "--include", predefs });
     arguments.append(mQtIncludes);
     // TODO: GCC includes!
     arguments.append({ file, "-o", mocFile });
 
-    runProcess(compiler, arguments);
+    MetaProcess mp;
+    mp.file = mocFile;
+    mp.dependsOn.append(findDependency(predefs));
+    // Generate MOC file
+    runProcess(compiler, arguments, mp);
+
     FileInfo info = mParsedFiles.value(file);
     info.path = file;
     info.generatedFile = mocFile;
+    // Compile MOC file
     info.generatedObjectFile = compile(mocFile);
     mParsedFiles.insert(file, info);
     return true;
@@ -418,7 +424,9 @@ void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
             const QStringList arguments { "-name", file.baseName(), qrcFile,
                                         "-o", cppFile };
 
-            runProcess(mQtDir + "/bin/" + tool, arguments);
+            MetaProcess mp;
+            mp.file = cppFile;
+            runProcess(mQtDir + "/bin/" + tool, arguments, mp);
 
             FileInfo info = mParsedFiles.value(qrcFile);
             info.type = FileInfo::QRC;
@@ -460,7 +468,7 @@ void ProjectManager::onProcessFinished(int exitCode, QProcess::ExitStatus exitSt
 
 
     mRunningJobs.removeOne(process);
-    process->deleteLater();
+    delete process; // Dangerous? Use QSharedPointer instead?
     runNextProcess();
 }
 
@@ -493,7 +501,11 @@ QString ProjectManager::compile(const QString &file)
     arguments.append(mCustomIncludeFlags);
     arguments.append({ "-o", objectFile, file });
 
-    runProcess(compiler, arguments);
+    MetaProcess mp;
+    mp.file = objectFile;
+    mp.dependsOn = findDependencies(file);
+
+    runProcess(compiler, arguments, mp);
     return objectFile;
 }
 
@@ -511,7 +523,7 @@ void ProjectManager::link()
             objectFiles.append(info.generatedObjectFile);
     }
 
-    qInfo() << "Linking:" << objectFiles;
+    //qInfo() << "Linking:" << objectFiles;
     const QString compiler("g++");
     QStringList arguments;
 
@@ -537,7 +549,10 @@ void ProjectManager::link()
 
     arguments.append(mCustomLibs);
 
-    runProcess(compiler, arguments);
+    MetaProcess mp;
+    mp.file = mTargetName;
+    mp.dependsOn = findAllDependencies();
+    runProcess(compiler, arguments, mp);
 }
 
 void ProjectManager::parseFile(const QString &file)
@@ -607,11 +622,19 @@ bool ProjectManager::initializeMoc()
 {
     qInfo() << "Initializig MOC";
     const QString compiler("g++");
+    const QString predefs("moc_predefs.h");
     const QStringList arguments({ "-pipe", "-g", "-Wall", "-W", "-dM", "-E",
-                            "-o", "moc_predefs.h",
+                            "-o", predefs,
                             mQtDir + "/mkspecs/features/data/dummy.cpp" });
-    /*mQtIsMocInitialized = */runProcess(compiler, arguments);
-    // TODO: handle this! If initializing MOC fails, we should stop.
+
+    FileInfo info;
+    info.path = predefs;
+    info.generatedFile = predefs;
+    mParsedFiles.insert(predefs, info);
+
+    MetaProcess mp;
+    mp.file = predefs;
+    runProcess(compiler, arguments, mp);
     mQtIsMocInitialized = true;
     return mQtIsMocInitialized;
 }
@@ -619,7 +642,8 @@ bool ProjectManager::initializeMoc()
 /*!
  * TODO: run asynchronously in a thread pool.
  */
-void ProjectManager::runProcess(const QString &app, const QStringList &arguments)
+void ProjectManager::runProcess(const QString &app, const QStringList &arguments,
+                                MetaProcess mp)
 {
     auto process = new QProcess();
 
@@ -632,21 +656,66 @@ void ProjectManager::runProcess(const QString &app, const QStringList &arguments
     process->setProcessChannelMode(QProcess::ForwardedChannels);
     process->setProgram(app);
     process->setArguments(arguments);
-    mProcessQueue.enqueue(process);
 
+    mp.process = process;
+    mProcessQueue.append(mp);
     runNextProcess();
 }
 
 void ProjectManager::runNextProcess()
 {
+    // TODO: use these counts to create a progress bar as in cmake!
     //qDebug() << "Running jobs:" << mRunningJobs.count() << "max jobs:" << mFlags.jobs << "process queue" << mProcessQueue.count();
 
     // Run next process if max number of jobs is not exceeded
     if (mProcessQueue.count() > 0 and mRunningJobs.count() < mFlags.jobs) {
-        mRunningJobs.append(mProcessQueue.dequeue());
-        qInfo() << "Running next process:" << mRunningJobs.last()->program() << mRunningJobs.last()->arguments().join(" ");
-        mRunningJobs.last()->start();
+        for (int i = 0; i < mProcessQueue.count();) {
+            if (!mProcessQueue.at(i).canRun()) {
+                ++i;
+                continue;
+            }
+
+            //MetaProcess mp = mProcessQueue.takeFirst();
+            mRunningJobs.append(mProcessQueue.at(i).process);
+            qInfo() << "Running next process:" << i << mRunningJobs.last()->program() << mRunningJobs.last()->arguments().join(" ");
+            mRunningJobs.last()->start();
+            mProcessQueue.remove(i);
+            // Start working asap
+            QCoreApplication::instance()->processEvents();
+            break;
+        }
     }
+}
+
+ProcessPtr ProjectManager::findDependency(const QString &file) const
+{
+    for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
+        if (mp.file == file)
+            return mp.process;
+    }
+
+    return ProcessPtr();
+}
+
+QVector<ProcessPtr> ProjectManager::findDependencies(const QString &file) const
+{
+    QVector<ProcessPtr> result;
+    for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
+        if (mp.file == file)
+            result.append(mp.process);
+    }
+
+    return result;
+}
+
+QVector<ProcessPtr> ProjectManager::findAllDependencies() const
+{
+    QVector<ProcessPtr> result;
+    for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
+        result.append(mp.process);
+    }
+
+    return result;
 }
 
 QString ProjectManager::capitalizeFirstLetter(const QString &string) const

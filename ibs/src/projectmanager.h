@@ -6,12 +6,12 @@
 
 // Process handling
 #include <QProcess>
-#include <QQueue>
 #include <QVector>
 
 #include "tags.h"
 #include "flags.h"
 #include "fileinfo.h"
+#include "metaprocess.h"
 
 class QJsonArray;
 
@@ -68,8 +68,11 @@ protected:
 private:
     void updateQtModules(const QStringList &modules);
     bool initializeMoc();
-    void runProcess(const QString &app, const QStringList &arguments);
+    void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp);
     void runNextProcess();
+    ProcessPtr findDependency(const QString &file) const;
+    QVector<ProcessPtr> findDependencies(const QString &file) const;
+    QVector<ProcessPtr> findAllDependencies() const;
     QString capitalizeFirstLetter(const QString &string) const;
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;
@@ -98,6 +101,6 @@ private:
     QString mTargetLibType = Tags::targetLibDynamic;
     QHash<QString, FileInfo> mParsedFiles;
 
-    QQueue<QProcess *> mProcessQueue;
+    QVector<MetaProcess> mProcessQueue;
     QVector<QProcess *> mRunningJobs;
 };
