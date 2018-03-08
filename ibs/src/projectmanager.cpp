@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QCryptographicHash>
+#include <QCoreApplication>
 
 // TODO: add categorized logging!
 #include <QDebug>
@@ -93,6 +94,13 @@ void ProjectManager::start()
     // Parsing done, link it!
     link();    
     saveCache();
+
+    // Check if we can exit.
+    while (mProcessQueue.count() != 0) {
+        // TODO: wait for finished
+        QCoreApplication::instance()->processEvents();
+    }
+
 
     emit finished();
 }
@@ -331,16 +339,13 @@ bool ProjectManager::onRunMoc(const QString &file)
     // TODO: GCC includes!
     arguments.append({ file, "-o", mocFile });
 
-    if (runProcess(compiler, arguments)) {
-        FileInfo info = mParsedFiles.value(file);
-        info.path = file;
-        info.generatedFile = mocFile;
-        info.generatedObjectFile = compile(mocFile);
-        mParsedFiles.insert(file, info);
-        return true;
-    }
-
-    return false;
+    runProcess(compiler, arguments);
+    FileInfo info = mParsedFiles.value(file);
+    info.path = file;
+    info.generatedFile = mocFile;
+    info.generatedObjectFile = compile(mocFile);
+    mParsedFiles.insert(file, info);
+    return true;
 }
 
 void ProjectManager::onTargetName(const QString &target)
@@ -431,6 +436,34 @@ void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
     }
 }
 
+void ProjectManager::onProcessErrorOccurred(QProcess::ProcessError _error)
+{
+    // TODO: add process name to the error message
+    emit error(QString("Process error occurred: %1").arg(QString(_error)));
+}
+
+void ProjectManager::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    auto process = qobject_cast<QProcess *>(sender());
+
+    if (process == nullptr) {
+        emit error("Process finished, but could not be accessed. :-(");
+        return;
+    }
+
+    if (exitCode != 0) {
+        emit error(QString("Process %1:%2 finished with exit code %3 and status %4")
+                   .arg(process->program(),
+                        QString::number(mRunningJobs.indexOf(process)),
+                        QString::number(exitCode), QString::number(exitStatus)));
+    }
+
+
+    mRunningJobs.removeOne(process);
+    process->deleteLater();
+    runNextProcess();
+}
+
 /*!
  * Compiles \a file and returns the name of the generated object file.
  */
@@ -450,7 +483,7 @@ QString ProjectManager::compile(const QString &file)
         }
     }
 
-    qInfo() << "Compiling:" << file << "into:" << objectFile;
+    //qInfo() << "Compiling:" << file << "into:" << objectFile;
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
     QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
 
@@ -464,7 +497,7 @@ QString ProjectManager::compile(const QString &file)
     return objectFile;
 }
 
-void ProjectManager::link() const
+void ProjectManager::link()
 {
     if (mIsError)
         return;
@@ -577,27 +610,43 @@ bool ProjectManager::initializeMoc()
     const QStringList arguments({ "-pipe", "-g", "-Wall", "-W", "-dM", "-E",
                             "-o", "moc_predefs.h",
                             mQtDir + "/mkspecs/features/data/dummy.cpp" });
-    mQtIsMocInitialized = runProcess(compiler, arguments);
+    /*mQtIsMocInitialized = */runProcess(compiler, arguments);
+    // TODO: handle this! If initializing MOC fails, we should stop.
+    mQtIsMocInitialized = true;
     return mQtIsMocInitialized;
 }
 
 /*!
  * TODO: run asynchronously in a thread pool.
  */
-bool ProjectManager::runProcess(const QString &app, const QStringList &arguments) const
+void ProjectManager::runProcess(const QString &app, const QStringList &arguments)
 {
-    QProcess process;
-    process.setProcessChannelMode(QProcess::ForwardedChannels);
-    qDebug() << "Running:" << app << arguments.join(" ");
-    process.start(app, arguments);
-    process.waitForFinished(5000);
-    const int exitCode = process.exitCode();
-    if (exitCode == 0) {
-        return true;
-    }
+    auto process = new QProcess();
 
-    qDebug() << "Process error:" << process.errorString() << exitCode;
-    return false;
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, &ProjectManager::onProcessFinished);
+
+    connect(process, &QProcess::errorOccurred,
+            this, &ProjectManager::onProcessErrorOccurred);
+
+    process->setProcessChannelMode(QProcess::ForwardedChannels);
+    process->setProgram(app);
+    process->setArguments(arguments);
+    mProcessQueue.enqueue(process);
+
+    runNextProcess();
+}
+
+void ProjectManager::runNextProcess()
+{
+    //qDebug() << "Running jobs:" << mRunningJobs.count() << "max jobs:" << mFlags.jobs << "process queue" << mProcessQueue.count();
+
+    // Run next process if max number of jobs is not exceeded
+    if (mProcessQueue.count() > 0 and mRunningJobs.count() < mFlags.jobs) {
+        mRunningJobs.append(mProcessQueue.dequeue());
+        qInfo() << "Running next process:" << mRunningJobs.last()->program() << mRunningJobs.last()->arguments().join(" ");
+        mRunningJobs.last()->start();
+    }
 }
 
 QString ProjectManager::capitalizeFirstLetter(const QString &string) const

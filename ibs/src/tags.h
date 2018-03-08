@@ -8,6 +8,7 @@ const QLatin1String run("run");
 const QLatin1String clean("clean");
 const QLatin1String quick_flag("quick");
 const QLatin1String qt_dir_flag("qt-dir");
+const QLatin1String jobs("jobs");
 // General
 const QLatin1String ibsCacheFileName(".ibs.cache");
 const QLatin1String inputFile("inputFile");

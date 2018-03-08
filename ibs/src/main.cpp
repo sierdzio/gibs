@@ -86,6 +86,10 @@ int main(int argc, char *argv[]) {
         QCoreApplication::translate(scope, "Clear build directory")},
         {{"q", Tags::quick_flag},
         QCoreApplication::translate(scope, "'Convention over configuration' mode - parse files only up to first line of 'concrete code'. Do not check file checksums when doing incremental builds.")},
+        {{"j", Tags::jobs},
+        QCoreApplication::translate(scope, "Max number of threads used to compile and process the sources"),
+        QCoreApplication::translate(scope, "Thread count"),
+        "1"},
     });
 
     // Process the actual command line arguments given by the user
@@ -97,11 +101,19 @@ int main(int argc, char *argv[]) {
 
     qDebug() << "Arguments:" << args;
 
+    bool jobsOk = false;
+
     const Flags flags(parser.isSet(Tags::run),
                       parser.isSet(Tags::clean),
                       parser.isSet(Tags::quick_flag),
+                      parser.value(Tags::jobs).toInt(&jobsOk),
                       parser.value(Tags::qt_dir_flag),
                       args.at(0));
+
+    if (!jobsOk) {
+        qFatal("Invalid number of jobs specified. Use '-j NUM'. Got: %s",
+               qPrintable(parser.value(Tags::jobs)));
+    }
 
     if (flags.clean) {
         ProjectManager manager(flags);

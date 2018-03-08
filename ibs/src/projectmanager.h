@@ -4,6 +4,11 @@
 #include <QHash>
 #include <QDateTime>
 
+// Process handling
+#include <QProcess>
+#include <QQueue>
+#include <QVector>
+
 #include "tags.h"
 #include "flags.h"
 #include "fileinfo.h"
@@ -51,15 +56,20 @@ protected slots:
     void onLibs(const QStringList &libs);
     void onRunTool(const QString &tool, const QStringList &args);
 
+    // Process handling
+    void onProcessErrorOccurred(QProcess::ProcessError _error);
+    void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
+
 protected:
     QString compile(const QString &file);
-    void link() const;
+    void link();
     void parseFile(const QString &file);
 
 private:
     void updateQtModules(const QStringList &modules);
     bool initializeMoc();
-    bool runProcess(const QString &app, const QStringList &arguments) const;
+    void runProcess(const QString &app, const QStringList &arguments);
+    void runNextProcess();
     QString capitalizeFirstLetter(const QString &string) const;
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;
@@ -87,4 +97,7 @@ private:
     QString mTargetType = Tags::targetApp;
     QString mTargetLibType = Tags::targetLibDynamic;
     QHash<QString, FileInfo> mParsedFiles;
+
+    QQueue<QProcess *> mProcessQueue;
+    QVector<QProcess *> mRunningJobs;
 };
