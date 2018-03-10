@@ -113,6 +113,9 @@ int main(int argc, char *argv[]) {
     if (!jobsOk) {
         qFatal("Invalid number of jobs specified. Use '-j NUM'. Got: %s",
                qPrintable(parser.value(Tags::jobs)));
+    } else {
+        // TODO: use Flags::toString to nicely print all flags!
+        qInfo() << "Maximum number of jobs:" << flags.jobs;
     }
 
     if (flags.clean) {

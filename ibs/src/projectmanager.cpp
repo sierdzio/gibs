@@ -128,7 +128,7 @@ void ProjectManager::clean()
 
 void ProjectManager::onError(const QString &error)
 {
-    qCritical() << error;
+    qCritical() << "Error!" << error;
     mIsError = true;
 }
 
@@ -424,6 +424,8 @@ void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
             const QStringList arguments { "-name", file.baseName(), qrcFile,
                                         "-o", cppFile };
 
+            qDebug() << "Running tool: rcc" << qrcFile << cppFile;
+
             MetaProcess mp;
             mp.file = cppFile;
             runProcess(mQtDir + "/bin/" + tool, arguments, mp);
@@ -446,8 +448,26 @@ void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
 
 void ProjectManager::onProcessErrorOccurred(QProcess::ProcessError _error)
 {
-    // TODO: add process name to the error message
-    emit error(QString("Process error occurred: %1").arg(QString(_error)));
+    auto process = qobject_cast<QProcess *>(sender());
+
+    if (process == nullptr) {
+        emit error("Process finished, but could not be accessed. :-(");
+        return;
+    }
+
+    // Remove process from the queue
+    for (int i = 0; i < mProcessQueue.count(); ++i) {
+        if (process == mProcessQueue.at(i).process) {
+            mProcessQueue.remove(i);
+            break;
+        }
+    }
+
+    emit error(QString("Process %1:%2 error occurred: %3")
+               .arg(process->program(),
+                    QString::number(mRunningJobs.indexOf(process)),
+                    QString(_error))
+               );
 }
 
 void ProjectManager::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
@@ -466,6 +486,13 @@ void ProjectManager::onProcessFinished(int exitCode, QProcess::ExitStatus exitSt
                         QString::number(exitCode), QString::number(exitStatus)));
     }
 
+    // Remove process from the queue
+    for (int i = 0; i < mProcessQueue.count(); ++i) {
+        if (process == mProcessQueue.at(i).process) {
+            mProcessQueue.remove(i);
+            break;
+        }
+    }
 
     mRunningJobs.removeOne(process);
     delete process; // Dangerous? Use QSharedPointer instead?
@@ -675,11 +702,9 @@ void ProjectManager::runNextProcess()
                 continue;
             }
 
-            //MetaProcess mp = mProcessQueue.takeFirst();
             mRunningJobs.append(mProcessQueue.at(i).process);
             qInfo() << "Running next process:" << i << mRunningJobs.last()->program() << mRunningJobs.last()->arguments().join(" ");
             mRunningJobs.last()->start();
-            mProcessQueue.remove(i);
             // Start working asap
             QCoreApplication::instance()->processEvents();
             break;
@@ -699,11 +724,16 @@ ProcessPtr ProjectManager::findDependency(const QString &file) const
 
 QVector<ProcessPtr> ProjectManager::findDependencies(const QString &file) const
 {
+    QString dependencies;
     QVector<ProcessPtr> result;
     for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
-        if (mp.file == file)
+        if (mp.file == file) {
+            dependencies += mp.process->arguments().last() + ", ";
             result.append(mp.process);
+        }
     }
+
+    qDebug() << "File" << file << "depends on:" << dependencies;
 
     return result;
 }
