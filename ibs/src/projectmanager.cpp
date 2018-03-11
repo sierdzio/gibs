@@ -91,17 +91,12 @@ void ProjectManager::start()
     } else {
         onParseRequest(mFlags.inputFile);
     }
+
+    // When all jobs are done, notify main.cpp that we can quit
+    connect(this, &ProjectManager::jobQueueEmpty, this, &ProjectManager::finished);
     // Parsing done, link it!
     link();    
     saveCache();
-
-    // Check if we can exit.
-    while (mProcessQueue.count() != 0) {
-        QCoreApplication::instance()->processEvents();
-    }
-
-
-    emit finished();
 }
 
 void ProjectManager::clean()
@@ -711,6 +706,9 @@ void ProjectManager::runNextProcess()
         // Start working asap
         QCoreApplication::instance()->processEvents();
     }
+
+    if (mProcessQueue.isEmpty())
+        emit jobQueueEmpty();
 }
 
 ProcessPtr ProjectManager::findDependency(const QString &file) const

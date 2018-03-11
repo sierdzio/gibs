@@ -31,6 +31,7 @@ public:
 signals:
     void error(const QString &error) const;
     void finished() const;
+    void jobQueueEmpty() const;
 
 public slots:
     void start();
