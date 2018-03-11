@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QThread>
 
 struct Flags
 {
@@ -10,13 +11,17 @@ struct Flags
         : run(_run), clean(_clean), quickMode(_quick), jobs(_jobs),
           qtDir(_qtDir), inputFile(_inputFile)
     {
+        // No job cap specified, use max number of threads available
+        if (jobs == 0) {
+            jobs = QThread::idealThreadCount();
+        }
     }
 
     const bool run = false;
     const bool clean = false;
     const bool quickMode = false;
 
-    const int jobs = 1;
+    int jobs = 0;
 
     const QString qtDir;
     const QString inputFile;
