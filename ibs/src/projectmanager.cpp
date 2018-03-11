@@ -695,20 +695,21 @@ void ProjectManager::runNextProcess()
     //qDebug() << "Running jobs:" << mRunningJobs.count() << "max jobs:" << mFlags.jobs << "process queue" << mProcessQueue.count();
 
     // Run next process if max number of jobs is not exceeded
-    if (mProcessQueue.count() > 0 and mRunningJobs.count() < mFlags.jobs) {
-        for (int i = 0; i < mProcessQueue.count();) {
-            if (!mProcessQueue.at(i).canRun()) {
-                ++i;
+    if ((mProcessQueue.count() > 0) and (mRunningJobs.count() < mFlags.jobs)) {
+        for (int i = 0; i < mProcessQueue.count() and (mRunningJobs.count() < mFlags.jobs); ++i) {
+            const auto & mp = mProcessQueue.at(i);
+            if (!mp.canRun() or mp.process->state() == QProcess::Running
+                    or mp.process->state() == QProcess::Starting) {
                 continue;
             }
 
-            mRunningJobs.append(mProcessQueue.at(i).process);
+            mRunningJobs.append(mp.process);
             qInfo() << "Running next process:" << i << mRunningJobs.last()->program() << mRunningJobs.last()->arguments().join(" ");
             mRunningJobs.last()->start();
-            // Start working asap
-            QCoreApplication::instance()->processEvents();
-            break;
         }
+
+        // Start working asap
+        QCoreApplication::instance()->processEvents();
     }
 }
 
