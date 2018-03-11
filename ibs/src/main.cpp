@@ -26,6 +26,11 @@ SOFTWARE.
   TEMPLATE main.cpp by Milo Solutions. Copyright 2016
 */
 
+/*i
+ target name ibs
+ qt core
+ */
+
 #include <QCoreApplication>
 #include <QLoggingCategory>
 
