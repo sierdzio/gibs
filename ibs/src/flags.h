@@ -3,26 +3,93 @@
 #include <QString>
 #include <QThread>
 
-struct Flags
+class Flags
 {
-    Flags(const bool _run, const bool _clean, const bool _quick,
-          const int _jobs,
-          const QString &_qtDir, const QString &_inputFile)
-        : run(_run), clean(_clean), quickMode(_quick), jobs(_jobs),
-          qtDir(_qtDir), inputFile(_inputFile)
+public:
+    Flags()
     {
+    }
+
+    bool run() const
+    {
+        return mRun;
+    }
+
+    void setRun(const bool run)
+    {
+        mRun = run;
+    }
+
+    bool clean() const
+    {
+        return mClean;
+    }
+    void setClean(bool clean)
+    {
+        mClean = clean;
+    }
+
+    bool quickMode() const
+    {
+        return mQuickMode;
+    }
+    void setQuickMode(bool quickMode)
+    {
+        mQuickMode = quickMode;
+    }
+
+    int jobs() const
+    {
+        return mJobs;
+    }
+    void setJobs(int jobs)
+    {
+        mJobs = jobs;
         // No job cap specified, use max number of threads available
-        if (jobs == 0) {
-            jobs = QThread::idealThreadCount();
+        if (mJobs == 0) {
+            mJobs = QThread::idealThreadCount();
         }
     }
 
-    const bool run = false;
-    const bool clean = false;
-    const bool quickMode = false;
+    QString qtDir() const
+    {
+        return mQtDir;
+    }
+    void setQtDir(const QString &qtDir)
+    {
+        mQtDir = qtDir;
+    }
 
-    int jobs = 0;
+    QString inputFile() const
+    {
+        return mInputFile;
+    }
+    void setInputFile(const QString &inputFile)
+    {
+        mInputFile = inputFile;
+    }
 
-    const QString qtDir;
-    const QString inputFile;
+    QString commands() const
+    {
+        return mCommands;
+    }
+    void setCommands(const QString &commands)
+    {
+        mCommands = commands;
+    }
+
+private:
+    bool mRun = false;
+    bool mClean = false;
+    bool mQuickMode = false;
+
+    int mJobs = 0;
+
+    QString mQtDir;
+    QString mInputFile;
+
+    // Ibs commands passed on the command line
+    QString mCommands;
 };
+
+

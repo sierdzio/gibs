@@ -95,6 +95,10 @@ int main(int argc, char *argv[]) {
         QCoreApplication::translate(scope, "Max number of threads used to compile and process the sources. If not specified, ibs will use max possible number of threads"),
         QCoreApplication::translate(scope, "Thread count"),
         "0"},
+        {{"c", Tags::commands},
+        QCoreApplication::translate(scope, "ibs syntax commands - same you can specify in c++ commends. All commands are suppored on the command line as well"),
+        QCoreApplication::translate(scope, "ibs commands, separated by semicolon"),
+        ""}
     });
 
     // Process the actual command line arguments given by the user
@@ -107,22 +111,24 @@ int main(int argc, char *argv[]) {
     qDebug() << "Arguments:" << args;
 
     bool jobsOk = false;
-    const Flags flags(parser.isSet(Tags::run),
-                      parser.isSet(Tags::clean),
-                      parser.isSet(Tags::quick_flag),
-                      parser.value(Tags::jobs).toInt(&jobsOk),
-                      parser.value(Tags::qt_dir_flag),
-                      args.at(0));
+    Flags flags;
+    flags.setRun(parser.isSet(Tags::run));
+    flags.setClean(parser.isSet(Tags::clean));
+    flags.setQuickMode(parser.isSet(Tags::quick_flag));
+    flags.setJobs(parser.value(Tags::jobs).toInt(&jobsOk));
+    flags.setQtDir(parser.value(Tags::qt_dir_flag));
+    flags.setInputFile(args.at(0));
+    flags.setCommands(parser.value(Tags::commands));
 
     if (!jobsOk) {
         qFatal("Invalid number of jobs specified. Use '-j NUM'. Got: %s",
                qPrintable(parser.value(Tags::jobs)));
     } else {
         // TODO: use Flags::toString to nicely print all flags!
-        qInfo() << "Maximum number of jobs:" << flags.jobs;
+        qInfo() << "Maximum number of jobs:" << flags.jobs();
     }
 
-    if (flags.clean) {
+    if (flags.clean()) {
         ProjectManager manager(flags);
         manager.loadCache();
         QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
@@ -133,12 +139,12 @@ int main(int argc, char *argv[]) {
     } else {
         ProjectManager manager(flags);
         manager.loadCache();
-        if (!flags.qtDir.isEmpty() && (flags.qtDir != manager.qtDir()))
-            manager.setQtDir(flags.qtDir);
+        if (!flags.qtDir().isEmpty() && (flags.qtDir() != manager.qtDir()))
+            manager.setQtDir(flags.qtDir());
         QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
         QTimer::singleShot(1, &manager, &ProjectManager::start);
 
-        if (flags.run) {
+        if (flags.run()) {
             qInfo() << "Running compiled binary";
         }
 

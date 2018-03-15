@@ -16,7 +16,7 @@
 ProjectManager::ProjectManager(const Flags &flags, QObject *parent)
     : QObject(parent), mFlags(flags)
 {
-    mQtDir = mFlags.qtDir;
+    mQtDir = mFlags.qtDir();
 }
 
 ProjectManager::~ProjectManager()
@@ -51,7 +51,7 @@ void ProjectManager::start()
             if (mIsError)
                 return;
 
-            if (isFileDirty(cached.path, mFlags.quickMode)) {
+            if (isFileDirty(cached.path, mFlags.quickMode())) {
                 if (cached.type == FileInfo::Cpp) {
                     parseFile(cached.path);
                 } else if (cached.type == FileInfo::QRC) {
@@ -89,7 +89,7 @@ void ProjectManager::start()
             }
         }
     } else {
-        onParseRequest(mFlags.inputFile);
+        onParseRequest(mFlags.inputFile());
     }
 
     // When all jobs are done, notify main.cpp that we can quit
@@ -147,7 +147,7 @@ void ProjectManager::saveCache() const
     mainObject.insert(Tags::targetType, mTargetType);
     mainObject.insert(Tags::targetLib, mTargetLibType);
     mainObject.insert(Tags::qtDir, mQtDir);
-    mainObject.insert(Tags::inputFile, mFlags.inputFile);
+    mainObject.insert(Tags::inputFile, mFlags.inputFile());
     mainObject.insert(Tags::qtModules, QJsonArray::fromStringList(mQtModules));
     mainObject.insert(Tags::defines, QJsonArray::fromStringList(mCustomDefines));
     mainObject.insert(Tags::includes, QJsonArray::fromStringList(mCustomIncludes));
@@ -690,8 +690,8 @@ void ProjectManager::runNextProcess()
     //qDebug() << "Running jobs:" << mRunningJobs.count() << "max jobs:" << mFlags.jobs << "process queue" << mProcessQueue.count();
 
     // Run next process if max number of jobs is not exceeded
-    if ((mProcessQueue.count() > 0) and (mRunningJobs.count() < mFlags.jobs)) {
-        for (int i = 0; i < mProcessQueue.count() and (mRunningJobs.count() < mFlags.jobs); ++i) {
+    if ((mProcessQueue.count() > 0) and (mRunningJobs.count() < mFlags.jobs())) {
+        for (int i = 0; i < mProcessQueue.count() and (mRunningJobs.count() < mFlags.jobs()); ++i) {
             const auto & mp = mProcessQueue.at(i);
             if (!mp.canRun() or mp.process->state() == QProcess::Running
                     or mp.process->state() == QProcess::Starting) {
