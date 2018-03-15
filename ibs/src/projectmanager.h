@@ -27,6 +27,7 @@ public:
     QString qtDir() const;
 
     void loadCache();
+    void loadCommands();
 
 signals:
     void error(const QString &error) const;

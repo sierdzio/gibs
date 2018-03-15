@@ -21,13 +21,17 @@ HEADERS += src/globals.h \
     src/tags.h \
     src/flags.h \
     src/fileinfo.h \
-    src/metaprocess.h
+    src/metaprocess.h \
+    src/baseparser.h \
+    src/commandparser.h
 
 SOURCES += src/main.cpp \ 
     src/fileparser.cpp \
     src/projectmanager.cpp \
     src/fileinfo.cpp \
-    src/metaprocess.cpp
+    src/metaprocess.cpp \
+    src/baseparser.cpp \
+    src/commandparser.cpp
 
 RESOURCES +=  \
     qml/qml.qrc \

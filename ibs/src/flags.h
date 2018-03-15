@@ -73,6 +73,7 @@ public:
     {
         return mCommands;
     }
+
     void setCommands(const QString &commands)
     {
         mCommands = commands;

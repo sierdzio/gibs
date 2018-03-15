@@ -128,20 +128,19 @@ int main(int argc, char *argv[]) {
         qInfo() << "Maximum number of jobs:" << flags.jobs();
     }
 
+    ProjectManager manager(flags);
+    manager.loadCache();
+    manager.loadCommands();
+    QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
+
     if (flags.clean()) {
-        ProjectManager manager(flags);
-        manager.loadCache();
-        QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
         QTimer::singleShot(1, &manager, &ProjectManager::clean);
         int result = app.exec();
         qInfo() << "Cleaning took:" << timer.elapsed() << "ms";
         return result;
     } else {
-        ProjectManager manager(flags);
-        manager.loadCache();
         if (!flags.qtDir().isEmpty() && (flags.qtDir() != manager.qtDir()))
             manager.setQtDir(flags.qtDir());
-        QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
         QTimer::singleShot(1, &manager, &ProjectManager::start);
 
         if (flags.run()) {

@@ -1,5 +1,6 @@
 #include "projectmanager.h"
 #include "fileparser.h"
+#include "commandparser.h"
 
 #include <QProcess>
 #include <QFileInfo>
@@ -258,6 +259,25 @@ void ProjectManager::loadCache()
     }
 
     mCacheEnabled = true;
+}
+
+void ProjectManager::loadCommands()
+{
+    if (mFlags.commands().isEmpty())
+        return;
+
+    qInfo() << "Loading commands from command line";
+
+    CommandParser parser(mFlags.commands());
+    connect(&parser, &CommandParser::error, this, &ProjectManager::error);
+    connect(&parser, &CommandParser::targetName, this, &ProjectManager::onTargetName);
+    connect(&parser, &CommandParser::targetType, this, &ProjectManager::onTargetType);
+    connect(&parser, &CommandParser::qtModules, this, &ProjectManager::onQtModules);
+    connect(&parser, &CommandParser::defines, this, &ProjectManager::onDefines);
+    connect(&parser, &CommandParser::includes, this, &ProjectManager::onIncludes);
+    connect(&parser, &CommandParser::libs, this, &ProjectManager::onLibs);
+    connect(&parser, &CommandParser::runTool, this, &ProjectManager::onRunTool);
+    parser.parse();
 }
 
 void ProjectManager::onParsed(const QString &file, const QString &source,

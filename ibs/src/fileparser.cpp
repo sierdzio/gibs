@@ -9,9 +9,10 @@
 // TODO: add categorized logging!
 #include <QDebug>
 
-FileParser::FileParser(const QString &file, const QStringList &includeDirs, QObject *parent) : QObject(parent),
-    mFile(file),
-    mIncludeDirs(includeDirs)
+FileParser::FileParser(const QString &file, const QStringList &includeDirs, BaseParser *parent)
+    : BaseParser (parent),
+      mFile(file),
+      mIncludeDirs(includeDirs)
 {    
 }
 
@@ -72,63 +73,14 @@ bool FileParser::parse() const
             if (line.contains(Tags::source))
                 source = extractArguments(line, Tags::source);
 
-            // TODO: handle spaces in target name
-            if(line.contains(Tags::targetCommand)) {
-                if (line.contains(Tags::targetName)) {
-                    const QString arg(extractArguments(line, Tags::targetName));
-                    qDebug() << "Target name:" << arg;
-                    emit targetName(arg);
-                }
-
-                if (line.contains(Tags::targetType)) {
-                    const QString arg(extractArguments(line, Tags::targetType));
-
-                    if (arg == Tags::targetApp || arg == Tags::targetLib) {
-                        qDebug() << "Target type:" << arg;
-                        emit targetType(arg);
-                    } else {
-                        qFatal("Invalid target type: %s", qPrintable(arg));
-                    }
-                }
-            }
-
-            if (line.contains(Tags::qtModules)) {
-                const QStringList args(extractArguments(line, Tags::qtModules).split(" "));
-                qDebug() << "Enabling Qt modules:" << args;
-                emit qtModules(args);
-            }
-
-            if (line.contains(Tags::defines)) {
-                const QStringList args(extractArguments(line, Tags::defines).split(" "));
-                qDebug() << "Adding defines:" << args;
-                emit defines(args);
-            }
-
-            if (line.contains(Tags::includes)) {
-                const QStringList args(extractArguments(line, Tags::includes).split(" "));
-                qDebug() << "Adding includes:" << args;
-                emit includes(args);
-            }
-
-            if (line.contains(Tags::libs)) {
-                const QStringList args(extractArguments(line, Tags::libs).split(" "));
-                qDebug() << "Adding libs:" << args;
-                emit libs(args);
-            }
-
-            if (line.contains(Tags::tool)) {
-                const QStringList args(extractArguments(line, Tags::tool).split(" "));
-                qDebug() << "Running tool:" << args;
-                if (args.size() > 0) {
-                    emit runTool(args.at(0), args.mid(1));
-                }
-            }
+            parseCommand(line);
         }
     }
 
     const QFileInfo header(mFile);
     if (source.isEmpty() and (header.suffix() == "cpp" or header.suffix() == "c"
-                              or header.suffix() == "cc")) {
+                              or header.suffix() == "cc"))
+    {
         source = mFile;
     }
 
@@ -167,11 +119,6 @@ bool FileParser::parse() const
     }
 
     return true;
-}
-
-QString FileParser::extractArguments(const QString &line, const QLatin1String &tag) const
-{
-    return line.mid(line.indexOf(tag) + tag.size() + 1);
 }
 
 QString FileParser::findFileExtension(const QString &filePath) const
