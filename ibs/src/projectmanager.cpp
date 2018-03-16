@@ -18,6 +18,7 @@ ProjectManager::ProjectManager(const Flags &flags, QObject *parent)
     : QObject(parent), mFlags(flags)
 {
     mQtDir = mFlags.qtDir();
+    onIncludes(QStringList { "." });
 }
 
 ProjectManager::~ProjectManager()

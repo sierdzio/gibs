@@ -44,7 +44,8 @@ bool BaseParser::parseCommand(const QString &commandString) const
     }
 
     if (commandString.contains(Tags::includes)) {
-        const QStringList args(extractArguments(commandString, Tags::includes).split(" "));
+        const QStringList args(extractArguments(commandString, Tags::includes)
+                               .split(" ", QString::SkipEmptyParts));
         qDebug() << "Adding includes:" << args;
         emit includes(args);
     }
