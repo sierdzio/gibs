@@ -21,10 +21,24 @@ app or libary):
 
 To clean the project, run:
 
-    ibs --clean
+    ibs --clean main.cpp
 
 Specifying the source file is not necessary - it will be extracted from ibs
 cache file generated during compilation.
+
+## Command line flags
+
+To see all available commands, type:
+
+    ibs --help
+
+Most notable options are:
+* `-c "target name ibs; include someDir"` allows you to pass ibs commands via
+the command line. All available ibs commands are listed below
+* `-j 5` allows you to lower the maximum number of threads used by ibs. By
+default, ibs uses all CPU cores. Note: you can also specify a fraction as the
+argument to `j`. For example, `-j 0.5` will use half of all available CPU cores
+* `--clean` removes all build artefacts. Executable and ibs cache are left alone
 
 # Commands
 

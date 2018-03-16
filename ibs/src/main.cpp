@@ -92,12 +92,12 @@ int main(int argc, char *argv[]) {
         {{"q", Tags::quick_flag},
         QCoreApplication::translate(scope, "'Convention over configuration' mode - parse files only up to first line of 'concrete code'. Do not check file checksums when doing incremental builds.")},
         {{"j", Tags::jobs},
-        QCoreApplication::translate(scope, "Max number of threads used to compile and process the sources. If not specified, ibs will use max possible number of threads"),
-        QCoreApplication::translate(scope, "Thread count"),
+        QCoreApplication::translate(scope, "Max number of threads used to compile and process the sources. If not specified, ibs will use max possible number of threads. If a fraction is specified, it will use given percentage of available cores (-j 0.5 means half of all CPU cores)"),
+        QCoreApplication::translate(scope, "threads"),
         "0"},
         {{"c", Tags::commands},
         QCoreApplication::translate(scope, "ibs syntax commands - same you can specify in c++ commends. All commands are suppored on the command line as well"),
-        QCoreApplication::translate(scope, "ibs commands, separated by semicolon"),
+        QCoreApplication::translate(scope, "commands"),
         ""}
     });
 
