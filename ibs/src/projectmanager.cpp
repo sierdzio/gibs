@@ -343,7 +343,7 @@ bool ProjectManager::onRunMoc(const QString &file)
             return false;
     }
 
-    const QFileInfo header(file);
+    const QFileInfo header(mFlags.relativePath() + "/" + file);
     const QString mocFile("moc_" + header.baseName() + ".cpp");
     const QString compiler(mQtDir + "/bin/moc");
     const QString predefs("moc_predefs.h");
@@ -353,7 +353,7 @@ bool ProjectManager::onRunMoc(const QString &file)
     arguments.append({ "--include", predefs });
     arguments.append(mQtIncludes);
     // TODO: GCC includes!
-    arguments.append({ file, "-o", mocFile });
+    arguments.append({ mFlags.relativePath() + "/" + file, "-o", mocFile });
 
     MetaProcess mp;
     mp.file = mocFile;
@@ -362,7 +362,7 @@ bool ProjectManager::onRunMoc(const QString &file)
     runProcess(compiler, arguments, mp);
 
     FileInfo info = mParsedFiles.value(file);
-    info.path = file;
+    info.path = mFlags.relativePath() + "/" + file;
     info.generatedFile = mocFile;
     // Compile MOC file
     info.generatedObjectFile = compile(mocFile);
@@ -412,7 +412,7 @@ void ProjectManager::onIncludes(const QStringList &includes)
     mCustomIncludes += includes;
     mCustomIncludes.removeDuplicates();
     for(const auto &incl : qAsConst(mCustomIncludes)) {
-        const QString &inc("-I" + incl);
+        const QString &inc("-I"+ mFlags.relativePath() + "/" + incl);
         if (!mCustomIncludeFlags.contains(inc)) {
             mCustomIncludeFlags.append(inc);
         }
@@ -435,12 +435,13 @@ void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
     if (tool == Tags::rcc) {
         // -name qml qml.qrc -o qrc_qml.cpp
         for (const auto &qrcFile : qAsConst(args)) {
-            const QFileInfo file(qrcFile);
+            const QFileInfo file(mFlags.relativePath() + "/" + qrcFile);
             const QString cppFile("qrc_" + file.baseName() + ".cpp");
-            const QStringList arguments { "-name", file.baseName(), qrcFile,
-                                        "-o", cppFile };
+            const QStringList arguments { "-name", file.baseName(),
+                        mFlags.relativePath() + "/" + qrcFile,
+                        "-o", cppFile };
 
-            qDebug() << "Running tool: rcc" << qrcFile << cppFile;
+            qDebug() << "Running tool: rcc" << mFlags.relativePath() + "/" + qrcFile << cppFile;
 
             MetaProcess mp;
             mp.file = cppFile;
@@ -448,7 +449,7 @@ void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
 
             FileInfo info = mParsedFiles.value(qrcFile);
             info.type = FileInfo::QRC;
-            info.path = qrcFile;
+            info.path = mFlags.relativePath() + "/" + qrcFile;
             info.dateModified = file.lastModified();
             info.dateCreated = file.created();
             info.generatedFile = cppFile;
@@ -777,12 +778,12 @@ QString ProjectManager::findFile(const QString &file, const QStringList &include
 {
     QString result;
     const QFileInfo fileInfo(file);
-    result = fileInfo.path() + "/" + fileInfo.fileName();
+    result = mFlags.relativePath() + "/" + fileInfo.fileName();
 
     // Search through include paths
     if (!QFileInfo(result).exists()) {
         for (const QString &inc : qAsConst(includeDirs)) {
-            result = inc + "/" + fileInfo.fileName();
+            result = mFlags.relativePath() + "/" + inc + "/" + fileInfo.fileName();
             if (QFileInfo(result).exists()) {
                 qDebug() << "Found file in include paths!" << result;
                 break;

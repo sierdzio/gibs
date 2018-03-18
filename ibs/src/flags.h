@@ -2,6 +2,8 @@
 
 #include <QString>
 #include <QThread>
+#include <QDir>
+#include <QFileInfo>
 
 class Flags
 {
@@ -79,6 +81,23 @@ public:
         mCommands = commands;
     }
 
+    QString relativePath() const
+    {
+        return mRelativePath;
+    }
+
+    void setRelativePath(const QString &inputFile)
+    {
+        const QFileInfo info(inputFile);
+        mRelativePath = info.path();
+    }
+
+    QString buildPath() const;
+    void setBuildPath(const QString &buildPath);
+
+    QString prefix() const;
+    void setPrefix(const QString &prefix);
+
 private:
     bool mRun = false;
     bool mClean = false;
@@ -91,6 +110,9 @@ private:
 
     // Ibs commands passed on the command line
     QString mCommands;
+
+    // Paths
+    QString mRelativePath; // pointing to dir where the input file is located
+    QString mBuildPath = QDir::currentPath(); // where build artifacts will be put. Default: current dir
+    QString mPrefix = QDir::currentPath(); // where target will be put (== prefix)
 };
-
-

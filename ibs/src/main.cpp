@@ -119,6 +119,7 @@ int main(int argc, char *argv[]) {
     flags.setQtDir(parser.value(Tags::qt_dir_flag));
     flags.setInputFile(args.at(0));
     flags.setCommands(parser.value(Tags::commands));
+    flags.setRelativePath(flags.inputFile());
 
     if (!jobsOk) {
         qFatal("Invalid number of jobs specified. Use '-j NUM'. Got: %s",
