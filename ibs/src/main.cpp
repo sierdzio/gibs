@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
     flags.setRun(parser.isSet(Tags::run));
     flags.setClean(parser.isSet(Tags::clean));
     flags.setQuickMode(parser.isSet(Tags::quick_flag));
-    flags.setJobs(parser.value(Tags::jobs).toInt(&jobsOk));
+    flags.setJobs(parser.value(Tags::jobs).toFloat(&jobsOk));
     flags.setQtDir(parser.value(Tags::qt_dir_flag));
     flags.setInputFile(args.at(0));
     flags.setCommands(parser.value(Tags::commands));

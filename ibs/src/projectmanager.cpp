@@ -574,10 +574,10 @@ void ProjectManager::link()
     if (mTargetType == Tags::targetLib) {
         if (mTargetLibType == Tags::targetLibDynamic) {
             arguments.append({ "-shared", "-Wl,-soname,lib" + mTargetName + ".so.1",
-                               "-o", "lib" + mTargetName + ".so.1.0.0"});
+                               "-o", mFlags.prefix() + "/" + "lib" + mTargetName + ".so.1.0.0"});
         }
     } else {
-        arguments.append({ "-o", mTargetName });
+        arguments.append({ "-o", mFlags.prefix() + "/" + mTargetName });
     }
 
     arguments.append(objectFiles);

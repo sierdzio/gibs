@@ -5,6 +5,8 @@
 #include <QDir>
 #include <QFileInfo>
 
+#include <cmath>
+
 class Flags
 {
 public:
@@ -44,12 +46,18 @@ public:
     {
         return mJobs;
     }
-    void setJobs(int jobs)
+
+    void setJobs(const float jobs)
     {
-        mJobs = jobs;
-        // No job cap specified, use max number of threads available
-        if (mJobs == 0) {
+        if (qFuzzyCompare(qreal(jobs), 0.0) or std::isless(jobs, 0.0)) {
+            // No job cap specified, use max number of threads available
             mJobs = QThread::idealThreadCount();
+        } else if (std::isless(jobs, 1.00)) {
+            // Cap will be interpreted as percentage
+            const int maxCount = QThread::idealThreadCount();
+            mJobs = std::floor(qreal(maxCount) * jobs);
+        } else {
+            mJobs = std::ceil(jobs);
         }
     }
 
@@ -92,11 +100,27 @@ public:
         mRelativePath = info.path();
     }
 
-    QString buildPath() const;
-    void setBuildPath(const QString &buildPath);
+    QString prefix() const
+    {
+        return mPrefix;
+    }
 
-    QString prefix() const;
-    void setPrefix(const QString &prefix);
+    void setPrefix(const QString &prefix)
+    {
+        const QDir prefixDir(prefix);
+
+        if (!prefixDir.exists()) {
+            qFatal("Prefix directory does not exist. Bailing out!");
+        }
+
+        mPrefix = prefix;
+    }
+
+    QString toString() const
+    {
+        QString result("");
+        return result;
+    }
 
 private:
     bool mRun = false;
@@ -113,6 +137,5 @@ private:
 
     // Paths
     QString mRelativePath; // pointing to dir where the input file is located
-    QString mBuildPath = QDir::currentPath(); // where build artifacts will be put. Default: current dir
     QString mPrefix = QDir::currentPath(); // where target will be put (== prefix)
 };
