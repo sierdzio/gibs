@@ -105,19 +105,16 @@ int main(int argc, char *argv[]) {
     parser.process(app);
 
     const QStringList args = parser.positionalArguments();
-    if (args.isEmpty())
-        qFatal("Input file is not set. Cannot continue. Please set the input file to your main c++ file");
-
-    qDebug() << "Arguments:" << args;
-
     bool jobsOk = false;
+
     Flags flags;
     flags.setRun(parser.isSet(Tags::run));
     flags.setClean(parser.isSet(Tags::clean));
     flags.setQuickMode(parser.isSet(Tags::quick_flag));
     flags.setJobs(parser.value(Tags::jobs).toFloat(&jobsOk));
     flags.setQtDir(parser.value(Tags::qt_dir_flag));
-    flags.setInputFile(args.at(0));
+    if (!args.isEmpty())
+        flags.setInputFile(args.at(0));
     flags.setCommands(parser.value(Tags::commands));
     flags.setRelativePath(flags.inputFile());
 

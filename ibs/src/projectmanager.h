@@ -80,7 +80,7 @@ private:
     QStringList jsonArrayToStringList(const QJsonArray &array) const;
     void removeFile(const QString &path) const;
 
-    const Flags mFlags;
+    Flags mFlags;
 
     bool mIsError = false;
     bool mCacheEnabled = false;

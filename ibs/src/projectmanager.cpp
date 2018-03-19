@@ -246,7 +246,6 @@ void ProjectManager::loadCache()
     onTargetType(mainObject.value(Tags::targetType).toString());
     mTargetLibType = mainObject.value(Tags::targetLib).toString();
     mQtDir = mainObject.value(Tags::qtDir).toString();
-    //mFlags.inputFile = mainObject.value(Tags::inputFile).toString();
     onQtModules(jsonArrayToStringList(mainObject.value(Tags::qtModules).toArray()));
     onDefines(jsonArrayToStringList(mainObject.value(Tags::defines).toArray()));
     onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));
@@ -258,6 +257,14 @@ void ProjectManager::loadCache()
         fileInfo.fromJsonArray(file.toArray());
         mParsedFiles.insert(fileInfo.path, fileInfo);
     }
+
+    if (mFlags.inputFile().isEmpty()) {
+        mFlags.setInputFile(mainObject.value(Tags::inputFile).toString());
+    } else {
+        // TODO: if input file was specified and is diferent than the one in cache
+        // we need to invalidate the cache!
+    }
+
 
     mCacheEnabled = true;
 }
@@ -754,7 +761,7 @@ QVector<ProcessPtr> ProjectManager::findDependencies(const QString &file) const
         }
     }
 
-    qDebug() << "File" << file << "depends on:" << dependencies;
+    //qDebug() << "File" << file << "depends on:" << dependencies;
 
     return result;
 }
@@ -785,7 +792,7 @@ QString ProjectManager::findFile(const QString &file, const QStringList &include
         for (const QString &inc : qAsConst(includeDirs)) {
             result = mFlags.relativePath() + "/" + inc + "/" + fileInfo.fileName();
             if (QFileInfo(result).exists()) {
-                qDebug() << "Found file in include paths!" << result;
+                //qDebug() << "Found file in include paths!" << result;
                 break;
             }
         }
