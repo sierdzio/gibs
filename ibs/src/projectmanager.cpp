@@ -350,7 +350,7 @@ bool ProjectManager::onRunMoc(const QString &file)
             return false;
     }
 
-    const QFileInfo header(mFlags.relativePath() + "/" + file);
+    const QFileInfo header(file);
     const QString mocFile("moc_" + header.baseName() + ".cpp");
     const QString compiler(mQtDir + "/bin/moc");
     const QString predefs("moc_predefs.h");
@@ -360,7 +360,7 @@ bool ProjectManager::onRunMoc(const QString &file)
     arguments.append({ "--include", predefs });
     arguments.append(mQtIncludes);
     // TODO: GCC includes!
-    arguments.append({ mFlags.relativePath() + "/" + file, "-o", mocFile });
+    arguments.append({ file, "-o", mocFile });
 
     MetaProcess mp;
     mp.file = mocFile;
@@ -784,20 +784,26 @@ QString ProjectManager::capitalizeFirstLetter(const QString &string) const
 QString ProjectManager::findFile(const QString &file, const QStringList &includeDirs) const
 {
     QString result;
-    const QFileInfo fileInfo(file);
-    result = mFlags.relativePath() + "/" + fileInfo.fileName();
+    if (file.contains(mFlags.relativePath()))
+        result = file;
+    else
+        result = mFlags.relativePath() + "/" + file;
 
     // Search through include paths
-    if (!QFileInfo(result).exists()) {
-        for (const QString &inc : qAsConst(includeDirs)) {
-            result = mFlags.relativePath() + "/" + inc + "/" + fileInfo.fileName();
-            if (QFileInfo(result).exists()) {
-                //qDebug() << "Found file in include paths!" << result;
-                break;
-            }
+    if (QFileInfo(result).exists()) {
+        //qDebug() << "RETURNING:" << result;
+        return result;
+    }
+
+    for (const QString &inc : qAsConst(includeDirs)) {
+        const QString tempResult(mFlags.relativePath() + "/" + inc + "/" + file);
+        if (QFileInfo(tempResult).exists()) {
+            result = tempResult;
+            break;
         }
     }
 
+    //qDebug() << "FOUND:" << result;
     return result;
 }
 
