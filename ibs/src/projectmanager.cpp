@@ -11,6 +11,11 @@
 #include <QCryptographicHash>
 #include <QCoreApplication>
 
+#include <QDir>
+#include <QDirIterator>
+#include <QFileInfo>
+#include <QFile>
+
 // TODO: add categorized logging!
 #include <QDebug>
 
@@ -91,6 +96,9 @@ void ProjectManager::start()
             }
         }
     } else {
+        if (mFlags.autoIncludes())
+            scanForIncludes(mFlags.inputFile());
+
         onParseRequest(mFlags.inputFile());
     }
 
@@ -824,4 +832,28 @@ void ProjectManager::removeFile(const QString &path) const
         qInfo() << "Removing:" << path;
         QFile::remove(path);
     }
+}
+
+/*!
+ * Scans \a path for all subdirectories and adds them to include dir list.
+ *
+ * This can be used to automatically guess include paths in a project.
+ *
+ * \a path can be a file - the function will search for all subdirs of the
+ * directory where that file is located.
+ */
+void ProjectManager::scanForIncludes(const QString &path)
+{
+    QStringList result;
+
+    // Make sure we don't deal with a file
+    QDirIterator it(QFileInfo(path).path(),
+                    QDir::Dirs | QDir::NoDotAndDotDot,
+                    QDirIterator::Subdirectories);
+
+    while (it.hasNext()) {
+        result.append(it.next());
+    }
+
+    onIncludes(result);
 }

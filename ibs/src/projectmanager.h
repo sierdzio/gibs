@@ -79,6 +79,7 @@ private:
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;
     void removeFile(const QString &path) const;
+    void scanForIncludes(const QString &path);
 
     Flags mFlags;
 

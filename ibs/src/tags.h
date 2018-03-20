@@ -12,6 +12,8 @@ const QLatin1String jobs("jobs");
 const QLatin1String commands("commands");
 const QLatin1String commandSeparator(";");
 const QLatin1String prefix("prefix");
+const QLatin1String auto_include_flag("auto-include");
+const QLatin1String auto_qt_modules_flag("auto-qt-modules");
 // General
 const QLatin1String ibsCacheFileName(".ibs.cache");
 const QLatin1String inputFile("inputFile");

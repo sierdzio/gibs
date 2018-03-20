@@ -87,10 +87,14 @@ int main(int argc, char *argv[]) {
         {Tags::qt_dir_flag,
         QCoreApplication::translate(scope, "Specify Qt directory for Qt apps"),
         QCoreApplication::translate(scope, "Qt dir")},
+        {{"m", Tags::auto_qt_modules_flag},
+        QCoreApplication::translate(scope, "Automatically guess Qt modules used by the project. This is done using internal dictionary mapping Qt classes to modules.")},
         {Tags::clean,
         QCoreApplication::translate(scope, "Clear build directory")},
         {{"q", Tags::quick_flag},
         QCoreApplication::translate(scope, "'Convention over configuration' mode - parse files only up to first line of 'concrete code'. Do not check file checksums when doing incremental builds.")},
+        {{"a", Tags::auto_include_flag},
+        QCoreApplication::translate(scope, "Automatically scan source directory for include paths. This can be used instead of ibs command 'include some/path' if the path is below input file.")},
         {{"j", Tags::jobs},
         QCoreApplication::translate(scope, "Max number of threads used to compile and process the sources. If not specified, ibs will use max possible number of threads. If a fraction is specified, it will use given percentage of available cores (-j 0.5 means half of all CPU cores)"),
         QCoreApplication::translate(scope, "threads"),
@@ -111,6 +115,8 @@ int main(int argc, char *argv[]) {
     flags.setRun(parser.isSet(Tags::run));
     flags.setClean(parser.isSet(Tags::clean));
     flags.setQuickMode(parser.isSet(Tags::quick_flag));
+    flags.setQtAutoModules(parser.isSet(Tags::auto_qt_modules_flag));
+    flags.setAutoIncludes(parser.isSet(Tags::auto_include_flag));
     flags.setJobs(parser.value(Tags::jobs).toFloat(&jobsOk));
     flags.setQtDir(parser.value(Tags::qt_dir_flag));
     if (!args.isEmpty())

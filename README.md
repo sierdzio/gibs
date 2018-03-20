@@ -39,6 +39,11 @@ the command line. All available ibs commands are listed below
 default, ibs uses all CPU cores. Note: you can also specify a fraction as the
 argument to `j`. For example, `-j 0.5` will use half of all available CPU cores
 * `--clean` removes all build artefacts. Executable and ibs cache are left alone
+* `--auto-include` Automatically scans source directory for include paths. This
+can be used instead of ibs command 'include some/path' if the path is below
+input file
+* `--auto-qt-modules` Automatically guesses Qt modules used by the project. This
+is done using internal dictionary mapping Qt classes to modules
 
 # Commands
 

@@ -28,7 +28,7 @@ public:
     {
         return mClean;
     }
-    void setClean(bool clean)
+    void setClean(const bool clean)
     {
         mClean = clean;
     }
@@ -37,7 +37,7 @@ public:
     {
         return mQuickMode;
     }
-    void setQuickMode(bool quickMode)
+    void setQuickMode(const bool quickMode)
     {
         mQuickMode = quickMode;
     }
@@ -122,10 +122,32 @@ public:
         return result;
     }
 
+    bool qtAutoModules() const
+    {
+        return mQtAutoModules;
+    }
+
+    void setQtAutoModules(const bool qtAutoModules)
+    {
+        mQtAutoModules = qtAutoModules;
+    }
+
+    bool autoIncludes() const
+    {
+        return mAutoIncludes;
+    }
+
+    void setAutoIncludes(const bool autoIncludes)
+    {
+        mAutoIncludes = autoIncludes;
+    }
+
 private:
     bool mRun = false;
     bool mClean = false;
     bool mQuickMode = false;
+    bool mQtAutoModules = false;
+    bool mAutoIncludes = false;
 
     int mJobs = 0;
 
