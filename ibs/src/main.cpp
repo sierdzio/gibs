@@ -74,7 +74,12 @@ int main(int argc, char *argv[]) {
 
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("Test helper");
+    parser.setApplicationDescription("C++ in-source project builder. Compile your "
+                                     "projects without all the hassle connected "
+                                     "with preparing a project file. Just run "
+                                     "'ibs main.cpp' and enjoy your compiled "
+                                     "binary! More info: "
+                                     "https://github.com/sierdzio/ibs");
     parser.addHelpOption();
     parser.addVersionOption();
 

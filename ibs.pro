@@ -3,6 +3,7 @@ CONFIG += tests
 TEMPLATE = subdirs
 
 SUBDIRS += ibs \
+    qtheadermapper
 
 tests {
     !android {
