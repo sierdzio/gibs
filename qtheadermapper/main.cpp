@@ -6,6 +6,9 @@
 #include <QDirIterator>
 
 #include <QHash>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 #include <QDebug>
 
