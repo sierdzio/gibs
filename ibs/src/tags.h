@@ -34,6 +34,10 @@ const QLatin1String defines("define");
 const QLatin1String includes("include");
 const QLatin1String libs("lib");
 const QLatin1String tool("tool");
+const QLatin1String submodules("submodules");
+const QLatin1String depends("depends on");
+const QLatin1String link("link(");
+const QLatin1String linkEnd(")");
 // Qt support
 const QLatin1String qtDir("qtDir");
 // Qt modules
@@ -63,4 +67,5 @@ const QLatin1String uic("uic");
 const QLatin1String parsedFiles("parsedFiles");
 const QLatin1String fileChecksum("fileChecksum");
 const QLatin1String fileModificationDate("fileModificationDate");
+const QLatin1String scopes("scopes");
 }

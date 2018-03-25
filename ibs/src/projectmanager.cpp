@@ -51,53 +51,58 @@ void ProjectManager::start()
 {
     // First, check if any files need to be recompiled
     if (mCacheEnabled) {
-        for (const auto &cached : mParsedFiles.values()) {
-            // Check if object file exists. If somebody removed it, or used
-            // --clean, then we have to recompile!
 
-            if (mIsError)
-                return;
+        for (const auto &scope : mScopes.values()) {
+            for (const auto &cached : scope.parsedFiles()) {
+                // Check if object file exists. If somebody removed it, or used
+                // --clean, then we have to recompile!
 
-            if (isFileDirty(cached.path, mFlags.quickMode())) {
-                if (cached.type == FileInfo::Cpp) {
-                    parseFile(cached.path);
-                } else if (cached.type == FileInfo::QRC) {
-                    onRunTool(Tags::rcc, QStringList({ cached.path }));
-                }
-            } else if (!cached.objectFile.isEmpty()) {
-                // There should be an object file on disk - let's check
-                const QFileInfo objFile(cached.objectFile);
-                if (!objFile.exists()) {
-                    qDebug() << "Object file missing - recompiling";
-                    compile(cached.path);
-                }
-            } else if (!cached.generatedObjectFile.isEmpty()) {
-                // There should be an object file on disk - let's check
-                const QFileInfo objFile(cached.generatedObjectFile);
-                if (!objFile.exists()) {
-                    qDebug() << "Generated object file missing - recompiling";
-                    // TODO: also check and regenerate the generated file before
-                    // compiling it!
+                if (mIsError)
+                    return;
 
-                    const QFileInfo genFile(cached.generatedFile);
-                    if (!genFile.exists()) {
-                        qDebug() << "Generated file missing - regenerating";
-                        if (cached.type == FileInfo::Cpp) {
-                            // Moc file needs to be regenerated
-                            onRunMoc(cached.path);
-                        } else if (cached.type == FileInfo::QRC) {
-                            // QRC c++ file needs to be regenerated
-                            onRunTool(Tags::rcc, QStringList({ cached.path }));
-                        }
+                if (isFileDirty(cached.path, mFlags.quickMode(), scope)) {
+                    if (cached.type == FileInfo::Cpp) {
+                        parseFile(cached.path);
+                    } else if (cached.type == FileInfo::QRC) {
+                        onRunTool(Tags::rcc, QStringList({ cached.path }));
                     }
+                } else if (!cached.objectFile.isEmpty()) {
+                    // There should be an object file on disk - let's check
+                    const QFileInfo objFile(cached.objectFile);
+                    if (!objFile.exists()) {
+                        qDebug() << "Object file missing - recompiling";
+                        compile(cached.path);
+                    }
+                } else if (!cached.generatedObjectFile.isEmpty()) {
+                    // There should be an object file on disk - let's check
+                    const QFileInfo objFile(cached.generatedObjectFile);
+                    if (!objFile.exists()) {
+                        qDebug() << "Generated object file missing - recompiling";
+                        // TODO: also check and regenerate the generated file before
+                        // compiling it!
 
-                    //compile(cached.generatedFile);
+                        const QFileInfo genFile(cached.generatedFile);
+                        if (!genFile.exists()) {
+                            qDebug() << "Generated file missing - regenerating";
+                            if (cached.type == FileInfo::Cpp) {
+                                // Moc file needs to be regenerated
+                                onRunMoc(cached.path);
+                            } else if (cached.type == FileInfo::QRC) {
+                                // QRC c++ file needs to be regenerated
+                                onRunTool(Tags::rcc, QStringList({ cached.path }));
+                            }
+                        }
+
+                        //compile(cached.generatedFile);
+                    }
                 }
             }
         }
     } else {
         if (mFlags.autoIncludes())
             scanForIncludes(mFlags.inputFile());
+
+        Scope scope(mFlags.inputFile());
 
         onParseRequest(mFlags.inputFile());
     }
@@ -119,13 +124,15 @@ void ProjectManager::clean()
         }
     }
 
-    for (const auto &info : mParsedFiles.values()) {
-        if (!info.objectFile.isEmpty())
-            removeFile(info.objectFile);
-        if (!info.generatedFile.isEmpty())
-            removeFile(info.generatedFile);
-        if (!info.generatedObjectFile.isEmpty())
-            removeFile(info.generatedObjectFile);
+    for (const auto &scope : mScopes.values()) {
+        for (const auto &info : scope.parsedFiles()) {
+            if (!info.objectFile.isEmpty())
+                removeFile(info.objectFile);
+            if (!info.generatedFile.isEmpty())
+                removeFile(info.generatedFile);
+            if (!info.generatedObjectFile.isEmpty())
+                removeFile(info.generatedObjectFile);
+        }
     }
 
     emit finished();
@@ -163,13 +170,11 @@ void ProjectManager::saveCache() const
     mainObject.insert(Tags::includes, QJsonArray::fromStringList(mCustomIncludes));
     mainObject.insert(Tags::libs, QJsonArray::fromStringList(mCustomLibs));
 
-    QJsonArray filesArray;
-    for (const auto &file : mParsedFiles.keys()) {
-        const FileInfo &fi = mParsedFiles.value(file);
-        if (!fi.isEmpty())
-            filesArray.append(fi.toJsonArray());
+    QJsonArray scopesArray;
+    for (const auto &scope : mScopes.values()) {
+        scopesArray.append(scope.toJson());
     }
-    mainObject.insert(Tags::parsedFiles, filesArray);
+    mainObject.insert(Tags::scopes, scopesArray);
 
     // TODO: save also all tools that need to be run!
 
@@ -191,7 +196,8 @@ void ProjectManager::saveCache() const
  *
  * If returns true, \a file will be recompiled.
  */
-bool ProjectManager::isFileDirty(const QString &file, const bool isQuickMode) const
+bool ProjectManager::isFileDirty(const QString &file, const bool isQuickMode,
+                                 const Scope &scope) const
 {
     const QFileInfo realFile(file);
 
@@ -199,7 +205,7 @@ bool ProjectManager::isFileDirty(const QString &file, const bool isQuickMode) co
         qInfo() << "File has vanished!" << file;
     }
 
-    const FileInfo cachedFile(mParsedFiles.value(file));
+    const FileInfo cachedFile(scope.parsedFile(file));
 
     if (realFile.created() != cachedFile.dateCreated) {
         qDebug() << "Different creation date. Recompiling."
@@ -259,11 +265,10 @@ void ProjectManager::loadCache()
     onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));
     onLibs(jsonArrayToStringList(mainObject.value(Tags::libs).toArray()));
 
-    const QJsonArray filesArray = mainObject.value(Tags::parsedFiles).toArray();
-    for (const auto &file : filesArray) {
-        FileInfo fileInfo;
-        fileInfo.fromJsonArray(file.toArray());
-        mParsedFiles.insert(fileInfo.path, fileInfo);
+    const QJsonArray scopesArray = mainObject.value(Tags::scopes).toArray();
+    for (const auto &scopeJson : scopesArray) {
+        Scope scope = Scope::fromJson(scopeJson.toObject());
+        mScopes.insert(scope.id(), scope);
     }
 
     if (mFlags.inputFile().isEmpty()) {
@@ -296,13 +301,15 @@ void ProjectManager::loadCommands()
     parser.parse();
 }
 
-void ProjectManager::onParsed(const QString &file, const QString &source,
+void ProjectManager::onParsed(const QByteArray &scopeId,
+                              const QString &file, const QString &source,
                               const QByteArray &checksum,
                               const QDateTime &modified,
                               const QDateTime &created)
 {
     // Update parsed file info
-    FileInfo info = mParsedFiles.value(file);
+    Scope scope = mScopes.value(scopeId);
+    FileInfo info = scope.parsedFile(file);
     info.type = FileInfo::Cpp;
     info.path = file;
     info.checksum = checksum;
@@ -314,20 +321,24 @@ void ProjectManager::onParsed(const QString &file, const QString &source,
         info.objectFile = compile(source);
     }
 
-    mParsedFiles.insert(file, info);
+    // TODO: switch to pointers and modify in-place?
+    scope.insertParsedFile(info);
+    mScopes.insert(scopeId, scope);
 }
 
-void ProjectManager::onParseRequest(const QString &file, const bool force)
+void ProjectManager::onParseRequest(const QByteArray &scopeId, const QString &file, const bool force)
 {
     if (mIsError)
         return;
 
+    Scope scope = mScopes.value(scopeId);
+
     // Skip files which we have parsed already
-    if (!force and mParsedFiles.contains(file))
+    if (!force and scope.isParsed(file))
         return;
 
     // Find file in include dirs
-    const QString selectedFile(findFile(file, mCustomIncludes));
+    const QString selectedFile(scope.findFile(file));
 
     if (selectedFile.isEmpty()) {
         qWarning() << "Could not find file:" << file;
@@ -335,15 +346,18 @@ void ProjectManager::onParseRequest(const QString &file, const bool force)
     }
 
     // Skip again, because name could have changed
-    if (!force and mParsedFiles.contains(selectedFile))
+    if (!force and scope.isParsed(selectedFile))
         return;
 
     // Prevent file from being parsed twice
-    mParsedFiles.insert(selectedFile, FileInfo());
+    FileInfo info;
+    info.path = selectedFile;
+    scope.insertParsedFile(info);
+    mScopes.insert(scopeId, scope);
     parseFile(selectedFile);
 }
 
-bool ProjectManager::onRunMoc(const QString &file)
+bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
 {
     if (mIsError)
         return false;
@@ -376,12 +390,19 @@ bool ProjectManager::onRunMoc(const QString &file)
     // Generate MOC file
     runProcess(compiler, arguments, mp);
 
-    FileInfo info = mParsedFiles.value(file);
+    // TODO: use a RAII ScopeLocker to make sure we don't forget to re-insert
+    // it into the hash
+    Scope scope = mScopes.value(scopeId);
+    FileInfo info = scope.parsedFile(file);
     info.path = mFlags.relativePath() + "/" + file;
     info.generatedFile = mocFile;
     // Compile MOC file
     info.generatedObjectFile = compile(mocFile);
-    mParsedFiles.insert(file, info);
+
+    // TODO: IMPORTANT! Old code used 'file' as key for parsed file hash here,
+    // new code uses 'info.path' instead, and they are different!
+    scope.insertParsedFile(info);
+    mScopes.insert(scopeId, scope);
     return true;
 }
 
@@ -422,17 +443,11 @@ void ProjectManager::onDefines(const QStringList &defines)
     qInfo() << "Updating custom defines:" << mCustomDefines;
 }
 
-void ProjectManager::onIncludes(const QStringList &includes)
+void ProjectManager::onIncludes(const QByteArray &scopeId, const QStringList &includes)
 {
-    mCustomIncludes += includes;
-    mCustomIncludes.removeDuplicates();
-    for(const auto &incl : qAsConst(mCustomIncludes)) {
-        const QString &inc("-I"+ mFlags.relativePath() + "/" + incl);
-        if (!mCustomIncludeFlags.contains(inc)) {
-            mCustomIncludeFlags.append(inc);
-        }
-    }
-    qInfo() << "Updating custom includes:" << mCustomIncludes;
+    Scope scope = mScopes.value(scopeId);
+    scope.addIncludePaths(includes);
+    mScopes.insert(scopeId, scope);
 }
 
 void ProjectManager::onLibs(const QStringList &libs)
@@ -442,7 +457,8 @@ void ProjectManager::onLibs(const QStringList &libs)
     qInfo() << "Updating custom libs:" << mCustomLibs;
 }
 
-void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
+void ProjectManager::onRunTool(const QByteArray &scopeId, const QString &tool,
+                               const QStringList &args)
 {
     if (mIsError)
         return;
@@ -462,14 +478,15 @@ void ProjectManager::onRunTool(const QString &tool, const QStringList &args)
             mp.file = cppFile;
             runProcess(mQtDir + "/bin/" + tool, arguments, mp);
 
-            FileInfo info = mParsedFiles.value(qrcFile);
+            Scope scope = mScopes.value(scopeId);
+            FileInfo info = scope.parsedFile(qrcFile);
             info.type = FileInfo::QRC;
             info.path = mFlags.relativePath() + "/" + qrcFile;
             info.dateModified = file.lastModified();
             info.dateCreated = file.created();
             info.generatedFile = cppFile;
             info.generatedObjectFile = compile(cppFile);
-            mParsedFiles.insert(qrcFile, info);
+            scope.insertParsedFile(info);
         }
     } else if (tool == Tags::uic) {
         // TODO: add uic support
@@ -789,31 +806,31 @@ QString ProjectManager::capitalizeFirstLetter(const QString &string) const
     return (string[0].toUpper() + string.mid(1));
 }
 
-QString ProjectManager::findFile(const QString &file, const QStringList &includeDirs) const
-{
-    QString result;
-    if (file.contains(mFlags.relativePath()))
-        result = file;
-    else
-        result = mFlags.relativePath() + "/" + file;
+//QString ProjectManager::findFile(const QString &file, const QStringList &includeDirs) const
+//{
+//    QString result;
+//    if (file.contains(mFlags.relativePath()))
+//        result = file;
+//    else
+//        result = mFlags.relativePath() + "/" + file;
 
-    // Search through include paths
-    if (QFileInfo(result).exists()) {
-        //qDebug() << "RETURNING:" << result;
-        return result;
-    }
+//    // Search through include paths
+//    if (QFileInfo(result).exists()) {
+//        //qDebug() << "RETURNING:" << result;
+//        return result;
+//    }
 
-    for (const QString &inc : qAsConst(includeDirs)) {
-        const QString tempResult(mFlags.relativePath() + "/" + inc + "/" + file);
-        if (QFileInfo(tempResult).exists()) {
-            result = tempResult;
-            break;
-        }
-    }
+//    for (const QString &inc : qAsConst(includeDirs)) {
+//        const QString tempResult(mFlags.relativePath() + "/" + inc + "/" + file);
+//        if (QFileInfo(tempResult).exists()) {
+//            result = tempResult;
+//            break;
+//        }
+//    }
 
-    //qDebug() << "FOUND:" << result;
-    return result;
-}
+//    //qDebug() << "FOUND:" << result;
+//    return result;
+//}
 
 QStringList ProjectManager::jsonArrayToStringList(const QJsonArray &array) const
 {

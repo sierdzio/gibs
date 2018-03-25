@@ -10,6 +10,7 @@
 
 #include "tags.h"
 #include "flags.h"
+#include "scope.h"
 #include "fileinfo.h"
 #include "metaprocess.h"
 
@@ -41,22 +42,26 @@ public slots:
 protected slots:
     void onError(const QString &error);
     void saveCache() const;
-    bool isFileDirty(const QString &file, const bool isQuickMode) const;
+    bool isFileDirty(const QString &file, const bool isQuickMode,
+                     const Scope &scope) const;
 
-    void onParsed(const QString &file, const QString &source,
+    void onParsed(const QByteArray &scopeId,
+                  const QString &file, const QString &source,
                   const QByteArray &checksum,
                   const QDateTime &modified,
                   const QDateTime &created);
-    void onParseRequest(const QString &file, const bool force = false);
-    bool onRunMoc(const QString &file);
+    void onParseRequest(const QByteArray &scopeId, const QString &file,
+                        const bool force = false);
+    bool onRunMoc(const QByteArray &scopeId, const QString &file);
     // ibs commands
     void onTargetName(const QString &target);
     void onTargetType(const QString &type);
     void onQtModules(const QStringList &modules);
     void onDefines(const QStringList &defines);
-    void onIncludes(const QStringList &includes);
+    void onIncludes(const QByteArray &scopeId, const QStringList &includes);
     void onLibs(const QStringList &libs);
-    void onRunTool(const QString &tool, const QStringList &args);
+    void onRunTool(const QByteArray &scopeId, const QString &tool,
+                   const QStringList &args);
 
     // Process handling
     void onProcessErrorOccurred(QProcess::ProcessError _error);
@@ -76,7 +81,7 @@ private:
     QVector<ProcessPtr> findDependencies(const QString &file) const;
     QVector<ProcessPtr> findAllDependencies() const;
     QString capitalizeFirstLetter(const QString &string) const;
-    QString findFile(const QString &file, const QStringList &includeDirs) const;
+    //QString findFile(const QString &file, const QStringList &includeDirs) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;
     void removeFile(const QString &path) const;
     void scanForIncludes(const QString &path);
@@ -95,14 +100,16 @@ private:
 
     QStringList mCustomDefines;
     QStringList mCustomDefineFlags;
-    QStringList mCustomIncludes;
-    QStringList mCustomIncludeFlags;
+    //QStringList mCustomIncludes;
+    //QStringList mCustomIncludeFlags;
     QStringList mCustomLibs;
 
     QString mTargetName = "default";
     QString mTargetType = Tags::targetApp;
     QString mTargetLibType = Tags::targetLibDynamic;
-    QHash<QString, FileInfo> mParsedFiles;
+    //QHash<QString, FileInfo> mParsedFiles;
+    // scopeId, scope
+    QHash<QByteArray, Scope> mScopes;
 
     QVector<MetaProcess> mProcessQueue;
     QVector<QProcess *> mRunningJobs;
