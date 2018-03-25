@@ -68,7 +68,7 @@ protected slots:
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
 protected:
-    QString compile(const QString &file);
+    QString compile(const QByteArray &scopeId, const QString &file);
     void link();
     void parseFile(const QString &file);
 

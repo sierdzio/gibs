@@ -551,7 +551,7 @@ void ProjectManager::onProcessFinished(int exitCode, QProcess::ExitStatus exitSt
 /*!
  * Compiles \a file and returns the name of the generated object file.
  */
-QString ProjectManager::compile(const QString &file)
+QString ProjectManager::compile(const QByteArray &scopeId, const QString &file)
 {
     if (mIsError)
         return QString();
