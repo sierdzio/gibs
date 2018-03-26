@@ -23,7 +23,6 @@ ProjectManager::ProjectManager(const Flags &flags, QObject *parent)
     : QObject(parent), mFlags(flags)
 {
     mQtDir = mFlags.qtDir();
-    //onIncludes(QStringList { "." });
 }
 
 ProjectManager::~ProjectManager()
@@ -861,28 +860,4 @@ void ProjectManager::removeFile(const QString &path) const
         qInfo() << "Removing:" << path;
         QFile::remove(path);
     }
-}
-
-/*!
- * Scans \a path for all subdirectories and adds them to include dir list.
- *
- * This can be used to automatically guess include paths in a project.
- *
- * \a path can be a file - the function will search for all subdirs of the
- * directory where that file is located.
- */
-void ProjectManager::scanForIncludes(const QString &path)
-{
-    QStringList result;
-
-    // Make sure we don't deal with a file
-    QDirIterator it(QFileInfo(path).path(),
-                    QDir::Dirs | QDir::NoDotAndDotDot,
-                    QDirIterator::Subdirectories);
-
-    while (it.hasNext()) {
-        result.append(it.next());
-    }
-
-    onIncludes(result);
 }
