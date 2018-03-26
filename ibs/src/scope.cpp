@@ -1,6 +1,7 @@
 #include "scope.h"
 #include "tags.h"
 
+#include <QDirIterator>
 #include <QCryptographicHash>
 #include <QJsonArray>
 
@@ -11,6 +12,7 @@ Scope::Scope(const QString &name, const QString &relativePath)
       mName(name),
       mId(QCryptographicHash::hash(name.toUtf8(), QCryptographicHash::Sha1))
 {
+    addIncludePaths({"."});
 }
 
 QString Scope::name() const
@@ -82,6 +84,35 @@ void Scope::addIncludePaths(const QStringList &includes)
         }
     }
     qInfo() << "Updating custom includes:" << mCustomIncludes;
+}
+
+QStringList Scope::customIncludeFlags() const
+{
+    return mCustomIncludeFlags;
+}
+
+/*!
+ * Scans \a path for all subdirectories and adds them to include dir list.
+ *
+ * This can be used to automatically guess include paths in a project.
+ *
+ * \a path can be a file - the function will search for all subdirs of the
+ * directory where that file is located.
+ */
+void Scope::autoScanForIncludes()
+{
+    QStringList result;
+
+    // Make sure we don't deal with a file
+    QDirIterator it(QFileInfo(mName).path(),
+                    QDir::Dirs | QDir::NoDotAndDotDot,
+                    QDirIterator::Subdirectories);
+
+    while (it.hasNext()) {
+        result.append(it.next());
+    }
+
+    addIncludePaths(result);
 }
 
 QString Scope::findFile(const QString &file) const

@@ -69,12 +69,12 @@ protected slots:
 
 protected:
     QString compile(const QByteArray &scopeId, const QString &file);
-    void link();
+    void link(const QByteArray &scopeId);
     void parseFile(const QString &file);
 
 private:
     void updateQtModules(const QStringList &modules);
-    bool initializeMoc();
+    bool initializeMoc(const QByteArray &scopeId);
     void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp);
     void runNextProcess();
     ProcessPtr findDependency(const QString &file) const;

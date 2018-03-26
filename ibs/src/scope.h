@@ -26,6 +26,8 @@ public:
     bool isParsed(const QString &path) const;
 
     void addIncludePaths(const QStringList &includes);
+    QStringList customIncludeFlags() const;
+    void autoScanForIncludes();
 
     QString findFile(const QString &file) const;
 

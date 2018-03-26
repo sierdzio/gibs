@@ -23,7 +23,7 @@ ProjectManager::ProjectManager(const Flags &flags, QObject *parent)
     : QObject(parent), mFlags(flags)
 {
     mQtDir = mFlags.qtDir();
-    onIncludes(QStringList { "." });
+    //onIncludes(QStringList { "." });
 }
 
 ProjectManager::~ProjectManager()
@@ -49,6 +49,8 @@ QString ProjectManager::qtDir() const
 
 void ProjectManager::start()
 {
+    QByteArray tempScopeId;
+
     // First, check if any files need to be recompiled
     if (mCacheEnabled) {
 
@@ -64,14 +66,14 @@ void ProjectManager::start()
                     if (cached.type == FileInfo::Cpp) {
                         parseFile(cached.path);
                     } else if (cached.type == FileInfo::QRC) {
-                        onRunTool(Tags::rcc, QStringList({ cached.path }));
+                        onRunTool(scope.id(), Tags::rcc, QStringList({ cached.path }));
                     }
                 } else if (!cached.objectFile.isEmpty()) {
                     // There should be an object file on disk - let's check
                     const QFileInfo objFile(cached.objectFile);
                     if (!objFile.exists()) {
                         qDebug() << "Object file missing - recompiling";
-                        compile(cached.path);
+                        compile(scope.id(), cached.path);
                     }
                 } else if (!cached.generatedObjectFile.isEmpty()) {
                     // There should be an object file on disk - let's check
@@ -86,10 +88,10 @@ void ProjectManager::start()
                             qDebug() << "Generated file missing - regenerating";
                             if (cached.type == FileInfo::Cpp) {
                                 // Moc file needs to be regenerated
-                                onRunMoc(cached.path);
+                                onRunMoc(scope.id(), cached.path);
                             } else if (cached.type == FileInfo::QRC) {
                                 // QRC c++ file needs to be regenerated
-                                onRunTool(Tags::rcc, QStringList({ cached.path }));
+                                onRunTool(scope.id(), Tags::rcc, QStringList({ cached.path }));
                             }
                         }
 
@@ -99,18 +101,20 @@ void ProjectManager::start()
             }
         }
     } else {
+        Scope scope(mFlags.inputFile(), mFlags.relativePath());
+
         if (mFlags.autoIncludes())
-            scanForIncludes(mFlags.inputFile());
+            scope.autoScanForIncludes();
 
-        Scope scope(mFlags.inputFile());
 
-        onParseRequest(mFlags.inputFile());
+        onParseRequest(scope.id(), mFlags.inputFile());
+        tempScopeId = scope.id();
     }
 
     // When all jobs are done, notify main.cpp that we can quit
     connect(this, &ProjectManager::jobQueueEmpty, this, &ProjectManager::finished);
     // Parsing done, link it!
-    link();    
+    link(tempScopeId);
     saveCache();
 }
 
@@ -167,7 +171,7 @@ void ProjectManager::saveCache() const
     mainObject.insert(Tags::inputFile, mFlags.inputFile());
     mainObject.insert(Tags::qtModules, QJsonArray::fromStringList(mQtModules));
     mainObject.insert(Tags::defines, QJsonArray::fromStringList(mCustomDefines));
-    mainObject.insert(Tags::includes, QJsonArray::fromStringList(mCustomIncludes));
+    //mainObject.insert(Tags::includes, QJsonArray::fromStringList(mCustomIncludes));
     mainObject.insert(Tags::libs, QJsonArray::fromStringList(mCustomLibs));
 
     QJsonArray scopesArray;
@@ -262,7 +266,7 @@ void ProjectManager::loadCache()
     mQtDir = mainObject.value(Tags::qtDir).toString();
     onQtModules(jsonArrayToStringList(mainObject.value(Tags::qtModules).toArray()));
     onDefines(jsonArrayToStringList(mainObject.value(Tags::defines).toArray()));
-    onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));
+    //onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));
     onLibs(jsonArrayToStringList(mainObject.value(Tags::libs).toArray()));
 
     const QJsonArray scopesArray = mainObject.value(Tags::scopes).toArray();
@@ -318,7 +322,7 @@ void ProjectManager::onParsed(const QByteArray &scopeId,
 
     // Compile source file, if present
     if (!source.isEmpty() and source == file) {
-        info.objectFile = compile(source);
+        info.objectFile = compile(scopeId, source);
     }
 
     // TODO: switch to pointers and modify in-place?
@@ -368,7 +372,7 @@ bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
     }
 
     if (mQtIsMocInitialized == false) {
-        if (initializeMoc() == false)
+        if (initializeMoc(scopeId) == false)
             return false;
     }
 
@@ -397,7 +401,7 @@ bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
     info.path = mFlags.relativePath() + "/" + file;
     info.generatedFile = mocFile;
     // Compile MOC file
-    info.generatedObjectFile = compile(mocFile);
+    info.generatedObjectFile = compile(scopeId, mocFile);
 
     // TODO: IMPORTANT! Old code used 'file' as key for parsed file hash here,
     // new code uses 'info.path' instead, and they are different!
@@ -485,7 +489,7 @@ void ProjectManager::onRunTool(const QByteArray &scopeId, const QString &tool,
             info.dateModified = file.lastModified();
             info.dateCreated = file.created();
             info.generatedFile = cppFile;
-            info.generatedObjectFile = compile(cppFile);
+            info.generatedObjectFile = compile(scopeId, cppFile);
             scope.insertParsedFile(info);
         }
     } else if (tool == Tags::uic) {
@@ -567,14 +571,16 @@ QString ProjectManager::compile(const QByteArray &scopeId, const QString &file)
         }
     }
 
+    const Scope scope = mScopes.value(scopeId);
+
     //qInfo() << "Compiling:" << file << "into:" << objectFile;
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
     QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
 
-    arguments.append(mCustomDefineFlags);
-    arguments.append(mQtDefines);
-    arguments.append(mQtIncludes);
-    arguments.append(mCustomIncludeFlags);
+    arguments.append(mCustomDefineFlags); // TODO: scope!
+    arguments.append(mQtDefines); // TODO: scope!
+    arguments.append(mQtIncludes); // TODO: scope!
+    arguments.append(scope.customIncludeFlags());
     arguments.append({ "-o", objectFile, file });
 
     MetaProcess mp;
@@ -585,19 +591,21 @@ QString ProjectManager::compile(const QByteArray &scopeId, const QString &file)
     return objectFile;
 }
 
-void ProjectManager::link()
+void ProjectManager::link(const QByteArray &scopeId)
 {
     if (mIsError)
         return;
 
+    const Scope scope = mScopes.value(scopeId);
     QStringList objectFiles;
-
-    for (const auto &info : mParsedFiles.values()) {
+    for (const auto &info : scope.parsedFiles()) {
         if (!info.objectFile.isEmpty())
             objectFiles.append(info.objectFile);
         if (!info.generatedObjectFile.isEmpty())
             objectFiles.append(info.generatedObjectFile);
     }
+
+    // TODO: add dependent scopes (from other subprojects)
 
     //qInfo() << "Linking:" << objectFiles;
     const QString compiler("g++");
@@ -694,7 +702,7 @@ void ProjectManager::updateQtModules(const QStringList &modules)
     mQtLibs.append("-lpthread");
 }
 
-bool ProjectManager::initializeMoc()
+bool ProjectManager::initializeMoc(const QByteArray &scopeId)
 {
     qInfo() << "Initializig MOC";
     const QString compiler("g++");
@@ -706,7 +714,11 @@ bool ProjectManager::initializeMoc()
     FileInfo info;
     info.path = predefs;
     info.generatedFile = predefs;
-    mParsedFiles.insert(predefs, info);
+    Scope scope = mScopes.value(scopeId);
+    scope.insertParsedFile(info);
+    mScopes.insert(scopeId, scope);
+    // TODO: is predefs info lost? Check dependency resolving
+    //mParsedFiles.insert(predefs, info);
 
     MetaProcess mp;
     mp.file = predefs;
