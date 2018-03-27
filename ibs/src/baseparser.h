@@ -1,12 +1,14 @@
 #pragma once
 
+#include "scope.h"
+
 #include <QObject>
 
 class BaseParser : public QObject
 {
     Q_OBJECT
 public:
-    explicit BaseParser(QObject *parent = nullptr);
+    explicit BaseParser(const Scope &scope, QObject *parent = nullptr);
 
 signals:
     void error(const QString &error) const;
@@ -17,11 +19,14 @@ signals:
     void includes(const QStringList &includes) const;
     void libs(const QStringList &libs) const;
     void runTool(const QString &tool, const QStringList &args) const;
+    void scopeUpdated(const Scope &scope);
 
 public slots:
-    virtual bool parse() const = 0;
+    virtual bool parse() = 0;
 
 protected:
-    bool parseCommand(const QString &commandString) const;
+    bool parseCommand(const QString &commandString);
     QString extractArguments(const QString &line, const QLatin1String &tag) const;
+
+    Scope mScope;
 };

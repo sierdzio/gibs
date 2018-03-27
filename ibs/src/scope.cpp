@@ -86,6 +86,11 @@ void Scope::addIncludePaths(const QStringList &includes)
     qInfo() << "Updating custom includes:" << mCustomIncludes;
 }
 
+QStringList Scope::includePaths() const
+{
+    return mCustomIncludes;
+}
+
 QStringList Scope::customIncludeFlags() const
 {
     return mCustomIncludeFlags;
@@ -113,6 +118,45 @@ void Scope::autoScanForIncludes()
     }
 
     addIncludePaths(result);
+}
+
+void Scope::setTargetName(const QString &target)
+{
+    mTargetName = target;
+}
+
+void Scope::setTargetType(const QString &type)
+{
+    mTargetType = type;
+}
+
+void Scope::setQtModules(const QStringList &modules)
+{
+    QStringList mod(mQtModules);
+    mod += modules;
+    mod.removeDuplicates();
+
+    if (mod != mQtModules) {
+        updateQtModules(mod);
+    }
+}
+
+void Scope::addDefines(const QStringList &defines)
+{
+    mCustomDefines += defines;
+    mCustomDefines.removeDuplicates();
+    for (const auto &define : qAsConst(mCustomDefines)) {
+        const QString def("-D" + define);
+        if (!mCustomDefineFlags.contains(def)) {
+            mCustomDefineFlags.append(def);
+        }
+    }
+}
+
+void Scope::addLibs(const QStringList &libs)
+{
+    mCustomLibs += libs;
+    mCustomLibs.removeDuplicates();
 }
 
 QString Scope::findFile(const QString &file) const
@@ -149,4 +193,54 @@ QString Scope::findFile(const QString &file, const QStringList &includeDirs) con
 
     //qDebug() << "FOUND:" << result;
     return result;
+}
+
+void Scope::updateQtModules(const QStringList &modules)
+{
+    mQtModules = modules;
+    mQtIncludes.clear();
+    mQtLibs.clear();
+    mQtDefines.clear();
+
+    for(const QString &module : qAsConst(mQtModules)) {
+        mQtDefines.append("-DQT_" + module.toUpper() + "_LIB");
+    }
+
+    mQtIncludes.append("-I" + mQtDir + "/include");
+    mQtIncludes.append("-I" + mQtDir + "/mkspecs/linux-g++");
+
+    // TODO: pre-capitalize module letters to do both loops faster
+    for(const QString &module : qAsConst(mQtModules)) {
+        const QString dir("-I" + mQtDir + "/include/Qt");
+        if (module == Tags::quickcontrols2) {
+            mQtIncludes.append(dir + "QuickControls2");
+        } else if (module == Tags::quickwidgets) {
+            mQtIncludes.append(dir + "QuickWidgets");
+        } else {
+            mQtIncludes.append(dir + capitalizeFirstLetter(module));
+        }
+    }
+
+    mQtLibs.append("-Wl,-rpath," + mQtDir + "/lib");
+    mQtLibs.append("-L" + mQtDir + "/lib");
+
+    for(const QString &module : qAsConst(mQtModules)) {
+        // TODO: use correct mkspecs
+        // TODO: use qmake -query to get good paths
+        const QString lib("-lQt5");
+        if (module == Tags::quickcontrols2) {
+            mQtLibs.append(lib + "QuickControls2");
+        } else if (module == Tags::quickwidgets) {
+            mQtLibs.append(lib + "QuickWidgets");
+        } else {
+            mQtLibs.append(lib + capitalizeFirstLetter(module));
+        }
+    }
+
+    mQtLibs.append("-lpthread");
+}
+
+QString Scope::capitalizeFirstLetter(const QString &string) const
+{
+    return (string[0].toUpper() + string.mid(1));
 }

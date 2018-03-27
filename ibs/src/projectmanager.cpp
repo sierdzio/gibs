@@ -52,7 +52,6 @@ void ProjectManager::start()
 
     // First, check if any files need to be recompiled
     if (mCacheEnabled) {
-
         for (const auto &scope : mScopes.values()) {
             for (const auto &cached : scope.parsedFiles()) {
                 // Check if object file exists. If somebody removed it, or used
@@ -63,7 +62,7 @@ void ProjectManager::start()
 
                 if (isFileDirty(cached.path, mFlags.quickMode(), scope)) {
                     if (cached.type == FileInfo::Cpp) {
-                        parseFile(cached.path);
+                        parseFile(scope.id(), cached.path);
                     } else if (cached.type == FileInfo::QRC) {
                         onRunTool(scope.id(), Tags::rcc, QStringList({ cached.path }));
                     }
@@ -79,9 +78,6 @@ void ProjectManager::start()
                     const QFileInfo objFile(cached.generatedObjectFile);
                     if (!objFile.exists()) {
                         qDebug() << "Generated object file missing - recompiling";
-                        // TODO: also check and regenerate the generated file before
-                        // compiling it!
-
                         const QFileInfo genFile(cached.generatedFile);
                         if (!genFile.exists()) {
                             qDebug() << "Generated file missing - regenerating";
@@ -357,7 +353,7 @@ void ProjectManager::onParseRequest(const QByteArray &scopeId, const QString &fi
     info.path = selectedFile;
     scope.insertParsedFile(info);
     mScopes.insert(scopeId, scope);
-    parseFile(selectedFile);
+    parseFile(scopeId, selectedFile);
 }
 
 bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
@@ -409,56 +405,56 @@ bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
     return true;
 }
 
-void ProjectManager::onTargetName(const QString &target)
-{
-    qInfo() << "Setting target name:" << target;
-    mTargetName = target;
-}
+//void ProjectManager::onTargetName(const QString &target)
+//{
+//    qInfo() << "Setting target name:" << target;
+//    mTargetName = target;
+//}
 
-void ProjectManager::onTargetType(const QString &type)
-{
-    qInfo() << "Setting target type:" << type;
-    mTargetType = type;
-}
+//void ProjectManager::onTargetType(const QString &type)
+//{
+//    qInfo() << "Setting target type:" << type;
+//    mTargetType = type;
+//}
 
-void ProjectManager::onQtModules(const QStringList &modules)
-{
-    QStringList mod(mQtModules);
-    mod += modules;
-    mod.removeDuplicates();
+//void ProjectManager::onQtModules(const QStringList &modules)
+//{
+//    QStringList mod(mQtModules);
+//    mod += modules;
+//    mod.removeDuplicates();
 
-    if (mod != mQtModules) {
-        qInfo() << "Updating required Qt module list:" << mod;
-        updateQtModules(mod);
-    }
-}
+//    if (mod != mQtModules) {
+//        qInfo() << "Updating required Qt module list:" << mod;
+//        updateQtModules(mod);
+//    }
+//}
 
-void ProjectManager::onDefines(const QStringList &defines)
-{
-    mCustomDefines += defines;
-    mCustomDefines.removeDuplicates();
-    for (const auto &define : qAsConst(mCustomDefines)) {
-        const QString def("-D" + define);
-        if (!mCustomDefineFlags.contains(def)) {
-            mCustomDefineFlags.append(def);
-        }
-    }
-    qInfo() << "Updating custom defines:" << mCustomDefines;
-}
+//void ProjectManager::onDefines(const QStringList &defines)
+//{
+//    mCustomDefines += defines;
+//    mCustomDefines.removeDuplicates();
+//    for (const auto &define : qAsConst(mCustomDefines)) {
+//        const QString def("-D" + define);
+//        if (!mCustomDefineFlags.contains(def)) {
+//            mCustomDefineFlags.append(def);
+//        }
+//    }
+//    qInfo() << "Updating custom defines:" << mCustomDefines;
+//}
 
-void ProjectManager::onIncludes(const QByteArray &scopeId, const QStringList &includes)
-{
-    Scope scope = mScopes.value(scopeId);
-    scope.addIncludePaths(includes);
-    mScopes.insert(scopeId, scope);
-}
+//void ProjectManager::onIncludes(const QByteArray &scopeId, const QStringList &includes)
+//{
+//    Scope scope = mScopes.value(scopeId);
+//    scope.addIncludePaths(includes);
+//    mScopes.insert(scopeId, scope);
+//}
 
-void ProjectManager::onLibs(const QStringList &libs)
-{
-    mCustomLibs += libs;
-    mCustomLibs.removeDuplicates();
-    qInfo() << "Updating custom libs:" << mCustomLibs;
-}
+//void ProjectManager::onLibs(const QStringList &libs)
+//{
+//    mCustomLibs += libs;
+//    mCustomLibs.removeDuplicates();
+//    qInfo() << "Updating custom libs:" << mCustomLibs;
+//}
 
 void ProjectManager::onRunTool(const QByteArray &scopeId, const QString &tool,
                                const QStringList &args)
@@ -638,68 +634,68 @@ void ProjectManager::link(const QByteArray &scopeId)
     runProcess(compiler, arguments, mp);
 }
 
-void ProjectManager::parseFile(const QString &file)
+void ProjectManager::parseFile(const QByteArray &scopeId, const QString &file)
 {
-    FileParser parser(file, mCustomIncludes);
+    FileParser parser(mScopes.value(scopeId), file);
     connect(&parser, &FileParser::error, this, &ProjectManager::error);
     connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
     connect(&parser, &FileParser::runMoc, this, &ProjectManager::onRunMoc);
-    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
-    connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
-    connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
-    connect(&parser, &FileParser::defines, this, &ProjectManager::onDefines);
-    connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
-    connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
+//    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
+//    connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
+//    connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
+//    connect(&parser, &FileParser::defines, this, &ProjectManager::onDefines);
+//    connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
+//    connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
     connect(&parser, &FileParser::runTool, this, &ProjectManager::onRunTool);
 
     parser.parse();
 }
 
-void ProjectManager::updateQtModules(const QStringList &modules)
-{
-    mQtModules = modules;
-    mQtIncludes.clear();
-    mQtLibs.clear();
-    mQtDefines.clear();
+//void ProjectManager::updateQtModules(const QStringList &modules)
+//{
+//    mQtModules = modules;
+//    mQtIncludes.clear();
+//    mQtLibs.clear();
+//    mQtDefines.clear();
 
-    for(const QString &module : qAsConst(mQtModules)) {
-        mQtDefines.append("-DQT_" + module.toUpper() + "_LIB");
-    }
+//    for(const QString &module : qAsConst(mQtModules)) {
+//        mQtDefines.append("-DQT_" + module.toUpper() + "_LIB");
+//    }
 
-    mQtIncludes.append("-I" + mQtDir + "/include");
-    mQtIncludes.append("-I" + mQtDir + "/mkspecs/linux-g++");
+//    mQtIncludes.append("-I" + mQtDir + "/include");
+//    mQtIncludes.append("-I" + mQtDir + "/mkspecs/linux-g++");
 
-    // TODO: pre-capitalize module letters to do both loops faster
-    for(const QString &module : qAsConst(mQtModules)) {
-        const QString dir("-I" + mQtDir + "/include/Qt");
-        if (module == Tags::quickcontrols2) {
-            mQtIncludes.append(dir + "QuickControls2");
-        } else if (module == Tags::quickwidgets) {
-            mQtIncludes.append(dir + "QuickWidgets");
-        } else {
-            mQtIncludes.append(dir + capitalizeFirstLetter(module));
-        }
-    }
+//    // TODO: pre-capitalize module letters to do both loops faster
+//    for(const QString &module : qAsConst(mQtModules)) {
+//        const QString dir("-I" + mQtDir + "/include/Qt");
+//        if (module == Tags::quickcontrols2) {
+//            mQtIncludes.append(dir + "QuickControls2");
+//        } else if (module == Tags::quickwidgets) {
+//            mQtIncludes.append(dir + "QuickWidgets");
+//        } else {
+//            mQtIncludes.append(dir + capitalizeFirstLetter(module));
+//        }
+//    }
 
-    mQtLibs.append("-Wl,-rpath," + mQtDir + "/lib");
-    mQtLibs.append("-L" + mQtDir + "/lib");
+//    mQtLibs.append("-Wl,-rpath," + mQtDir + "/lib");
+//    mQtLibs.append("-L" + mQtDir + "/lib");
 
-    for(const QString &module : qAsConst(mQtModules)) {
-        // TODO: use correct mkspecs
-        // TODO: use qmake -query to get good paths
-        const QString lib("-lQt5");
-        if (module == Tags::quickcontrols2) {
-            mQtLibs.append(lib + "QuickControls2");
-        } else if (module == Tags::quickwidgets) {
-            mQtLibs.append(lib + "QuickWidgets");
-        } else {
-            mQtLibs.append(lib + capitalizeFirstLetter(module));
-        }
-    }
+//    for(const QString &module : qAsConst(mQtModules)) {
+//        // TODO: use correct mkspecs
+//        // TODO: use qmake -query to get good paths
+//        const QString lib("-lQt5");
+//        if (module == Tags::quickcontrols2) {
+//            mQtLibs.append(lib + "QuickControls2");
+//        } else if (module == Tags::quickwidgets) {
+//            mQtLibs.append(lib + "QuickWidgets");
+//        } else {
+//            mQtLibs.append(lib + capitalizeFirstLetter(module));
+//        }
+//    }
 
-    mQtLibs.append("-lpthread");
-}
+//    mQtLibs.append("-lpthread");
+//}
 
 bool ProjectManager::initializeMoc(const QByteArray &scopeId)
 {
@@ -812,10 +808,10 @@ QVector<ProcessPtr> ProjectManager::findAllDependencies() const
     return result;
 }
 
-QString ProjectManager::capitalizeFirstLetter(const QString &string) const
-{
-    return (string[0].toUpper() + string.mid(1));
-}
+//QString ProjectManager::capitalizeFirstLetter(const QString &string) const
+//{
+//    return (string[0].toUpper() + string.mid(1));
+//}
 
 //QString ProjectManager::findFile(const QString &file, const QStringList &includeDirs) const
 //{

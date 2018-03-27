@@ -54,12 +54,12 @@ protected slots:
                         const bool force = false);
     bool onRunMoc(const QByteArray &scopeId, const QString &file);
     // ibs commands
-    void onTargetName(const QString &target);
-    void onTargetType(const QString &type);
-    void onQtModules(const QStringList &modules);
-    void onDefines(const QStringList &defines);
-    void onIncludes(const QByteArray &scopeId, const QStringList &includes);
-    void onLibs(const QStringList &libs);
+//    void onTargetName(const QString &target);
+//    void onTargetType(const QString &type);
+//    void onQtModules(const QStringList &modules);
+//    void onDefines(const QStringList &defines);
+//    void onIncludes(const QByteArray &scopeId, const QStringList &includes);
+//    void onLibs(const QStringList &libs);
     void onRunTool(const QByteArray &scopeId, const QString &tool,
                    const QStringList &args);
 
@@ -70,17 +70,17 @@ protected slots:
 protected:
     QString compile(const QByteArray &scopeId, const QString &file);
     void link(const QByteArray &scopeId);
-    void parseFile(const QString &file);
+    void parseFile(const QByteArray &scopeId, const QString &file);
 
 private:
-    void updateQtModules(const QStringList &modules);
+    //void updateQtModules(const QStringList &modules);
     bool initializeMoc(const QByteArray &scopeId);
     void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp);
     void runNextProcess();
     ProcessPtr findDependency(const QString &file) const;
     QVector<ProcessPtr> findDependencies(const QString &file) const;
     QVector<ProcessPtr> findAllDependencies() const;
-    QString capitalizeFirstLetter(const QString &string) const;
+//    QString capitalizeFirstLetter(const QString &string) const;
     //QString findFile(const QString &file, const QStringList &includeDirs) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;
     void removeFile(const QString &path) const;
@@ -91,22 +91,24 @@ private:
     bool mIsError = false;
     bool mCacheEnabled = false;
 
-    QString mQtDir;
-    QStringList mQtModules;
-    bool mQtIsMocInitialized = false;
-    QStringList mQtIncludes;
-    QStringList mQtLibs;
-    QStringList mQtDefines;
+    // TODO: ... what about global settings? Hm.
 
-    QStringList mCustomDefines;
-    QStringList mCustomDefineFlags;
-    //QStringList mCustomIncludes;
-    //QStringList mCustomIncludeFlags;
-    QStringList mCustomLibs;
+//    QString mQtDir;
+//    QStringList mQtModules;
+//    bool mQtIsMocInitialized = false;
+//    QStringList mQtIncludes;
+//    QStringList mQtLibs;
+//    QStringList mQtDefines;
 
-    QString mTargetName = "default";
-    QString mTargetType = Tags::targetApp;
-    QString mTargetLibType = Tags::targetLibDynamic;
+//    QStringList mCustomDefines;
+//    QStringList mCustomDefineFlags;
+//    //QStringList mCustomIncludes;
+//    //QStringList mCustomIncludeFlags;
+//    QStringList mCustomLibs;
+
+//    QString mTargetName = "default";
+//    QString mTargetType = Tags::targetApp;
+//    QString mTargetLibType = Tags::targetLibDynamic;
     //QHash<QString, FileInfo> mParsedFiles;
     // scopeId, scope
     QHash<QByteArray, Scope> mScopes;

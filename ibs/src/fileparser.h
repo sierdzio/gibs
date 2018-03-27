@@ -1,15 +1,15 @@
 #pragma once
 
-#include <QObject>
-
 #include "baseparser.h"
+
+#include <QObject>
 
 class FileParser : public BaseParser
 {
     Q_OBJECT
 public:
-    explicit FileParser(const QString &file,
-                        const QStringList &includeDirs = QStringList(),
+    explicit FileParser(const Scope &scope,
+                        const QString &file,
                         BaseParser *parent = nullptr);
 
 signals:
@@ -21,11 +21,10 @@ signals:
     void runMoc(const QString &file) const;
 
 public slots:
-    bool parse() const override final;
+    bool parse() override final;
 
 protected:
     QString findFileExtension(const QString &filePath) const;
 
     const QString mFile;
-    QStringList mIncludeDirs;
 };

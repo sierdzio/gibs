@@ -9,15 +9,14 @@
 // TODO: add categorized logging!
 #include <QDebug>
 
-FileParser::FileParser(const QString &file, const QStringList &includeDirs, BaseParser *parent)
-    : BaseParser (parent),
-      mFile(file),
-      mIncludeDirs(includeDirs)
+FileParser::FileParser(const Scope &scope, const QString &file, BaseParser *parent)
+    : BaseParser (scope, parent),
+      mFile(file)
 {    
 }
 
-bool FileParser::parse() const
-{
+bool FileParser::parse()
+ {
     QFile file(mFile);
     if (mFile.isEmpty() or !file.exists()) {
         emit error(QString("File %1 does not exist").arg(mFile));
@@ -92,7 +91,7 @@ bool FileParser::parse() const
 
             // Search through include paths
             if (ext.isEmpty()) {
-                for (const QString &inc : qAsConst(mIncludeDirs)) {
+                for (const QString &inc : mScope.includePaths()) {
                     const QString incBase(inc + "/" + header.baseName());
                     ext = findFileExtension(incBase);
                     if (!ext.isEmpty()) {
