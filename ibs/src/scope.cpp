@@ -7,8 +7,9 @@
 
 #include <QDebug>
 
-Scope::Scope(const QString &name, const QString &relativePath)
-    : mRelativePath(relativePath),
+Scope::Scope(const QString &name, const QString &relativePath, QObject *parent)
+    : QObject(parent),
+      mRelativePath(relativePath),
       mName(name),
       mId(QCryptographicHash::hash(name.toUtf8(), QCryptographicHash::Sha1))
 {
@@ -35,21 +36,34 @@ QJsonObject Scope::toJson() const
     }
 
     object.insert(Tags::parsedFiles, filesArray);
-    // TODO: implement
+    object.insert(Tags::targetName, mTargetName);
+    object.insert(Tags::targetType, mTargetType);
+    object.insert(Tags::targetLib, mTargetLibType);
+    object.insert(Tags::qtModules, QJsonArray::fromStringList(mQtModules));
+    object.insert(Tags::defines, QJsonArray::fromStringList(mCustomDefines));
+    object.insert(Tags::libs, QJsonArray::fromStringList(mCustomLibs));
+
     return object;
 }
 
-Scope Scope::fromJson(const QJsonObject &json)
+Scope *Scope::fromJson(const QJsonObject &json)
 {
-    Scope scope;
+    Scope *scope = new Scope();
     const QJsonArray filesArray = json.value(Tags::parsedFiles).toArray();
     for (const auto &file : filesArray) {
         FileInfo fileInfo;
         fileInfo.fromJsonArray(file.toArray());
-        scope.mParsedFiles.insert(fileInfo.path, fileInfo);
+        scope->mParsedFiles.insert(fileInfo.path, fileInfo);
     }
 
-    // TODO: implement
+    scope->setTargetName(json.value(Tags::targetName).toString());
+    scope->setTargetType(json.value(Tags::targetType).toString());
+    scope->mTargetLibType = json.value(Tags::targetLib).toString();
+    scope->setQtModules(scope->jsonArrayToStringList(json.value(Tags::qtModules).toArray()));
+    scope->addDefines(scope->jsonArrayToStringList(json.value(Tags::defines).toArray()));
+    //onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));
+    scope->addLibs(scope->jsonArrayToStringList(json.value(Tags::libs).toArray()));
+
     return scope;
 }
 
@@ -178,14 +192,14 @@ QString Scope::findFile(const QString &file, const QStringList &includeDirs) con
         result = mRelativePath + "/" + file;
 
     // Search through include paths
-    if (QFileInfo(result).exists()) {
+    if (QFileInfo::exists(result)) {
         //qDebug() << "RETURNING:" << result;
         return result;
     }
 
     for (const QString &inc : qAsConst(includeDirs)) {
         const QString tempResult(mRelativePath + "/" + inc + "/" + file);
-        if (QFileInfo(tempResult).exists()) {
+        if (QFileInfo::exists(tempResult)) {
             result = tempResult;
             break;
         }
@@ -243,4 +257,70 @@ void Scope::updateQtModules(const QStringList &modules)
 QString Scope::capitalizeFirstLetter(const QString &string) const
 {
     return (string[0].toUpper() + string.mid(1));
+}
+
+QStringList Scope::jsonArrayToStringList(const QJsonArray &array) const
+{
+    QStringList result;
+
+    for (const auto &value : array) {
+        result.append(value.toString());
+    }
+
+    return result;
+}
+
+bool Scope::qtIsMocInitialized() const
+{
+    return mQtIsMocInitialized;
+}
+
+void Scope::setQtIsMocInitialized(bool qtIsMocInitialized)
+{
+    mQtIsMocInitialized = qtIsMocInitialized;
+}
+
+QStringList Scope::customLibs() const
+{
+    return mCustomLibs;
+}
+
+QString Scope::targetLibType() const
+{
+    return mTargetLibType;
+}
+
+QString Scope::targetType() const
+{
+    return mTargetType;
+}
+
+QString Scope::targetName() const
+{
+    return mTargetName;
+}
+
+QStringList Scope::qtLibs() const
+{
+    return mQtLibs;
+}
+
+QStringList Scope::qtIncludes() const
+{
+    return mQtIncludes;
+}
+
+QStringList Scope::qtDefines() const
+{
+    return mQtDefines;
+}
+
+QStringList Scope::customDefineFlags() const
+{
+    return mCustomDefineFlags;
+}
+
+QStringList Scope::qtModules() const
+{
+    return mQtModules;
 }

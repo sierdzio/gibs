@@ -43,7 +43,7 @@ protected slots:
     void onError(const QString &error);
     void saveCache() const;
     bool isFileDirty(const QString &file, const bool isQuickMode,
-                     const Scope &scope) const;
+                     Scope *scope) const;
 
     void onParsed(const QByteArray &scopeId,
                   const QString &file, const QString &source,
@@ -80,9 +80,9 @@ private:
     ProcessPtr findDependency(const QString &file) const;
     QVector<ProcessPtr> findDependencies(const QString &file) const;
     QVector<ProcessPtr> findAllDependencies() const;
-//    QString capitalizeFirstLetter(const QString &string) const;
+    //QString capitalizeFirstLetter(const QString &string) const;
     //QString findFile(const QString &file, const QStringList &includeDirs) const;
-    QStringList jsonArrayToStringList(const QJsonArray &array) const;
+    //QStringList jsonArrayToStringList(const QJsonArray &array) const;
     void removeFile(const QString &path) const;
     void scanForIncludes(const QString &path);
 
@@ -93,7 +93,8 @@ private:
 
     // TODO: ... what about global settings? Hm.
 
-//    QString mQtDir;
+    // TODO: Allow different Qt dir per subproject (scope)
+    QString mQtDir;
 //    QStringList mQtModules;
 //    bool mQtIsMocInitialized = false;
 //    QStringList mQtIncludes;
@@ -111,7 +112,7 @@ private:
 //    QString mTargetLibType = Tags::targetLibDynamic;
     //QHash<QString, FileInfo> mParsedFiles;
     // scopeId, scope
-    QHash<QByteArray, Scope> mScopes;
+    QHash<QByteArray, Scope*> mScopes; // TODO: QSharedPointer<Scope>
 
     QVector<MetaProcess> mProcessQueue;
     QVector<QProcess *> mRunningJobs;

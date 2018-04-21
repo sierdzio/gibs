@@ -1,13 +1,13 @@
 #include "commandparser.h"
 #include "tags.h"
 
-CommandParser::CommandParser(const QString &commands, QObject *parent)
-    : BaseParser(parent),
+CommandParser::CommandParser(const QString &commands, Scope *scope, QObject *parent)
+    : BaseParser(scope, parent),
       mCommandsRaw(commands)
 {    
 }
 
-bool CommandParser::parse() const
+bool CommandParser::parse()
 {
     const QStringList commands(mCommandsRaw.split(Tags::commandSeparator));
 

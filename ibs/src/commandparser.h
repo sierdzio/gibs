@@ -8,10 +8,10 @@ class CommandParser : public BaseParser
 {
     Q_OBJECT
 public:
-    explicit CommandParser(const QString &commands, QObject *parent = nullptr);
+    explicit CommandParser(const QString &commands, Scope *scope, QObject *parent = nullptr);
 
 public slots:
-    bool parse() const override final;
+    bool parse() override final;
 
 private:
     QString mCommandsRaw;

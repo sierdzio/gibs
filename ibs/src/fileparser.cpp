@@ -9,7 +9,7 @@
 // TODO: add categorized logging!
 #include <QDebug>
 
-FileParser::FileParser(const Scope &scope, const QString &file, BaseParser *parent)
+FileParser::FileParser(const QString &file, Scope *scope, BaseParser *parent)
     : BaseParser (scope, parent),
       mFile(file)
 {    

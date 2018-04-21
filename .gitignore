@@ -5,6 +5,7 @@ build-*
 *.log
 *.data
 *.user*
+.qmake.stash
 *.pdb
 *.obj
 *.o

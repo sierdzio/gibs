@@ -3,12 +3,14 @@
 #include "scope.h"
 
 #include <QObject>
+#include <QPointer>
 
 class BaseParser : public QObject
 {
     Q_OBJECT
+
 public:
-    explicit BaseParser(const Scope &scope, QObject *parent = nullptr);
+    explicit BaseParser(Scope *scope, QObject *parent = nullptr);
 
 signals:
     void error(const QString &error) const;
@@ -28,5 +30,5 @@ protected:
     bool parseCommand(const QString &commandString);
     QString extractArguments(const QString &line, const QLatin1String &tag) const;
 
-    Scope mScope;
+    QPointer<Scope> mScope; // TODO: maybe BaseParser can inherit from Scope?
 };

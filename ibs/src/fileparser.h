@@ -8,8 +8,7 @@ class FileParser : public BaseParser
 {
     Q_OBJECT
 public:
-    explicit FileParser(const Scope &scope,
-                        const QString &file,
+    explicit FileParser(const QString &file, Scope *scope,
                         BaseParser *parent = nullptr);
 
 signals:

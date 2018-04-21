@@ -3,9 +3,15 @@
 
 #include <QDebug>
 
-BaseParser::BaseParser(const Scope &scope, QObject *parent) : QObject(parent),
+BaseParser::BaseParser(Scope *scope, QObject *parent) : QObject(parent),
     mScope(scope)
-{
+{    
+    connect(this, &BaseParser::targetName, scope, &Scope::setTargetName);
+    connect(this, &BaseParser::targetType, scope, &Scope::setTargetType);
+    connect(this, &BaseParser::qtModules, scope, &Scope::setQtModules);
+    connect(this, &BaseParser::defines, scope, &Scope::addDefines);
+    connect(this, &BaseParser::includes, scope, &Scope::addIncludePaths);
+    connect(this, &BaseParser::libs, scope, &Scope::addLibs);
 }
 
 bool BaseParser::parseCommand(const QString &commandString)
@@ -17,7 +23,7 @@ bool BaseParser::parseCommand(const QString &commandString)
         if (commandString.contains(Tags::targetName)) {
             const QString arg(extractArguments(commandString, Tags::targetName));
             qDebug() << "Target name:" << arg;
-            mScope.setTargetName(arg);
+            mScope->setTargetName(arg);
             emit targetName(arg);
         }
 
@@ -26,7 +32,7 @@ bool BaseParser::parseCommand(const QString &commandString)
 
             if (arg == Tags::targetApp || arg == Tags::targetLib) {
                 qDebug() << "Target type:" << arg;
-                mScope.setTargetType(arg);
+                mScope->setTargetType(arg);
                 emit targetType(arg);
             } else {
                 qFatal("Invalid target type: %s", qPrintable(arg));
@@ -37,14 +43,14 @@ bool BaseParser::parseCommand(const QString &commandString)
     if (commandString.contains(Tags::qtModules)) {
         const QStringList args(extractArguments(commandString, Tags::qtModules).split(" "));
         qDebug() << "Enabling Qt modules:" << args;
-        mScope.setQtModules(args);
+        mScope->setQtModules(args);
         emit qtModules(args);
     }
 
     if (commandString.contains(Tags::defines)) {
         const QStringList args(extractArguments(commandString, Tags::defines).split(" "));
         qDebug() << "Adding defines:" << args;
-        mScope.addDefines(args);
+        mScope->addDefines(args);
         emit defines(args);
     }
 
@@ -52,14 +58,14 @@ bool BaseParser::parseCommand(const QString &commandString)
         const QStringList args(extractArguments(commandString, Tags::includes)
                                .split(" ", QString::SkipEmptyParts));
         qDebug() << "Adding includes:" << args;
-        mScope.addIncludePaths(args);
+        mScope->addIncludePaths(args);
         emit includes(args);
     }
 
     if (commandString.contains(Tags::libs)) {
         const QStringList args(extractArguments(commandString, Tags::libs).split(" "));
         qDebug() << "Adding libs:" << args;
-        mScope.addLibs(args);
+        mScope->addLibs(args);
         emit libs(args);
     }
 
