@@ -326,7 +326,9 @@ void ProjectManager::onParsed(const QByteArray &scopeId,
     //mScopes.insert(scopeId, scope);
 }
 
-void ProjectManager::onParseRequest(const QByteArray &scopeId, const QString &file, const bool force)
+void ProjectManager::onParseRequest(const QByteArray &scopeId,
+                                    const QString &file,
+                                    const bool force)
 {
     if (mIsError)
         return;
@@ -334,8 +336,9 @@ void ProjectManager::onParseRequest(const QByteArray &scopeId, const QString &fi
     Scope *scope = mScopes.value(scopeId);
 
     // Skip files which we have parsed already
-    if (!force and scope->isParsed(file))
+    if (!force and scope->isParsed(file)) {
         return;
+    }
 
     // Find file in include dirs
     const QString selectedFile(scope->findFile(file));
@@ -346,8 +349,9 @@ void ProjectManager::onParseRequest(const QByteArray &scopeId, const QString &fi
     }
 
     // Skip again, because name could have changed
-    if (!force and scope->isParsed(selectedFile))
+    if (!force and scope->isParsed(selectedFile)) {
         return;
+    }
 
     // Prevent file from being parsed twice
     FileInfo info;
