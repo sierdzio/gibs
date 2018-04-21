@@ -20,7 +20,7 @@ signals:
     void defines(const QStringList &defines) const;
     void includes(const QStringList &includes) const;
     void libs(const QStringList &libs) const;
-    void runTool(const QString &tool, const QStringList &args) const;
+    void runTool(const QByteArray &scopeId, const QString &tool, const QStringList &args) const;
     void scopeUpdated(const Scope &scope);
 
 public slots:

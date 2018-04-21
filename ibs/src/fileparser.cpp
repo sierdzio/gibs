@@ -52,12 +52,12 @@ bool FileParser::parse()
                 QString include(line.mid(line.indexOf('"') + 1));
                 include.chop(1);
 
-                emit parseRequest(include, false);
+                emit parseRequest(mScope->id(), include, false);
             }
         }
 
         if (line.startsWith("Q_OBJECT") or line.startsWith("Q_GADGET")) {
-            emit runMoc(mFile);
+            emit runMoc(mScope->id(), mFile);
         }
 
         // Detect IBS comment scope
@@ -91,7 +91,7 @@ bool FileParser::parse()
 
             // Search through include paths
             if (ext.isEmpty()) {
-                for (const QString &inc : mScope.includePaths()) {
+                for (const QString &inc : mScope->includePaths()) {
                     const QString incBase(inc + "/" + header.baseName());
                     ext = findFileExtension(incBase);
                     if (!ext.isEmpty()) {
@@ -107,14 +107,17 @@ bool FileParser::parse()
     }
 
     // Important: this emit needs to be sent before parseRequest()
-    if (QFileInfo(source).exists())
-        emit parsed(mFile, source, checksum.result(), header.lastModified(), header.created());
-    else
-        emit parsed(mFile, QString(), checksum.result(), header.lastModified(), header.created());
+    if (QFileInfo::exists(source)) {
+        emit parsed(mScope->id(), mFile, source, checksum.result(),
+                    header.lastModified(), header.created());
+    } else {
+        emit parsed(mScope->id(), mFile, QString(), checksum.result(),
+                    header.lastModified(), header.created());
+    }
 
     // Parse source file, only when we are not parsing it already
     if (!source.isEmpty() and source != mFile) {
-        emit parseRequest(source, true);
+        emit parseRequest(mScope->id(), source, true);
     }
 
     return true;
@@ -122,8 +125,8 @@ bool FileParser::parse()
 
 QString FileParser::findFileExtension(const QString &filePath) const
 {
-    if (QFileInfo(filePath + ".cpp").exists()) return ".cpp";
-    if (QFileInfo(filePath + ".c").exists()) return ".c";
-    if (QFileInfo(filePath + ".cc").exists()) return ".cc";
+    if (QFileInfo::exists(filePath + ".cpp")) return ".cpp";
+    if (QFileInfo::exists(filePath + ".c")) return ".c";
+    if (QFileInfo::exists(filePath + ".cc")) return ".cc";
     return QString();
 }

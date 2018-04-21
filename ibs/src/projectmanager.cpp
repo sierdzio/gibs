@@ -97,10 +97,10 @@ void ProjectManager::start()
         }
     } else {
         Scope *scope = new Scope(mFlags.inputFile(), mFlags.relativePath(), this);
+        mScopes.insert(scope->id(), scope);
 
         if (mFlags.autoIncludes())
             scope->autoScanForIncludes();
-
 
         onParseRequest(scope->id(), mFlags.inputFile());
         tempScopeId = scope->id();
@@ -288,6 +288,7 @@ void ProjectManager::loadCommands()
 
     qInfo() << "Loading commands from command line";
 
+    // TODO: use Scope filled by CommandParser as global scope!
     //CommandParser parser(mFlags.commands());
     //connect(&parser, &CommandParser::error, this, &ProjectManager::error);
 //    connect(&parser, &CommandParser::targetName, this, &ProjectManager::onTargetName);
@@ -322,7 +323,7 @@ void ProjectManager::onParsed(const QByteArray &scopeId,
 
     // TODO: switch to pointers and modify in-place?
     scope->insertParsedFile(info);
-    mScopes.insert(scopeId, scope);
+    //mScopes.insert(scopeId, scope);
 }
 
 void ProjectManager::onParseRequest(const QByteArray &scopeId, const QString &file, const bool force)
@@ -352,7 +353,7 @@ void ProjectManager::onParseRequest(const QByteArray &scopeId, const QString &fi
     FileInfo info;
     info.path = selectedFile;
     scope->insertParsedFile(info);
-    mScopes.insert(scopeId, scope);
+    //mScopes.insert(scopeId, scope);
     parseFile(scopeId, selectedFile);
 }
 
@@ -402,7 +403,7 @@ bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
     // TODO: IMPORTANT! Old code used 'file' as key for parsed file hash here,
     // new code uses 'info.path' instead, and they are different!
     scope->insertParsedFile(info);
-    mScopes.insert(scopeId, scope);
+    //mScopes.insert(scopeId, scope);
     return true;
 }
 
@@ -712,7 +713,7 @@ bool ProjectManager::initializeMoc(const QByteArray &scopeId)
     info.generatedFile = predefs;
     Scope *scope = mScopes.value(scopeId);
     scope->insertParsedFile(info);
-    mScopes.insert(scopeId, scope);
+    //mScopes.insert(scopeId, scope);
     // TODO: is predefs info lost? Check dependency resolving
     //mParsedFiles.insert(predefs, info);
 
