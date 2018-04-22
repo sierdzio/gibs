@@ -26,6 +26,8 @@ public:
     QJsonObject toJson() const;
     static Scope *fromJson(const QJsonObject &json);
 
+    void mergeWith(Scope *other);
+
     QList<FileInfo> parsedFiles() const;
     void insertParsedFile(const FileInfo &fileInfo);
     FileInfo parsedFile(const QString &path) const;
@@ -38,25 +40,19 @@ public:
     QString findFile(const QString &file) const;
 
     QStringList qtModules() const;
-
     QStringList customDefineFlags() const;
-
     QStringList qtDefines() const;
-
     QStringList qtIncludes() const;
-
     QStringList qtLibs() const;
-
     QString targetName() const;
-
     QString targetType() const;
-
     QString targetLibType() const;
-
     QStringList customLibs() const;
+    QString qtDir() const;
 
     bool qtIsMocInitialized() const;
     void setQtIsMocInitialized(bool qtIsMocInitialized);
+
 
 public slots:
     void addIncludePaths(const QStringList &includes);
@@ -87,8 +83,6 @@ protected:
 
     QStringList mCustomDefines;
     QStringList mCustomDefineFlags;
-    //QStringList mCustomIncludes;
-    //QStringList mCustomIncludeFlags;
     QStringList mCustomLibs;
 
     QString mTargetName = "default";

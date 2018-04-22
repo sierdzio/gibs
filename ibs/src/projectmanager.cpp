@@ -97,6 +97,11 @@ void ProjectManager::start()
         }
     } else {
         Scope *scope = new Scope(mFlags.inputFile(), mFlags.relativePath(), this);
+
+        if (!mGlobalScope.isNull()) {
+            scope->mergeWith(mGlobalScope);
+        }
+
         mScopes.insert(scope->id(), scope);
 
         if (mFlags.autoIncludes())
@@ -289,16 +294,20 @@ void ProjectManager::loadCommands()
     qInfo() << "Loading commands from command line";
 
     // TODO: use Scope filled by CommandParser as global scope!
-    //CommandParser parser(mFlags.commands());
-    //connect(&parser, &CommandParser::error, this, &ProjectManager::error);
+    if (mGlobalScope.isNull()) {
+        mGlobalScope = new Scope("Global", mFlags.relativePath(), this);
+    }
+
+    CommandParser parser(mFlags.commands(), mGlobalScope);
+    connect(&parser, &CommandParser::error, this, &ProjectManager::error);
 //    connect(&parser, &CommandParser::targetName, this, &ProjectManager::onTargetName);
 //    connect(&parser, &CommandParser::targetType, this, &ProjectManager::onTargetType);
 //    connect(&parser, &CommandParser::qtModules, this, &ProjectManager::onQtModules);
 //    connect(&parser, &CommandParser::defines, this, &ProjectManager::onDefines);
 //    connect(&parser, &CommandParser::includes, this, &ProjectManager::onIncludes);
 //    connect(&parser, &CommandParser::libs, this, &ProjectManager::onLibs);
-    //connect(&parser, &CommandParser::runTool, this, &ProjectManager::onRunTool);
-    //parser.parse();
+    connect(&parser, &CommandParser::runTool, this, &ProjectManager::onRunTool);
+    parser.parse();
 }
 
 void ProjectManager::onParsed(const QByteArray &scopeId,

@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QHash>
 #include <QDateTime>
+#include <QPointer>
 
 // Process handling
 #include <QProcess>
@@ -111,6 +112,9 @@ private:
 //    QString mTargetType = Tags::targetApp;
 //    QString mTargetLibType = Tags::targetLibDynamic;
     //QHash<QString, FileInfo> mParsedFiles;
+
+    QPointer<Scope> mGlobalScope;
+
     // scopeId, scope
     QHash<QByteArray, Scope*> mScopes; // TODO: QSharedPointer<Scope>
 

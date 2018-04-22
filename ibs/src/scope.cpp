@@ -67,6 +67,32 @@ Scope *Scope::fromJson(const QJsonObject &json)
     return scope;
 }
 
+/*!
+ * "Inherits" internals from \a other scope. Useful if you have a parent scope
+ * (like global scope from CommandParser) and want to share the settings with
+ * current scope.
+ *
+ * ID of \a other scope is not merged - current scope will have different ID
+ * and QObject parent.
+ */
+void Scope::mergeWith(Scope *other)
+{
+    mQtDir = other->qtDir();
+    mQtModules = other->qtModules();
+    mQtIsMocInitialized = other->qtIsMocInitialized();
+    mQtIncludes = other->qtIncludes();
+    mQtDefines = other->qtDefines();
+    mCustomDefines = other->mCustomDefines; //
+    mCustomDefineFlags = other->customDefineFlags();
+    mCustomLibs = other->customLibs();
+    //mTargetName;
+    //mTargetType;
+    //mTargetLibType;
+    mCustomIncludes = other->mCustomIncludes; //
+    mCustomIncludeFlags = other->customIncludeFlags();
+    //mParsedFiles;
+}
+
 QList<FileInfo> Scope::parsedFiles() const
 {
     return mParsedFiles.values();
@@ -268,6 +294,11 @@ QStringList Scope::jsonArrayToStringList(const QJsonArray &array) const
     }
 
     return result;
+}
+
+QString Scope::qtDir() const
+{
+    return mQtDir;
 }
 
 bool Scope::qtIsMocInitialized() const
