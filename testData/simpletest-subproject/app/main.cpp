@@ -3,6 +3,7 @@
 #include <iostream>
 
 //i target name SimpleTestSubproject
+//i subproject ../library/simpletest.h
 
 int main() {
     SimpleTest sc;
