@@ -79,6 +79,18 @@ bool BaseParser::parseCommand(const QString &commandString)
         }
     }
 
+    if (commandString.contains(Tags::subproject)) {
+        // Make sure we select proper tag
+        const QLatin1String tag = commandString.contains(Tags::subprojects)? Tags::subprojects : Tags::subproject;
+        const QStringList args(extractArguments(commandString, tag).split(" "));
+        qDebug() << "Subprojects(s):" << args;
+        if (args.size() > 0) {
+            for (const auto &arg : qAsConst(args)) {
+                emit subproject(mScope->id(), arg);
+            }
+        }
+    }
+
     return true;
 }
 

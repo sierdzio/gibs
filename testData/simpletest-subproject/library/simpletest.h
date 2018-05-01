@@ -5,6 +5,7 @@
 /*i
  * target name simpletest
  * target type lib dynamic
+ * qt core
  */
 
 class LIBRARYSHARED_EXPORT SimpleTest

@@ -21,6 +21,7 @@ signals:
     void includes(const QStringList &includes) const;
     void libs(const QStringList &libs) const;
     void runTool(const QByteArray &scopeId, const QString &tool, const QStringList &args) const;
+    void subproject(const QByteArray &scopeId, const QString &path) const;
     void scopeUpdated(const Scope &scope);
 
 public slots:

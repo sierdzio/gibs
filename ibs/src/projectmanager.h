@@ -63,6 +63,7 @@ protected slots:
 //    void onLibs(const QStringList &libs);
     void onRunTool(const QByteArray &scopeId, const QString &tool,
                    const QStringList &args);
+    void onSubproject(const QByteArray &scopeId, const QString &path);
 
     // Process handling
     void onProcessErrorOccurred(QProcess::ProcessError _error);

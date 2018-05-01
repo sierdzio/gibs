@@ -307,6 +307,7 @@ void ProjectManager::loadCommands()
 //    connect(&parser, &CommandParser::includes, this, &ProjectManager::onIncludes);
 //    connect(&parser, &CommandParser::libs, this, &ProjectManager::onLibs);
     connect(&parser, &CommandParser::runTool, this, &ProjectManager::onRunTool);
+    connect(&parser, &CommandParser::subproject, this, &ProjectManager::onSubproject);
     parser.parse();
 }
 
@@ -380,8 +381,6 @@ bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
                    "more info.");
     }
 
-    // TODO: use a RAII ScopeLocker to make sure we don't forget to re-insert
-    // it into the hash
     Scope *scope = mScopes.value(scopeId);
     if (scope->qtIsMocInitialized() == false) {
         if (initializeMoc(scopeId) == false)
@@ -509,6 +508,22 @@ void ProjectManager::onRunTool(const QByteArray &scopeId, const QString &tool,
     }
 }
 
+/*!
+ * Register new subproject. If current scope (\a scopeId) depends on the new
+ * project, it will be added to \a scopeId later.
+ *
+ * \a path contains the main file of the subproject.
+ */
+void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path)
+{
+    auto scope = new Scope(path, path, this);
+    auto oldScope = mScopes.value(scopeId);
+    // TODO: add missing API to scope
+    //oldScope->dependOn(scope->id());
+    mScopes.insert(scope->id(), scope);
+    // TODO: kick off compilation of the new scope
+}
+
 void ProjectManager::onProcessErrorOccurred(QProcess::ProcessError _error)
 {
     auto process = qobject_cast<QProcess *>(sender());
@@ -587,9 +602,9 @@ QString ProjectManager::compile(const QByteArray &scopeId, const QString &file)
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
     QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
 
-    arguments.append(scope->customDefineFlags()); // TODO: scope!
-    arguments.append(scope->qtDefines()); // TODO: scope!
-    arguments.append(scope->qtIncludes()); // TODO: scope!
+    arguments.append(scope->customDefineFlags());
+    arguments.append(scope->qtDefines());
+    arguments.append(scope->qtIncludes());
     arguments.append(scope->customIncludeFlags());
     arguments.append({ "-o", objectFile, file });
 
@@ -663,6 +678,7 @@ void ProjectManager::parseFile(const QByteArray &scopeId, const QString &file)
 //    connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
 //    connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
     connect(&parser, &FileParser::runTool, this, &ProjectManager::onRunTool);
+    connect(&parser, &FileParser::subproject, this, &ProjectManager::onSubproject);
 
     parser.parse();
 }
