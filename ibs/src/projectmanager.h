@@ -46,14 +46,14 @@ protected slots:
     bool isFileDirty(const QString &file, const bool isQuickMode,
                      Scope *scope) const;
 
-    void onParsed(const QByteArray &scopeId,
-                  const QString &file, const QString &source,
-                  const QByteArray &checksum,
-                  const QDateTime &modified,
-                  const QDateTime &created);
-    void onParseRequest(const QByteArray &scopeId, const QString &file,
-                        const bool force = false);
-    bool onRunMoc(const QByteArray &scopeId, const QString &file);
+//    void onParsed(const QByteArray &scopeId,
+//                  const QString &file, const QString &source,
+//                  const QByteArray &checksum,
+//                  const QDateTime &modified,
+//                  const QDateTime &created);
+//    void onParseRequest(const QByteArray &scopeId, const QString &file,
+//                        const bool force = false);
+//    bool onRunMoc(const QByteArray &scopeId, const QString &file);
     // ibs commands
 //    void onTargetName(const QString &target);
 //    void onTargetType(const QString &type);
@@ -61,18 +61,18 @@ protected slots:
 //    void onDefines(const QStringList &defines);
 //    void onIncludes(const QByteArray &scopeId, const QStringList &includes);
 //    void onLibs(const QStringList &libs);
-    void onRunTool(const QByteArray &scopeId, const QString &tool,
-                   const QStringList &args);
-    void onSubproject(const QByteArray &scopeId, const QString &path);
+//    void onRunTool(const QByteArray &scopeId, const QString &tool,
+//                   const QStringList &args);
+//    void onSubproject(const QByteArray &scopeId, const QString &path);
 
     // Process handling
     void onProcessErrorOccurred(QProcess::ProcessError _error);
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
-protected:
-    QString compile(const QByteArray &scopeId, const QString &file);
-    void link(const QByteArray &scopeId);
-    void parseFile(const QByteArray &scopeId, const QString &file);
+//protected:
+//    QString compile(const QByteArray &scopeId, const QString &file);
+//    void link(const QByteArray &scopeId);
+//    void parseFile(const QByteArray &scopeId, const QString &file);
 
 private:
     //void updateQtModules(const QStringList &modules);

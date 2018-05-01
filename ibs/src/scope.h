@@ -27,6 +27,7 @@ public:
     static Scope *fromJson(const QJsonObject &json);
 
     void mergeWith(Scope *other);
+    void dependOn(Scope *other);
 
     QList<FileInfo> parsedFiles() const;
     void insertParsedFile(const FileInfo &fileInfo);
@@ -53,7 +54,6 @@ public:
     bool qtIsMocInitialized() const;
     void setQtIsMocInitialized(bool qtIsMocInitialized);
 
-
 public slots:
     void addIncludePaths(const QStringList &includes);
     void setTargetName(const QString &target);
@@ -61,6 +61,23 @@ public slots:
     void setQtModules(const QStringList &modules);
     void addDefines(const QStringList &defines);
     void addLibs(const QStringList &libs);
+
+protected:
+    QString compile(const QString &file);
+    void link();
+    void parseFile(const QString &file);
+
+protected slots:
+    void onParsed(const QString &file, const QString &source,
+                  const QByteArray &checksum,
+                  const QDateTime &modified,
+                  const QDateTime &created);
+    void onParseRequest(const QString &file,
+                        const bool force = false);
+    bool onRunMoc(const QString &file);
+    void onRunTool(const QString &tool,
+                   const QStringList &args);
+    //void onSubproject(const QByteArray &scopeId, const QString &path);
 
 
 protected:
@@ -73,6 +90,8 @@ protected:
     const QString mRelativePath;
     const QString mName;
     const QByteArray mId;
+
+    bool mIsError = false;
 
     QString mQtDir;
     QStringList mQtModules;

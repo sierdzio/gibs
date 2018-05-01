@@ -311,113 +311,113 @@ void ProjectManager::loadCommands()
     parser.parse();
 }
 
-void ProjectManager::onParsed(const QByteArray &scopeId,
-                              const QString &file, const QString &source,
-                              const QByteArray &checksum,
-                              const QDateTime &modified,
-                              const QDateTime &created)
-{
-    // Update parsed file info
-    Scope *scope = mScopes.value(scopeId);
-    FileInfo info = scope->parsedFile(file);
-    info.type = FileInfo::Cpp;
-    info.path = file;
-    info.checksum = checksum;
-    info.dateModified = modified;
-    info.dateCreated = created;
+//void ProjectManager::onParsed(const QByteArray &scopeId,
+//                              const QString &file, const QString &source,
+//                              const QByteArray &checksum,
+//                              const QDateTime &modified,
+//                              const QDateTime &created)
+//{
+//    // Update parsed file info
+//    Scope *scope = mScopes.value(scopeId);
+//    FileInfo info = scope->parsedFile(file);
+//    info.type = FileInfo::Cpp;
+//    info.path = file;
+//    info.checksum = checksum;
+//    info.dateModified = modified;
+//    info.dateCreated = created;
 
-    // Compile source file, if present
-    if (!source.isEmpty() and source == file) {
-        info.objectFile = compile(scopeId, source);
-    }
+//    // Compile source file, if present
+//    if (!source.isEmpty() and source == file) {
+//        info.objectFile = compile(scopeId, source);
+//    }
 
-    // TODO: switch to pointers and modify in-place?
-    scope->insertParsedFile(info);
-    //mScopes.insert(scopeId, scope);
-}
+//    // TODO: switch to pointers and modify in-place?
+//    scope->insertParsedFile(info);
+//    //mScopes.insert(scopeId, scope);
+//}
 
-void ProjectManager::onParseRequest(const QByteArray &scopeId,
-                                    const QString &file,
-                                    const bool force)
-{
-    if (mIsError)
-        return;
+//void ProjectManager::onParseRequest(const QByteArray &scopeId,
+//                                    const QString &file,
+//                                    const bool force)
+//{
+//    if (mIsError)
+//        return;
 
-    Scope *scope = mScopes.value(scopeId);
+//    Scope *scope = mScopes.value(scopeId);
 
-    // Skip files which we have parsed already
-    if (!force and scope->isParsed(file)) {
-        return;
-    }
+//    // Skip files which we have parsed already
+//    if (!force and scope->isParsed(file)) {
+//        return;
+//    }
 
-    // Find file in include dirs
-    const QString selectedFile(scope->findFile(file));
+//    // Find file in include dirs
+//    const QString selectedFile(scope->findFile(file));
 
-    if (selectedFile.isEmpty()) {
-        qWarning() << "Could not find file:" << file;
-        return;
-    }
+//    if (selectedFile.isEmpty()) {
+//        qWarning() << "Could not find file:" << file;
+//        return;
+//    }
 
-    // Skip again, because name could have changed
-    if (!force and scope->isParsed(selectedFile)) {
-        return;
-    }
+//    // Skip again, because name could have changed
+//    if (!force and scope->isParsed(selectedFile)) {
+//        return;
+//    }
 
-    // Prevent file from being parsed twice
-    FileInfo info;
-    info.path = selectedFile;
-    scope->insertParsedFile(info);
-    //mScopes.insert(scopeId, scope);
-    parseFile(scopeId, selectedFile);
-}
+//    // Prevent file from being parsed twice
+//    FileInfo info;
+//    info.path = selectedFile;
+//    scope->insertParsedFile(info);
+//    //mScopes.insert(scopeId, scope);
+//    parseFile(scopeId, selectedFile);
+//}
 
-bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
-{
-    if (mIsError)
-        return false;
+//bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
+//{
+//    if (mIsError)
+//        return false;
 
-    if (mQtDir.isEmpty()) {
-        emit error("Can't run MOC because Qt dir is not set. See 'ibs --help' for "
-                   "more info.");
-    }
+//    if (mQtDir.isEmpty()) {
+//        emit error("Can't run MOC because Qt dir is not set. See 'ibs --help' for "
+//                   "more info.");
+//    }
 
-    Scope *scope = mScopes.value(scopeId);
-    if (scope->qtIsMocInitialized() == false) {
-        if (initializeMoc(scopeId) == false)
-            return false;
-    }
+//    Scope *scope = mScopes.value(scopeId);
+//    if (scope->qtIsMocInitialized() == false) {
+//        if (initializeMoc(scopeId) == false)
+//            return false;
+//    }
 
-    const QFileInfo header(file);
-    const QString mocFile("moc_" + header.baseName() + ".cpp");
-    const QString compiler(mQtDir + "/bin/moc");
-    const QString predefs("moc_predefs.h");
+//    const QFileInfo header(file);
+//    const QString mocFile("moc_" + header.baseName() + ".cpp");
+//    const QString compiler(mQtDir + "/bin/moc");
+//    const QString predefs("moc_predefs.h");
 
-    QStringList arguments;
-    arguments.append(scope->qtDefines());
-    arguments.append({ "--include", predefs });
-    arguments.append(scope->qtIncludes());
-    // TODO: GCC includes!
-    arguments.append({ file, "-o", mocFile });
+//    QStringList arguments;
+//    arguments.append(scope->qtDefines());
+//    arguments.append({ "--include", predefs });
+//    arguments.append(scope->qtIncludes());
+//    // TODO: GCC includes!
+//    arguments.append({ file, "-o", mocFile });
 
-    MetaProcess mp;
-    mp.file = mocFile;
-    mp.dependsOn.append(findDependency(predefs));
-    // Generate MOC file
-    runProcess(compiler, arguments, mp);
+//    MetaProcess mp;
+//    mp.file = mocFile;
+//    mp.dependsOn.append(findDependency(predefs));
+//    // Generate MOC file
+//    runProcess(compiler, arguments, mp);
 
 
-    FileInfo info = scope->parsedFile(file);
-    info.path = mFlags.relativePath() + "/" + file;
-    info.generatedFile = mocFile;
-    // Compile MOC file
-    info.generatedObjectFile = compile(scopeId, mocFile);
+//    FileInfo info = scope->parsedFile(file);
+//    info.path = mFlags.relativePath() + "/" + file;
+//    info.generatedFile = mocFile;
+//    // Compile MOC file
+//    info.generatedObjectFile = compile(scopeId, mocFile);
 
-    // TODO: IMPORTANT! Old code used 'file' as key for parsed file hash here,
-    // new code uses 'info.path' instead, and they are different!
-    scope->insertParsedFile(info);
-    //mScopes.insert(scopeId, scope);
-    return true;
-}
+//    // TODO: IMPORTANT! Old code used 'file' as key for parsed file hash here,
+//    // new code uses 'info.path' instead, and they are different!
+//    scope->insertParsedFile(info);
+//    //mScopes.insert(scopeId, scope);
+//    return true;
+//}
 
 //void ProjectManager::onTargetName(const QString &target)
 //{
@@ -470,43 +470,43 @@ bool ProjectManager::onRunMoc(const QByteArray &scopeId, const QString &file)
 //    qInfo() << "Updating custom libs:" << mCustomLibs;
 //}
 
-void ProjectManager::onRunTool(const QByteArray &scopeId, const QString &tool,
-                               const QStringList &args)
-{
-    if (mIsError)
-        return;
+//void ProjectManager::onRunTool(const QByteArray &scopeId, const QString &tool,
+//                               const QStringList &args)
+//{
+//    if (mIsError)
+//        return;
 
-    if (tool == Tags::rcc) {
-        // -name qml qml.qrc -o qrc_qml.cpp
-        for (const auto &qrcFile : qAsConst(args)) {
-            const QFileInfo file(mFlags.relativePath() + "/" + qrcFile);
-            const QString cppFile("qrc_" + file.baseName() + ".cpp");
-            const QStringList arguments { "-name", file.baseName(),
-                        mFlags.relativePath() + "/" + qrcFile,
-                        "-o", cppFile };
+//    if (tool == Tags::rcc) {
+//        // -name qml qml.qrc -o qrc_qml.cpp
+//        for (const auto &qrcFile : qAsConst(args)) {
+//            const QFileInfo file(mFlags.relativePath() + "/" + qrcFile);
+//            const QString cppFile("qrc_" + file.baseName() + ".cpp");
+//            const QStringList arguments { "-name", file.baseName(),
+//                        mFlags.relativePath() + "/" + qrcFile,
+//                        "-o", cppFile };
 
-            qDebug() << "Running tool: rcc" << mFlags.relativePath() + "/" + qrcFile << cppFile;
+//            qDebug() << "Running tool: rcc" << mFlags.relativePath() + "/" + qrcFile << cppFile;
 
-            MetaProcess mp;
-            mp.file = cppFile;
-            runProcess(mQtDir + "/bin/" + tool, arguments, mp);
+//            MetaProcess mp;
+//            mp.file = cppFile;
+//            runProcess(mQtDir + "/bin/" + tool, arguments, mp);
 
-            Scope *scope = mScopes.value(scopeId);
-            FileInfo info = scope->parsedFile(qrcFile);
-            info.type = FileInfo::QRC;
-            info.path = mFlags.relativePath() + "/" + qrcFile;
-            info.dateModified = file.lastModified();
-            info.dateCreated = file.created();
-            info.generatedFile = cppFile;
-            info.generatedObjectFile = compile(scopeId, cppFile);
-            scope->insertParsedFile(info);
-        }
-    } else if (tool == Tags::uic) {
-        // TODO: add uic support
-    } else {
-        // TODO: add any tool support
-    }
-}
+//            Scope *scope = mScopes.value(scopeId);
+//            FileInfo info = scope->parsedFile(qrcFile);
+//            info.type = FileInfo::QRC;
+//            info.path = mFlags.relativePath() + "/" + qrcFile;
+//            info.dateModified = file.lastModified();
+//            info.dateCreated = file.created();
+//            info.generatedFile = cppFile;
+//            info.generatedObjectFile = compile(scopeId, cppFile);
+//            scope->insertParsedFile(info);
+//        }
+//    } else if (tool == Tags::uic) {
+//        // TODO: add uic support
+//    } else {
+//        // TODO: add any tool support
+//    }
+//}
 
 /*!
  * Register new subproject. If current scope (\a scopeId) depends on the new
@@ -518,8 +518,7 @@ void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path
 {
     auto scope = new Scope(path, path, this);
     auto oldScope = mScopes.value(scopeId);
-    // TODO: add missing API to scope
-    //oldScope->dependOn(scope->id());
+    oldScope->dependOn(scope);
     mScopes.insert(scope->id(), scope);
     // TODO: kick off compilation of the new scope
 }
@@ -580,108 +579,108 @@ void ProjectManager::onProcessFinished(int exitCode, QProcess::ExitStatus exitSt
 /*!
  * Compiles \a file and returns the name of the generated object file.
  */
-QString ProjectManager::compile(const QByteArray &scopeId, const QString &file)
-{
-    if (mIsError)
-        return QString();
+//QString ProjectManager::compile(const QByteArray &scopeId, const QString &file)
+//{
+//    if (mIsError)
+//        return QString();
 
-    const QFileInfo info(file);
-    const QString objectFile(info.baseName() + ".o");
-    const QString compiler("g++");
+//    const QFileInfo info(file);
+//    const QString objectFile(info.baseName() + ".o");
+//    const QString compiler("g++");
 
-    Scope *scope = mScopes.value(scopeId);
-    if (!scope->qtModules().isEmpty()) {
-        if (mQtDir.isEmpty()) {
-            qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
-                   "with --qt-dir argument");
-        }
-    }
+//    Scope *scope = mScopes.value(scopeId);
+//    if (!scope->qtModules().isEmpty()) {
+//        if (mQtDir.isEmpty()) {
+//            qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
+//                   "with --qt-dir argument");
+//        }
+//    }
 
 
-    //qInfo() << "Compiling:" << file << "into:" << objectFile;
-    // TODO: add ProjectManager class and schedule compilation there (threaded!).
-    QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
+//    //qInfo() << "Compiling:" << file << "into:" << objectFile;
+//    // TODO: add ProjectManager class and schedule compilation there (threaded!).
+//    QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
 
-    arguments.append(scope->customDefineFlags());
-    arguments.append(scope->qtDefines());
-    arguments.append(scope->qtIncludes());
-    arguments.append(scope->customIncludeFlags());
-    arguments.append({ "-o", objectFile, file });
+//    arguments.append(scope->customDefineFlags());
+//    arguments.append(scope->qtDefines());
+//    arguments.append(scope->qtIncludes());
+//    arguments.append(scope->customIncludeFlags());
+//    arguments.append({ "-o", objectFile, file });
 
-    MetaProcess mp;
-    mp.file = objectFile;
-    mp.dependsOn = findDependencies(file);
+//    MetaProcess mp;
+//    mp.file = objectFile;
+//    mp.dependsOn = findDependencies(file);
 
-    runProcess(compiler, arguments, mp);
-    return objectFile;
-}
+//    runProcess(compiler, arguments, mp);
+//    return objectFile;
+//}
 
-void ProjectManager::link(const QByteArray &scopeId)
-{
-    if (mIsError)
-        return;
+//void ProjectManager::link(const QByteArray &scopeId)
+//{
+//    if (mIsError)
+//        return;
 
-    Scope *scope = mScopes.value(scopeId);
-    QStringList objectFiles;
-    for (const auto &info : scope->parsedFiles()) {
-        if (!info.objectFile.isEmpty())
-            objectFiles.append(info.objectFile);
-        if (!info.generatedObjectFile.isEmpty())
-            objectFiles.append(info.generatedObjectFile);
-    }
+//    Scope *scope = mScopes.value(scopeId);
+//    QStringList objectFiles;
+//    for (const auto &info : scope->parsedFiles()) {
+//        if (!info.objectFile.isEmpty())
+//            objectFiles.append(info.objectFile);
+//        if (!info.generatedObjectFile.isEmpty())
+//            objectFiles.append(info.generatedObjectFile);
+//    }
 
-    // TODO: add dependent scopes (from other subprojects)
+//    // TODO: add dependent scopes (from other subprojects)
 
-    //qInfo() << "Linking:" << objectFiles;
-    const QString compiler("g++");
-    QStringList arguments;
+//    //qInfo() << "Linking:" << objectFiles;
+//    const QString compiler("g++");
+//    QStringList arguments;
 
-    if (scope->targetType() == Tags::targetLib) {
-        if (scope->targetLibType() == Tags::targetLibDynamic) {
-            arguments.append({ "-shared", "-Wl,-soname,lib" + scope->targetName() + ".so.1",
-                               "-o", mFlags.prefix() + "/" + "lib" + scope->targetName() + ".so.1.0.0"});
-        }
-    } else {
-        arguments.append({ "-o", mFlags.prefix() + "/" + scope->targetName() });
-    }
+//    if (scope->targetType() == Tags::targetLib) {
+//        if (scope->targetLibType() == Tags::targetLibDynamic) {
+//            arguments.append({ "-shared", "-Wl,-soname,lib" + scope->targetName() + ".so.1",
+//                               "-o", mFlags.prefix() + "/" + "lib" + scope->targetName() + ".so.1.0.0"});
+//        }
+//    } else {
+//        arguments.append({ "-o", mFlags.prefix() + "/" + scope->targetName() });
+//    }
 
-    arguments.append(objectFiles);
+//    arguments.append(objectFiles);
 
-    if (!scope->qtModules().isEmpty()) {
-        if (mQtDir.isEmpty()) {
-            qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
-                   "with --qt-dir argument");
-        }
+//    if (!scope->qtModules().isEmpty()) {
+//        if (mQtDir.isEmpty()) {
+//            qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
+//                   "with --qt-dir argument");
+//        }
 
-        arguments.append(scope->qtLibs());
-    }
+//        arguments.append(scope->qtLibs());
+//    }
 
-    arguments.append(scope->customLibs());
+//    arguments.append(scope->customLibs());
 
-    MetaProcess mp;
-    mp.file = scope->targetName();
-    mp.dependsOn = findAllDependencies();
-    runProcess(compiler, arguments, mp);
-}
+//    MetaProcess mp;
+//    mp.file = scope->targetName();
+//    mp.dependsOn = findAllDependencies();
+//    runProcess(compiler, arguments, mp);
+//}
 
-void ProjectManager::parseFile(const QByteArray &scopeId, const QString &file)
-{
-    FileParser parser(file, mScopes.value(scopeId));
-    connect(&parser, &FileParser::error, this, &ProjectManager::error);
-    connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
-    connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
-    connect(&parser, &FileParser::runMoc, this, &ProjectManager::onRunMoc);
-//    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
-//    connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
-//    connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
-//    connect(&parser, &FileParser::defines, this, &ProjectManager::onDefines);
-//    connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
-//    connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
-    connect(&parser, &FileParser::runTool, this, &ProjectManager::onRunTool);
-    connect(&parser, &FileParser::subproject, this, &ProjectManager::onSubproject);
+//void ProjectManager::parseFile(const QByteArray &scopeId, const QString &file)
+//{
+//    FileParser parser(file, mScopes.value(scopeId));
+//    connect(&parser, &FileParser::error, this, &ProjectManager::error);
+//    connect(&parser, &FileParser::parsed, this, &ProjectManager::onParsed);
+//    connect(&parser, &FileParser::parseRequest, this, &ProjectManager::onParseRequest);
+//    connect(&parser, &FileParser::runMoc, this, &ProjectManager::onRunMoc);
+////    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
+////    connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
+////    connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
+////    connect(&parser, &FileParser::defines, this, &ProjectManager::onDefines);
+////    connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
+////    connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
+//    connect(&parser, &FileParser::runTool, this, &ProjectManager::onRunTool);
+//    connect(&parser, &FileParser::subproject, this, &ProjectManager::onSubproject);
 
-    parser.parse();
-}
+//    parser.parse();
+//}
 
 //void ProjectManager::updateQtModules(const QStringList &modules)
 //{
