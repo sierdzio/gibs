@@ -21,8 +21,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *******************************************************************************/
 
-#pragma once
-
 // Including version sources (MScripts)
 /*******************************************************************************
 Copyright (C) 2017 Milo Solutions
@@ -61,3 +59,15 @@ const QByteArray APP_VERSION = QByteArray("0.0.1");
 const QByteArray GIT_COMMIT_ID;
 #endif
 
+// IBS code
+#include <QFile>
+#include <QDebug>
+
+namespace Ibs {
+void removeFile(const QString &path) {
+    if (QFile::exists(path)) {
+        qInfo() << "Removing:" << path;
+        QFile::remove(path);
+    }
+}
+}

@@ -1,4 +1,5 @@
 #include "scope.h"
+#include "globals.h"
 #include "tags.h"
 #include "metaprocess.h"
 #include "fileparser.h"
@@ -9,9 +10,11 @@
 
 #include <QDebug>
 
-Scope::Scope(const QString &name, const QString &relativePath, QObject *parent)
+Scope::Scope(const QString &name, const QString &relativePath, const QString &prefix,
+             QObject *parent)
     : QObject(parent),
       mRelativePath(relativePath),
+      mPrefix(prefix),
       mName(name),
       mId(QCryptographicHash::hash(name.toUtf8(), QCryptographicHash::Sha1))
 {
@@ -263,10 +266,10 @@ void Scope::link()
     if (targetType() == Tags::targetLib) {
         if (targetLibType() == Tags::targetLibDynamic) {
             arguments.append({ "-shared", "-Wl,-soname,lib" + targetName() + ".so.1",
-                               "-o", mFlags.prefix() + "/" + "lib" + targetName() + ".so.1.0.0"});
+                               "-o", mPrefix + "/" + "lib" + targetName() + ".so.1.0.0"});
         }
     } else {
-        arguments.append({ "-o", mFlags.prefix() + "/" + targetName() });
+        arguments.append({ "-o", mPrefix + "/" + targetName() });
     }
 
     arguments.append(objectFiles);
@@ -285,7 +288,7 @@ void Scope::link()
     MetaProcess mp;
     mp.file = targetName();
     mp.dependsOn = findAllDependencies();
-    runProcess(compiler, arguments, mp);
+    emit runProcess(compiler, arguments, mp);
 }
 
 void Scope::parseFile(const QString &file)
@@ -295,16 +298,53 @@ void Scope::parseFile(const QString &file)
     connect(&parser, &FileParser::parsed, this, &Scope::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &Scope::onParseRequest);
     connect(&parser, &FileParser::runMoc, this, &Scope::onRunMoc);
-//    connect(&parser, &FileParser::targetName, this, &ProjectManager::onTargetName);
-//    connect(&parser, &FileParser::targetType, this, &ProjectManager::onTargetType);
-//    connect(&parser, &FileParser::qtModules, this, &ProjectManager::onQtModules);
-//    connect(&parser, &FileParser::defines, this, &ProjectManager::onDefines);
-//    connect(&parser, &FileParser::includes, this, &ProjectManager::onIncludes);
-//    connect(&parser, &FileParser::libs, this, &ProjectManager::onLibs);
     connect(&parser, &FileParser::runTool, this, &Scope::onRunTool);
-    connect(&parser, &FileParser::subproject, this, &Scope::onSubproject);
+    connect(&parser, &FileParser::subproject, this, &Scope::subproject);
 
     parser.parse();
+}
+
+/*!
+ * Checks if \a file has changed since last compilation. Returns true if it has,
+ * or if it is not in cache.
+ *
+ * If returns true, \a file will be recompiled.
+ */
+bool Scope::isFileDirty(const QString &file, const bool isQuickMode) const
+{
+    const QFileInfo realFile(file);
+
+    if (!realFile.exists()) {
+        qInfo() << "File has vanished!" << file;
+    }
+
+    const FileInfo cachedFile(parsedFile(file));
+
+    if (realFile.created() != cachedFile.dateCreated) {
+        qDebug() << "Different creation date. Recompiling."
+                 << file << realFile.created() << cachedFile.dateCreated;
+        return true;
+    }
+
+    if (realFile.lastModified() != cachedFile.dateModified) {
+        qDebug() << "Different modification date. Recompiling."
+                 << file << realFile.lastModified() << cachedFile.dateModified;
+        return true;
+    }
+
+    if (!isQuickMode) {
+        // Deep verification is off - for now
+//        QFile fileData(file);
+//        fileData.open(QFile::ReadOnly | QFile::Text);
+//        const auto checksum = QCryptographicHash::hash(fileData.readAll(), QCryptographicHash::Sha1);
+//        if (checksum != cachedFile.checksum) {
+//            qDebug() << "Different checksum. Recompiling."
+//                     << file << checksum << cachedFile.checksum;
+//            return true;
+//        }
+    }
+
+    return false;
 }
 
 void Scope::onParsed(const QString &file, const QString &source, const QByteArray &checksum, const QDateTime &modified, const QDateTime &created)
@@ -369,7 +409,7 @@ bool Scope::onRunMoc(const QString &file)
     }
 
     if (qtIsMocInitialized() == false) {
-        if (initializeMoc(id()) == false)
+        if (initializeMoc() == false)
             return false;
     }
 
@@ -393,7 +433,7 @@ bool Scope::onRunMoc(const QString &file)
 
 
     FileInfo info = parsedFile(file);
-    info.path = mFlags.relativePath() + "/" + file;
+    info.path = mRelativePath + "/" + file;
     info.generatedFile = mocFile;
     // Compile MOC file
     info.generatedObjectFile = compile(mocFile);
@@ -413,21 +453,21 @@ void Scope::onRunTool(const QString &tool, const QStringList &args)
     if (tool == Tags::rcc) {
         // -name qml qml.qrc -o qrc_qml.cpp
         for (const auto &qrcFile : qAsConst(args)) {
-            const QFileInfo file(mFlags.relativePath() + "/" + qrcFile);
+            const QFileInfo file(mRelativePath + "/" + qrcFile);
             const QString cppFile("qrc_" + file.baseName() + ".cpp");
             const QStringList arguments { "-name", file.baseName(),
-                        mFlags.relativePath() + "/" + qrcFile,
+                        mRelativePath + "/" + qrcFile,
                         "-o", cppFile };
 
-            qDebug() << "Running tool: rcc" << mFlags.relativePath() + "/" + qrcFile << cppFile;
+            qDebug() << "Running tool: rcc" << mRelativePath + "/" + qrcFile << cppFile;
 
             MetaProcess mp;
             mp.file = cppFile;
             runProcess(mQtDir + "/bin/" + tool, arguments, mp);
 
-            FileInfo info = scope->parsedFile(qrcFile);
+            FileInfo info = parsedFile(qrcFile);
             info.type = FileInfo::QRC;
-            info.path = mFlags.relativePath() + "/" + qrcFile;
+            info.path = mRelativePath + "/" + qrcFile;
             info.dateModified = file.lastModified();
             info.dateCreated = file.created();
             info.generatedFile = cppFile;
@@ -542,6 +582,66 @@ QStringList Scope::jsonArrayToStringList(const QJsonArray &array) const
     return result;
 }
 
+ProcessPtr Scope::findDependency(const QString &file) const
+{
+    for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
+        if (mp.file == file)
+            return mp.process;
+    }
+
+    return ProcessPtr();
+}
+
+QVector<ProcessPtr> Scope::findDependencies(const QString &file) const
+{
+    QString dependencies;
+    QVector<ProcessPtr> result;
+    for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
+        if (mp.file == file) {
+            dependencies += mp.process->arguments().last() + ", ";
+            result.append(mp.process);
+        }
+    }
+
+    //qDebug() << "File" << file << "depends on:" << dependencies;
+
+    return result;
+}
+
+QVector<ProcessPtr> Scope::findAllDependencies() const
+{
+    QVector<ProcessPtr> result;
+    for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
+        result.append(mp.process);
+    }
+
+    return result;
+}
+
+bool Scope::initializeMoc()
+{
+    qInfo() << "Initializig MOC";
+    const QString compiler("g++");
+    const QString predefs("moc_predefs.h");
+    const QStringList arguments({ "-pipe", "-g", "-Wall", "-W", "-dM", "-E",
+                            "-o", predefs,
+                            mQtDir + "/mkspecs/features/data/dummy.cpp" });
+
+    FileInfo info;
+    info.path = predefs;
+    info.generatedFile = predefs;
+    insertParsedFile(info);
+    //mScopes.insert(scopeId, scope);
+    // TODO: is predefs info lost? Check dependency resolving
+    //mParsedFiles.insert(predefs, info);
+
+    MetaProcess mp;
+    mp.file = predefs;
+    runProcess(compiler, arguments, mp);
+    setQtIsMocInitialized(true);
+    return qtIsMocInitialized();
+}
+
 QString Scope::qtDir() const
 {
     return mQtDir;
@@ -555,6 +655,81 @@ bool Scope::qtIsMocInitialized() const
 void Scope::setQtIsMocInitialized(bool qtIsMocInitialized)
 {
     mQtIsMocInitialized = qtIsMocInitialized;
+}
+
+void Scope::start(bool fromCache, bool isQuickMode)
+{
+    QByteArray tempScopeId;
+
+    // First, check if any files need to be recompiled
+    if (fromCache) {
+            for (const auto &cached : parsedFiles()) {
+                // Check if object file exists. If somebody removed it, or used
+                // --clean, then we have to recompile!
+
+                if (mIsError)
+                    return;
+
+                if (isFileDirty(cached.path, isQuickMode)) {
+                    if (cached.type == FileInfo::Cpp) {
+                        parseFile(cached.path);
+                    } else if (cached.type == FileInfo::QRC) {
+                        onRunTool(Tags::rcc, QStringList({ cached.path }));
+                    }
+                } else if (!cached.objectFile.isEmpty()) {
+                    // There should be an object file on disk - let's check
+                    const QFileInfo objFile(cached.objectFile);
+                    if (!objFile.exists()) {
+                        qDebug() << "Object file missing - recompiling";
+                        compile(cached.path);
+                    }
+                } else if (!cached.generatedObjectFile.isEmpty()) {
+                    // There should be an object file on disk - let's check
+                    const QFileInfo objFile(cached.generatedObjectFile);
+                    if (!objFile.exists()) {
+                        qDebug() << "Generated object file missing - recompiling";
+                        const QFileInfo genFile(cached.generatedFile);
+                        if (!genFile.exists()) {
+                            qDebug() << "Generated file missing - regenerating";
+                            if (cached.type == FileInfo::Cpp) {
+                                // Moc file needs to be regenerated
+                                onRunMoc(cached.path);
+                            } else if (cached.type == FileInfo::QRC) {
+                                // QRC c++ file needs to be regenerated
+                                onRunTool(Tags::rcc, QStringList({ cached.path }));
+                            }
+                        }
+
+                        //compile(cached.generatedFile);
+                    }
+                }
+            }
+    } else {
+        onParseRequest(mName);
+    }
+
+    // Parsing done, link it!
+    link();
+}
+
+void Scope::clean()
+{
+    for (const auto &info : parsedFiles()) {
+        if (!info.objectFile.isEmpty())
+            Ibs::removeFile(info.objectFile);
+        if (!info.generatedFile.isEmpty())
+            Ibs::removeFile(info.generatedFile);
+        if (!info.generatedObjectFile.isEmpty())
+            Ibs::removeFile(info.generatedObjectFile);
+    }
+
+    if (!qtModules().isEmpty()) {
+        qInfo() << "Cleaning MOC and QRC files";
+        const QString moc("moc_predefs.h");
+        if (QFile::exists(moc)) {
+            QFile::remove(moc);
+        }
+    }
 }
 
 QStringList Scope::customLibs() const

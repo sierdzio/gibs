@@ -11,6 +11,7 @@
 #include "flags.h"
 #include "fileinfo.h"
 #include "tags.h"
+#include "metaprocess.h"
 
 class Scope : public QObject
 {
@@ -18,6 +19,7 @@ class Scope : public QObject
 
 public:
     explicit Scope(const QString &name, const QString &relativePath,
+                   const QString &prefix,
                    QObject *parent = nullptr);
 
     QString name() const;
@@ -55,6 +57,9 @@ public:
     void setQtIsMocInitialized(bool qtIsMocInitialized);
 
 public slots:
+    void start(bool fromCache, bool isQuickMode);
+    void clean();
+
     void addIncludePaths(const QStringList &includes);
     void setTargetName(const QString &target);
     void setTargetType(const QString &type);
@@ -62,10 +67,16 @@ public slots:
     void addDefines(const QStringList &defines);
     void addLibs(const QStringList &libs);
 
+signals:
+    void error(const QString &error) const;
+    void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp) const;
+    void subproject(const QByteArray &scopeId, const QString &path) const;
+
 protected:
     QString compile(const QString &file);
     void link();
-    void parseFile(const QString &file);
+    void parseFile(const QString &file);    
+    bool isFileDirty(const QString &file, const bool isQuickMode) const;
 
 protected slots:
     void onParsed(const QString &file, const QString &source,
@@ -85,9 +96,16 @@ protected:
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     void updateQtModules(const QStringList &modules);
     QString capitalizeFirstLetter(const QString &string) const;
-    QStringList jsonArrayToStringList(const QJsonArray &array) const;
+    QStringList jsonArrayToStringList(const QJsonArray &array) const;    
+
+    ProcessPtr findDependency(const QString &file) const;
+    QVector<ProcessPtr> findDependencies(const QString &file) const;
+    QVector<ProcessPtr> findAllDependencies() const;
+
+    bool initializeMoc();
 
     const QString mRelativePath;
+    const QString mPrefix;
     const QString mName;
     const QByteArray mId;
 

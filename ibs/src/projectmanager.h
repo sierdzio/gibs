@@ -39,12 +39,13 @@ signals:
 public slots:
     void start();
     void clean();
+    void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp);
 
 protected slots:
     void onError(const QString &error);
     void saveCache() const;
-    bool isFileDirty(const QString &file, const bool isQuickMode,
-                     Scope *scope) const;
+//    bool isFileDirty(const QString &file, const bool isQuickMode,
+//                     Scope *scope) const;
 
 //    void onParsed(const QByteArray &scopeId,
 //                  const QString &file, const QString &source,
@@ -63,7 +64,7 @@ protected slots:
 //    void onLibs(const QStringList &libs);
 //    void onRunTool(const QByteArray &scopeId, const QString &tool,
 //                   const QStringList &args);
-//    void onSubproject(const QByteArray &scopeId, const QString &path);
+    void onSubproject(const QByteArray &scopeId, const QString &path);
 
     // Process handling
     void onProcessErrorOccurred(QProcess::ProcessError _error);
@@ -76,16 +77,16 @@ protected slots:
 
 private:
     //void updateQtModules(const QStringList &modules);
-    bool initializeMoc(const QByteArray &scopeId);
-    void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp);
+    //bool initializeMoc(const QByteArray &scopeId);
+    //void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp);
     void runNextProcess();
-    ProcessPtr findDependency(const QString &file) const;
-    QVector<ProcessPtr> findDependencies(const QString &file) const;
-    QVector<ProcessPtr> findAllDependencies() const;
+//    ProcessPtr findDependency(const QString &file) const;
+//    QVector<ProcessPtr> findDependencies(const QString &file) const;
+//    QVector<ProcessPtr> findAllDependencies() const;
     //QString capitalizeFirstLetter(const QString &string) const;
     //QString findFile(const QString &file, const QStringList &includeDirs) const;
     //QStringList jsonArrayToStringList(const QJsonArray &array) const;
-    void removeFile(const QString &path) const;
+    //void removeFile(const QString &path) const;
     void scanForIncludes(const QString &path);
 
     Flags mFlags;
