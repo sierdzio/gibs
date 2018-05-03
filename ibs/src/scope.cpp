@@ -12,12 +12,14 @@
 #include <QDebug>
 
 Scope::Scope(const QString &name, const QString &relativePath, const QString &prefix,
+             const QString &qtDir,
              QObject *parent)
     : QObject(parent),
       mRelativePath(relativePath),
       mPrefix(prefix),
       mName(name),
-      mId(QCryptographicHash::hash(name.toUtf8(), QCryptographicHash::Sha1))
+      mId(QCryptographicHash::hash(name.toUtf8(), QCryptographicHash::Sha1)),
+      mQtDir(qtDir)
 {
     addIncludePaths({"."});
 }
@@ -81,7 +83,7 @@ Scope *Scope::fromJson(const QJsonObject &json)
  * ID of \a other scope is not merged - current scope will have different ID
  * and QObject parent.
  */
-void Scope::mergeWith(Scope *other)
+void Scope::mergeWith(const ScopePtr &other)
 {
     mQtDir = other->qtDir();
     mQtModules = other->qtModules();
@@ -99,9 +101,9 @@ void Scope::mergeWith(Scope *other)
     //mParsedFiles;
 }
 
-void Scope::dependOn(Scope *other)
+void Scope::dependOn(const ScopePtr &other)
 {
-    mDependencies.append(other->id());
+    mScopeDependencies.append(other->id());
 }
 
 QList<FileInfo> Scope::parsedFiles() const
@@ -237,9 +239,9 @@ QString Scope::compile(const QString &file)
     arguments.append(customIncludeFlags());
     arguments.append({ "-o", objectFile, file });
 
-    MetaProcess mp;
-    mp.file = objectFile;
-    mp.fileDependencies = findDependencies(file);
+    MetaProcessPtr mp = MetaProcessPtr::create();
+    mp->file = objectFile;
+    mp->fileDependencies = findDependencies(file);
     mProcessQueue.append(mp);
 
     emit runProcess(compiler, arguments, mp);
@@ -261,7 +263,7 @@ void Scope::link()
 
     // TODO: add dependent scopes (from other subprojects)
 
-    //qInfo() << "Linking:" << objectFiles;
+    qInfo() << "Linking:" << objectFiles;
     const QString compiler("g++");
     QStringList arguments;
 
@@ -287,10 +289,10 @@ void Scope::link()
 
     arguments.append(customLibs());
 
-    MetaProcess mp;
-    mp.file = targetName();
-    mp.fileDependencies = findAllDependencies();
-    mp.scopeDepenencies = mDependencies;
+    MetaProcessPtr mp = MetaProcessPtr::create();
+    mp->file = targetName();
+    mp->fileDependencies = findAllDependencies();
+    mp->scopeDepenencies = mScopeDependencies;
     mProcessQueue.append(mp);
     emit runProcess(compiler, arguments, mp);
 }
@@ -429,9 +431,9 @@ bool Scope::onRunMoc(const QString &file)
     // TODO: GCC includes!
     arguments.append({ file, "-o", mocFile });
 
-    MetaProcess mp;
-    mp.file = mocFile;
-    mp.fileDependencies.append(findDependency(predefs));
+    MetaProcessPtr mp = MetaProcessPtr::create();
+    mp->file = mocFile;
+    mp->fileDependencies.append(findDependency(predefs));
     mProcessQueue.append(mp);
     // Generate MOC file
     emit runProcess(compiler, arguments, mp);
@@ -466,8 +468,8 @@ void Scope::onRunTool(const QString &tool, const QStringList &args)
 
             qDebug() << "Running tool: rcc" << mRelativePath + "/" + qrcFile << cppFile;
 
-            MetaProcess mp;
-            mp.file = cppFile;
+            MetaProcessPtr mp = MetaProcessPtr::create();
+            mp->file = cppFile;
             mProcessQueue.append(mp);
             emit runProcess(mQtDir + "/bin/" + tool, arguments, mp);
 
@@ -588,39 +590,42 @@ QStringList Scope::jsonArrayToStringList(const QJsonArray &array) const
     return result;
 }
 
-ProcessPtr Scope::findDependency(const QString &file) const
+MetaProcessPtr Scope::findDependency(const QString &file) const
 {
-    for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
-        if (mp.file == file)
-            return mp.process;
+    for (const MetaProcessPtr &mp : qAsConst(mProcessQueue)) {
+        if (mp->file == file)
+            return mp;
     }
 
-    return ProcessPtr();
+    return MetaProcessPtr();
 }
 
-QVector<ProcessPtr> Scope::findDependencies(const QString &file) const
+QVector<MetaProcessPtr> Scope::findDependencies(const QString &file) const
 {
     QString dependencies;
-    QVector<ProcessPtr> result;
-    for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
-        if (mp.file == file) {
-            dependencies += mp.process->arguments().last() + ", ";
-            result.append(mp.process);
+    QVector<MetaProcessPtr> result;
+    for (const MetaProcessPtr &mp : qAsConst(mProcessQueue)) {
+        if (mp->file == file) {
+            dependencies += QFileInfo(mp->file).fileName() + ", ";
+            result.append(mp);
         }
     }
 
-    //qDebug() << "File" << file << "depends on:" << dependencies;
+    qDebug() << "File" << file << "depends on:" << dependencies;
 
     return result;
 }
 
-QVector<ProcessPtr> Scope::findAllDependencies() const
+QVector<MetaProcessPtr> Scope::findAllDependencies() const
 {
-    QVector<ProcessPtr> result;
-    for (const MetaProcess &mp : qAsConst(mProcessQueue)) {
-        result.append(mp.process);
+    QString dependencies;
+    QVector<MetaProcessPtr> result;
+    for (const MetaProcessPtr &mp : qAsConst(mProcessQueue)) {
+        dependencies += QFileInfo(mp->file).fileName() + ", ";
+        result.append(mp);
     }
 
+    qDebug() << "All dependencies:" << dependencies;
     return result;
 }
 
@@ -641,8 +646,8 @@ bool Scope::initializeMoc()
     // TODO: is predefs info lost? Check dependency resolving
     //mParsedFiles.insert(predefs, info);
 
-    MetaProcess mp;
-    mp.file = predefs;
+    MetaProcessPtr mp = MetaProcessPtr::create();
+    mp->file = predefs;
     mProcessQueue.append(mp);
     emit runProcess(compiler, arguments, mp);
     setQtIsMocInitialized(true);

@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QHash>
+#include <QScopedPointer>
 
 #include <QJsonObject>
 #include <QJsonArray>
@@ -13,13 +14,17 @@
 #include "tags.h"
 #include "metaprocess.h"
 
+class Scope;
+
+using ScopePtr = QSharedPointer<Scope>;
+
 class Scope : public QObject
 {
     Q_OBJECT
 
 public:
     explicit Scope(const QString &name, const QString &relativePath,
-                   const QString &prefix,
+                   const QString &prefix, const QString &qtDir,
                    QObject *parent = nullptr);
 
     QString name() const;
@@ -28,8 +33,8 @@ public:
     QJsonObject toJson() const;
     static Scope *fromJson(const QJsonObject &json);
 
-    void mergeWith(Scope *other);
-    void dependOn(Scope *other);
+    void mergeWith(const ScopePtr &other);
+    void dependOn(const ScopePtr &other);
 
     QList<FileInfo> parsedFiles() const;
     void insertParsedFile(const FileInfo &fileInfo);
@@ -69,7 +74,7 @@ public slots:
 
 signals:
     void error(const QString &error) const;
-    void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp) const;
+    void runProcess(const QString &app, const QStringList &arguments, const MetaProcessPtr &mp) const;
     void subproject(const QByteArray &scopeId, const QString &path) const;
 
 protected:
@@ -98,9 +103,9 @@ protected:
     QString capitalizeFirstLetter(const QString &string) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;    
 
-    ProcessPtr findDependency(const QString &file) const;
-    QVector<ProcessPtr> findDependencies(const QString &file) const;
-    QVector<ProcessPtr> findAllDependencies() const;
+    MetaProcessPtr findDependency(const QString &file) const;
+    QVector<MetaProcessPtr> findDependencies(const QString &file) const;
+    QVector<MetaProcessPtr> findAllDependencies() const;
 
     bool initializeMoc();
 
@@ -129,6 +134,8 @@ protected:
     QStringList mCustomIncludes;
     QStringList mCustomIncludeFlags;
     QHash<QString, FileInfo> mParsedFiles;
-    QVector<QByteArray> mDependencies;
-    QVector<MetaProcess> mProcessQueue; // Local process queue
+    QVector<QByteArray> mScopeDependencies;
+    // TODO: change into QStringList and use only file names here.
+    // MetaProcessPtr can remain in ProjectManager, but not really here.
+    QVector<MetaProcessPtr> mProcessQueue; // Local process queue
 };

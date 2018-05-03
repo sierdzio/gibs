@@ -39,54 +39,19 @@ signals:
 public slots:
     void start();
     void clean();
-    void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp);
+    void runProcess(const QString &app, const QStringList &arguments, const MetaProcessPtr &mp);
 
 protected slots:
     void onError(const QString &error);
     void saveCache() const;
-//    bool isFileDirty(const QString &file, const bool isQuickMode,
-//                     Scope *scope) const;
-
-//    void onParsed(const QByteArray &scopeId,
-//                  const QString &file, const QString &source,
-//                  const QByteArray &checksum,
-//                  const QDateTime &modified,
-//                  const QDateTime &created);
-//    void onParseRequest(const QByteArray &scopeId, const QString &file,
-//                        const bool force = false);
-//    bool onRunMoc(const QByteArray &scopeId, const QString &file);
-    // ibs commands
-//    void onTargetName(const QString &target);
-//    void onTargetType(const QString &type);
-//    void onQtModules(const QStringList &modules);
-//    void onDefines(const QStringList &defines);
-//    void onIncludes(const QByteArray &scopeId, const QStringList &includes);
-//    void onLibs(const QStringList &libs);
-//    void onRunTool(const QByteArray &scopeId, const QString &tool,
-//                   const QStringList &args);
     void onSubproject(const QByteArray &scopeId, const QString &path);
 
     // Process handling
     void onProcessErrorOccurred(QProcess::ProcessError _error);
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
-//protected:
-//    QString compile(const QByteArray &scopeId, const QString &file);
-//    void link(const QByteArray &scopeId);
-//    void parseFile(const QByteArray &scopeId, const QString &file);
-
 private:
-    //void updateQtModules(const QStringList &modules);
-    //bool initializeMoc(const QByteArray &scopeId);
-    //void runProcess(const QString &app, const QStringList &arguments, MetaProcess mp);
     void runNextProcess();
-//    ProcessPtr findDependency(const QString &file) const;
-//    QVector<ProcessPtr> findDependencies(const QString &file) const;
-//    QVector<ProcessPtr> findAllDependencies() const;
-    //QString capitalizeFirstLetter(const QString &string) const;
-    //QString findFile(const QString &file, const QStringList &includeDirs) const;
-    //QStringList jsonArrayToStringList(const QJsonArray &array) const;
-    //void removeFile(const QString &path) const;
     void scanForIncludes(const QString &path);
 
     Flags mFlags;
@@ -98,28 +63,12 @@ private:
 
     // TODO: Allow different Qt dir per subproject (scope)
     QString mQtDir;
-//    QStringList mQtModules;
-//    bool mQtIsMocInitialized = false;
-//    QStringList mQtIncludes;
-//    QStringList mQtLibs;
-//    QStringList mQtDefines;
 
-//    QStringList mCustomDefines;
-//    QStringList mCustomDefineFlags;
-//    //QStringList mCustomIncludes;
-//    //QStringList mCustomIncludeFlags;
-//    QStringList mCustomLibs;
-
-//    QString mTargetName = "default";
-//    QString mTargetType = Tags::targetApp;
-//    QString mTargetLibType = Tags::targetLibDynamic;
-    //QHash<QString, FileInfo> mParsedFiles;
-
-    QPointer<Scope> mGlobalScope;
+    ScopePtr mGlobalScope;
 
     // scopeId, scope
-    QHash<QByteArray, Scope*> mScopes; // TODO: QSharedPointer<Scope>
+    QHash<QByteArray, ScopePtr> mScopes;
 
-    QVector<MetaProcess> mProcessQueue;
-    QVector<QProcess *> mRunningJobs;
+    QVector<MetaProcessPtr> mProcessQueue;
+    QVector<ProcessPtr> mRunningJobs;
 };
