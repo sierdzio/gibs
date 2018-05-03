@@ -58,16 +58,3 @@ const QByteArray APP_VERSION = QByteArray("0.0.1");
 #else
 const QByteArray GIT_COMMIT_ID;
 #endif
-
-// IBS code
-#include <QFile>
-#include <QDebug>
-
-namespace Ibs {
-void removeFile(const QString &path) {
-    if (QFile::exists(path)) {
-        qInfo() << "Removing:" << path;
-        QFile::remove(path);
-    }
-}
-}

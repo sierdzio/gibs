@@ -1,5 +1,5 @@
 #include "scope.h"
-#include "globals.h"
+#include "ibs.h"
 #include "tags.h"
 #include "metaprocess.h"
 #include "fileparser.h"
@@ -7,6 +7,7 @@
 #include <QDirIterator>
 #include <QCryptographicHash>
 #include <QJsonArray>
+#include <QProcess>
 
 #include <QDebug>
 
@@ -100,7 +101,7 @@ void Scope::mergeWith(Scope *other)
 
 void Scope::dependOn(Scope *other)
 {
-    // TODO: implement
+    mDependencies.append(other->id());
 }
 
 QList<FileInfo> Scope::parsedFiles() const
@@ -238,9 +239,10 @@ QString Scope::compile(const QString &file)
 
     MetaProcess mp;
     mp.file = objectFile;
-    mp.dependsOn = findDependencies(file);
+    mp.fileDependencies = findDependencies(file);
+    mProcessQueue.append(mp);
 
-    runProcess(compiler, arguments, mp);
+    emit runProcess(compiler, arguments, mp);
     return objectFile;
 }
 
@@ -287,7 +289,9 @@ void Scope::link()
 
     MetaProcess mp;
     mp.file = targetName();
-    mp.dependsOn = findAllDependencies();
+    mp.fileDependencies = findAllDependencies();
+    mp.scopeDepenencies = mDependencies;
+    mProcessQueue.append(mp);
     emit runProcess(compiler, arguments, mp);
 }
 
@@ -427,9 +431,10 @@ bool Scope::onRunMoc(const QString &file)
 
     MetaProcess mp;
     mp.file = mocFile;
-    mp.dependsOn.append(findDependency(predefs));
+    mp.fileDependencies.append(findDependency(predefs));
+    mProcessQueue.append(mp);
     // Generate MOC file
-    runProcess(compiler, arguments, mp);
+    emit runProcess(compiler, arguments, mp);
 
 
     FileInfo info = parsedFile(file);
@@ -463,7 +468,8 @@ void Scope::onRunTool(const QString &tool, const QStringList &args)
 
             MetaProcess mp;
             mp.file = cppFile;
-            runProcess(mQtDir + "/bin/" + tool, arguments, mp);
+            mProcessQueue.append(mp);
+            emit runProcess(mQtDir + "/bin/" + tool, arguments, mp);
 
             FileInfo info = parsedFile(qrcFile);
             info.type = FileInfo::QRC;
@@ -637,7 +643,8 @@ bool Scope::initializeMoc()
 
     MetaProcess mp;
     mp.file = predefs;
-    runProcess(compiler, arguments, mp);
+    mProcessQueue.append(mp);
+    emit runProcess(compiler, arguments, mp);
     setQtIsMocInitialized(true);
     return qtIsMocInitialized();
 }

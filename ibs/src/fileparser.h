@@ -12,17 +12,14 @@ public:
                         BaseParser *parent = nullptr);
 
 signals:
-    void parsed(const QByteArray &scopeId,
-                const QString &file,
+    void parsed(const QString &file,
                 const QString &sourceFile,
                 const QByteArray &checksum,
                 const QDateTime &modified,
                 const QDateTime &created) const;
-    void parseRequest(const QByteArray &scopeId,
-                      const QString &file,
+    void parseRequest(const QString &file,
                       const bool force) const;
-    void runMoc(const QByteArray &scopeId,
-                const QString &file) const;
+    void runMoc(const QString &file) const;
 
 public slots:
     bool parse() override final;

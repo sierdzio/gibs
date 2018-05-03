@@ -17,5 +17,6 @@ public:
 
     QString file; //! Target file (which will be compiled, linked etc.)
     ProcessPtr process; //! QProcess pointer
-    QVector<ProcessPtr> dependsOn; //! List of processes which need to end before this one starts
+    QVector<ProcessPtr> fileDependencies; //! List of processes which need to end before this one starts
+    QVector<QByteArray> scopeDepenencies; //! List of other scopes which this process depends on
 };

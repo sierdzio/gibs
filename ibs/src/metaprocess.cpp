@@ -10,7 +10,7 @@ MetaProcess::MetaProcess()
 
 bool MetaProcess::canRun() const
 {
-    for (auto processptr : qAsConst(dependsOn)) {
+    for (const auto &processptr : qAsConst(fileDependencies)) {
         if (!processptr.isNull()) {
             qDebug() << "Waiting for:" << processptr->arguments().last();
             return false;

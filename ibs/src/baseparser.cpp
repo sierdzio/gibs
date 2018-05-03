@@ -75,7 +75,7 @@ bool BaseParser::parseCommand(const QString &commandString)
         if (args.size() > 0) {
             // TODO: that will modify the scope, but our local mScope will be "old"
             // We need to synchronise them or switch to pointers (yep).
-            emit runTool(mScope->id(), args.at(0), args.mid(1));
+            emit runTool(args.at(0), args.mid(1));
         }
     }
 

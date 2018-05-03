@@ -129,4 +129,6 @@ protected:
     QStringList mCustomIncludes;
     QStringList mCustomIncludeFlags;
     QHash<QString, FileInfo> mParsedFiles;
+    QVector<QByteArray> mDependencies;
+    QVector<MetaProcess> mProcessQueue; // Local process queue
 };

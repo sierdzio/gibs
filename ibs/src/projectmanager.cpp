@@ -1,5 +1,5 @@
 #include "projectmanager.h"
-#include "globals.h"
+#include "ibs.h"
 #include "fileparser.h"
 #include "commandparser.h"
 
@@ -61,6 +61,7 @@ void ProjectManager::start()
                                  mFlags.prefix(), this);
         connect(scope, &Scope::error, this, &ProjectManager::error);
         connect(scope, &Scope::subproject, this, &ProjectManager::onSubproject);
+        connect(scope, &Scope::runProcess, this, &ProjectManager::runProcess);
 
         if (!mGlobalScope.isNull()) {
             scope->mergeWith(mGlobalScope);
@@ -249,6 +250,7 @@ void ProjectManager::loadCommands()
                                  mFlags.prefix(), this);
         connect(mGlobalScope, &Scope::error, this, &ProjectManager::error);
         connect(mGlobalScope, &Scope::subproject, this, &ProjectManager::onSubproject);
+        connect(mGlobalScope, &Scope::runProcess, this, &ProjectManager::runProcess);
     }
 
     CommandParser parser(mFlags.commands(), mGlobalScope);
@@ -473,11 +475,12 @@ void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path
                            mFlags.prefix(), this);
     connect(scope, &Scope::error, this, &ProjectManager::error);
     connect(scope, &Scope::subproject, this, &ProjectManager::onSubproject);
+    connect(scope, &Scope::runProcess, this, &ProjectManager::runProcess);
 
     auto oldScope = mScopes.value(scopeId);
     oldScope->dependOn(scope);
     mScopes.insert(scope->id(), scope);
-    // TODO: kick off compilation of the new scope
+    scope->start(false, mFlags.quickMode());
 }
 
 void ProjectManager::onProcessErrorOccurred(QProcess::ProcessError _error)

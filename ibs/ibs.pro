@@ -24,7 +24,8 @@ HEADERS += src/globals.h \
     src/metaprocess.h \
     src/baseparser.h \
     src/commandparser.h \
-    src/scope.h
+    src/scope.h \
+    src/ibs.h
 
 SOURCES += src/main.cpp \ 
     src/fileparser.cpp \
@@ -33,7 +34,8 @@ SOURCES += src/main.cpp \
     src/metaprocess.cpp \
     src/baseparser.cpp \
     src/commandparser.cpp \
-    src/scope.cpp
+    src/scope.cpp \
+    src/ibs.cpp
 
 RESOURCES +=  \
     qml/qml.qrc \

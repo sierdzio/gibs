@@ -52,12 +52,12 @@ bool FileParser::parse()
                 QString include(line.mid(line.indexOf('"') + 1));
                 include.chop(1);
 
-                emit parseRequest(mScope->id(), include, false);
+                emit parseRequest(include, false);
             }
         }
 
         if (line.startsWith("Q_OBJECT") or line.startsWith("Q_GADGET")) {
-            emit runMoc(mScope->id(), mFile);
+            emit runMoc(mFile);
         }
 
         // Detect IBS comment scope
@@ -108,16 +108,16 @@ bool FileParser::parse()
 
     // Important: this emit needs to be sent before parseRequest()
     if (QFileInfo::exists(source)) {
-        emit parsed(mScope->id(), mFile, source, checksum.result(),
+        emit parsed(mFile, source, checksum.result(),
                     header.lastModified(), header.created());
     } else {
-        emit parsed(mScope->id(), mFile, QString(), checksum.result(),
+        emit parsed(mFile, QString(), checksum.result(),
                     header.lastModified(), header.created());
     }
 
     // Parse source file, only when we are not parsing it already
     if (!source.isEmpty() and source != mFile) {
-        emit parseRequest(mScope->id(), source, true);
+        emit parseRequest(source, true);
     }
 
     return true;
