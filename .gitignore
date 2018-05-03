@@ -1,3 +1,6 @@
+.ibs.cache
+SimpleTest
+
 build
 debug
 release
