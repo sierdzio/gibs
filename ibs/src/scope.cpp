@@ -34,6 +34,11 @@ QByteArray Scope::id() const
     return mId;
 }
 
+QString Scope::relativePath() const
+{
+    return mRelativePath;
+}
+
 QJsonObject Scope::toJson() const
 {
     QJsonObject object;
@@ -104,6 +109,16 @@ void Scope::mergeWith(const ScopePtr &other)
 void Scope::dependOn(const ScopePtr &other)
 {
     mScopeDependencies.append(other->id());
+}
+
+bool Scope::isFinished() const
+{
+    for (const auto &mp : qAsConst(mProcessQueue)) {
+        if (mp->hasFinished == false)
+            return false;
+    }
+
+    return false;
 }
 
 QList<FileInfo> Scope::parsedFiles() const
@@ -270,7 +285,9 @@ void Scope::link()
     if (targetType() == Tags::targetLib) {
         if (targetLibType() == Tags::targetLibDynamic) {
             arguments.append({ "-shared", "-Wl,-soname,lib" + targetName() + ".so.1",
-                               "-o", mPrefix + "/" + "lib" + targetName() + ".so.1.0.0"});
+                               "-o", mPrefix + "/" + "lib" + targetName() + ".so"
+                               //".1.0.0"
+                             });
         }
     } else {
         arguments.append({ "-o", mPrefix + "/" + targetName() });
@@ -306,7 +323,6 @@ void Scope::parseFile(const QString &file)
     connect(&parser, &FileParser::runMoc, this, &Scope::onRunMoc);
     connect(&parser, &FileParser::runTool, this, &Scope::onRunTool);
     connect(&parser, &FileParser::subproject, this, &Scope::subproject);
-
     parser.parse();
 }
 
@@ -400,7 +416,6 @@ void Scope::onParseRequest(const QString &file, const bool force)
     FileInfo info;
     info.path = selectedFile;
     insertParsedFile(info);
-    //mScopes.insert(scopeId, scope);
     parseFile(selectedFile);
 }
 
@@ -654,6 +669,11 @@ bool Scope::initializeMoc()
     return qtIsMocInitialized();
 }
 
+void Scope::setTargetLibType(const QString &targetLibType)
+{
+    mTargetLibType = targetLibType;
+}
+
 QString Scope::qtDir() const
 {
     return mQtDir;
@@ -717,6 +737,7 @@ void Scope::start(bool fromCache, bool isQuickMode)
                 }
             }
     } else {
+        //qDebug() << "I SHOULD BE HERE!" << mName;
         onParseRequest(mName);
     }
 

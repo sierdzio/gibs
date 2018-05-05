@@ -29,12 +29,14 @@ public:
 
     QString name() const;
     QByteArray id() const;
+    QString relativePath() const;
 
     QJsonObject toJson() const;
     static Scope *fromJson(const QJsonObject &json);
 
     void mergeWith(const ScopePtr &other);
     void dependOn(const ScopePtr &other);
+    bool isFinished() const;
 
     QList<FileInfo> parsedFiles() const;
     void insertParsedFile(const FileInfo &fileInfo);
@@ -60,6 +62,8 @@ public:
 
     bool qtIsMocInitialized() const;
     void setQtIsMocInitialized(bool qtIsMocInitialized);
+
+    void setTargetLibType(const QString &targetLibType);
 
 public slots:
     void start(bool fromCache, bool isQuickMode);

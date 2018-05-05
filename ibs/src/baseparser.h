@@ -16,6 +16,7 @@ signals:
     void error(const QString &error) const;
     void targetName(const QString &target) const;
     void targetType(const QString &type) const;
+    void targetLibType(const QString &libType) const;
     void qtModules(const QStringList &modules) const;
     void defines(const QStringList &defines) const;
     void includes(const QStringList &includes) const;
@@ -30,6 +31,7 @@ public slots:
 protected:
     bool parseCommand(const QString &commandString);
     QString extractArguments(const QString &line, const QLatin1String &tag) const;
+    QString tag(const QLatin1String &rawTag) const;
 
     QPointer<Scope> mScope; // TODO: maybe BaseParser can inherit from Scope?
 };

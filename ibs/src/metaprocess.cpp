@@ -20,7 +20,5 @@ bool MetaProcess::canRun() const
         }
     }
 
-    // TODO: scope dependencies!
-
     return true;
 }

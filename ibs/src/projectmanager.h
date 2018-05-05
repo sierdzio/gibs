@@ -54,16 +54,10 @@ private:
     void runNextProcess();
     void scanForIncludes(const QString &path);
 
-    Flags mFlags;
-
     bool mIsError = false;
     bool mCacheEnabled = false;
 
-    // TODO: ... what about global settings? Hm.
-
-    // TODO: Allow different Qt dir per subproject (scope)
-    QString mQtDir;
-
+    Flags mFlags;
     ScopePtr mGlobalScope;
 
     // scopeId, scope

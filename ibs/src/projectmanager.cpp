@@ -25,7 +25,6 @@ ProjectManager::ProjectManager(const Flags &flags, QObject *parent)
 {
     qRegisterMetaType<MetaProcess>("MetaProcess");
     qRegisterMetaType<MetaProcessPtr>("MetaProcessPtr");
-    mQtDir = mFlags.qtDir();
 }
 
 ProjectManager::~ProjectManager()
@@ -34,19 +33,19 @@ ProjectManager::~ProjectManager()
 
 void ProjectManager::setQtDir(const QString &qtDir)
 {
-    if (qtDir == mQtDir) {
+    if (qtDir == mFlags.qtDir()) {
         return;
     }
 
     qInfo() << "Setting Qt directory to:" << qtDir;
-    mQtDir = qtDir;
+    mFlags.setQtDir(qtDir);
 
     // TODO: upgrade mQtLibs and mQtIncludes
 }
 
 QString ProjectManager::qtDir() const
 {
-    return mQtDir;
+    return mFlags.qtDir();
 }
 
 void ProjectManager::start()
@@ -60,7 +59,7 @@ void ProjectManager::start()
         }
     } else {
         ScopePtr scope = ScopePtr::create(mFlags.inputFile(), mFlags.relativePath(),
-                                 mFlags.prefix(), mQtDir);
+                                          mFlags.prefix(), mFlags.qtDir());
         connect(scope.data(), &Scope::error, this, &ProjectManager::error);
         connect(scope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
         connect(scope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
@@ -118,7 +117,7 @@ void ProjectManager::saveCache() const
 
     QJsonObject mainObject;
 
-    mainObject.insert(Tags::qtDir, mQtDir);
+    mainObject.insert(Tags::qtDir, mFlags.qtDir());
     mainObject.insert(Tags::inputFile, mFlags.inputFile());
 
     QJsonArray scopesArray;
@@ -163,7 +162,7 @@ void ProjectManager::loadCache()
     const auto document = QJsonDocument::fromJson(file.readAll());
     const QJsonObject mainObject(document.object());
 
-    mQtDir = mainObject.value(Tags::qtDir).toString();
+    mFlags.setQtDir(mainObject.value(Tags::qtDir).toString());
 
     const QJsonArray scopesArray = mainObject.value(Tags::scopes).toArray();
     for (const auto &scopeJson : scopesArray) {
@@ -191,7 +190,7 @@ void ProjectManager::loadCommands()
 
     if (mGlobalScope.isNull()) {
         mGlobalScope = ScopePtr::create("Global", mFlags.relativePath(),
-                                        mFlags.prefix(), mQtDir);
+                                        mFlags.prefix(), mFlags.qtDir());
         connect(mGlobalScope.data(), &Scope::error, this, &ProjectManager::error);
         connect(mGlobalScope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
         connect(mGlobalScope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
@@ -212,19 +211,39 @@ void ProjectManager::loadCommands()
  */
 void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path)
 {
-    ScopePtr scope = ScopePtr::create(path, path, mFlags.prefix(), mQtDir);
+    auto oldScope = mScopes.value(scopeId);
+    const QString newRelativePath(QFileInfo(path).path());
+    ScopePtr scope = ScopePtr::create(oldScope->relativePath() + "/" + path,
+                                      newRelativePath,
+                                      mFlags.prefix(),
+                                      mFlags.qtDir());
+    //qDebug() << "Subproject:" << scope->name() << "STARTING!";
     connect(scope.data(), &Scope::error, this, &ProjectManager::error);
     connect(scope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
     connect(scope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
             Qt::QueuedConnection);
 
-    auto oldScope = mScopes.value(scopeId);
+    // TODO: as subproject is being parsed, it should also set includepath and
+    // LIBS in the depending scope
+
     oldScope->dependOn(scope);
     if (!mGlobalScope.isNull()) {
         scope->mergeWith(mGlobalScope);
     }
     mScopes.insert(scope->id(), scope);
     scope->start(false, mFlags.quickMode());
+    //qDebug() << "Subproject:" << scope->name() << "FINISHED!";
+    // TODO: this has to be made conditional: only when subproject is actually
+    // a library (and not an app, or type zero, or plugin).
+    // Update INCLUDEPATH
+    oldScope->addIncludePaths(scope->includePaths());
+    oldScope->addIncludePaths(QStringList {scope->relativePath()});
+    // Update LIBS
+    oldScope->addLibs(QStringList {
+                          //"-L" + oldScope->relativePath() + "/" + newRelativePath,
+                          "-L" + mFlags.prefix(),
+                          "-l" + scope->targetName()
+                      });
 }
 
 void ProjectManager::onProcessErrorOccurred(QProcess::ProcessError _error)
@@ -326,6 +345,15 @@ void ProjectManager::runNextProcess()
             if (mp->hasFinished or !mp->canRun() or mp->process->state() == QProcess::Running
                     or mp->process->state() == QProcess::Starting) {
                 continue;
+            }
+
+            if (mp->scopeDepenencies.isEmpty() == false) {
+                for (const auto &scopeId : qAsConst(mp->scopeDepenencies)) {
+                    if (mScopes.value(scopeId)->isFinished() == false) {
+                        qDebug() << "Waiting for scope:" << mScopes.value(scopeId)->name();
+                        continue;
+                    }
+                }
             }
 
             mRunningJobs.append(mp->process);
