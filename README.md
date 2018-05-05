@@ -138,13 +138,66 @@ You do not need to run MOC manually, ibs will run it automatically when needed.
 
 ### Tools
 
-IBS can run external tools, applications and processes. To do this, use the `tool`
+Ibs can run external tools, applications and processes. To do this, use the `tool`
 command, followed by executable path and any necessary arguments.
 
 There are some tools which are pre-configured (like Qt's tools: `rcc` and `uic`)
 and you don't need to specify their paths.
 
     //i tool myexecutable.exe --some -a -r -g -s
+
+### Subprojects
+
+Ibs can compile collections of projects in one go. This is especially useful
+in bigger projects, where you - for example - might have an application and a
+library used by that app.
+
+If a subproject is a library, it will be automatically linked with your main
+app. There is no need to manually specify include paths or libs in that case.
+
+(not implemented) If a subproject is another application, it will not be
+connected to the "main" app. The executables will be placed in the same
+directory.
+
+(not implemented) If a subproject is a plugin, ibs will create the plugin and
+copy it to the same directory as the main app. No further linking will be
+preformed.
+
+Specifying a subproject is extremely easy:
+
+    //i subproject path/to/subproject.h
+
+Ibs will not synchronise until it is absolutely necessary: main app and the
+subproject will be compiled in parallel. Only when linking, ibs will wait for
+the library to be ready before linking the app.
+
+### Features
+
+(not implemented yet)
+
+Feature is a compile-time piece of functionality that can be turned on or off.
+Internally, features are just Subprojects with some extra bits attached.
+
+A feature can be easily turned on or off via a command line flag (during
+compilation). Internally, feature always adds a compiler define when it is turned
+on. For example, if feature named `tts-support` is added, your C++ code will see
+`TTS_SUPPORT` ifdef as being true. You can use this in code to respond to the
+feature being active or not.
+
+A feature typically comes with it's own set of C++ files. These are pointed to
+by feature definition.
+
+To define a feature, use this syntax:
+
+    //i feature tts-support ../path/to/feature.h [default on|off]
+
+Then you can select the feature next time you build your project, like this:
+
+    ibs main.cpp --tts-support
+
+Or unselect it using:
+
+    ibs main.cpp --no-tts-support
 
 # Recommendations
 
