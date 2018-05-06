@@ -46,12 +46,20 @@ QJsonObject Scope::toJson() const
     for (const auto &file : mParsedFiles.values()) {
         if (!file.isEmpty())
             filesArray.append(file.toJsonArray());
+    }    
+
+    QJsonArray scopesArray;
+    for (const auto &scope : qAsConst(mScopeDependencies)) {
+        scopesArray.append(QString(scope.toHex()));
     }
 
+    object.insert(Tags::scopeId, QString(id().toHex()));
     object.insert(Tags::parsedFiles, filesArray);
     object.insert(Tags::targetName, mTargetName);
     object.insert(Tags::targetType, mTargetType);
     object.insert(Tags::targetLib, mTargetLibType);
+    object.insert(Tags::scopeDependencies, scopesArray);
+    object.insert(Tags::qtDir, mQtDir);
     object.insert(Tags::qtModules, QJsonArray::fromStringList(mQtModules));
     object.insert(Tags::defines, QJsonArray::fromStringList(mCustomDefines));
     object.insert(Tags::libs, QJsonArray::fromStringList(mCustomLibs));
@@ -59,19 +67,30 @@ QJsonObject Scope::toJson() const
     return object;
 }
 
+/*!
+ * Constructs new Scope from \a json data and returns a pointer to it. The caller
+ * is responsible for deleting the pointer.
+ */
 Scope *Scope::fromJson(const QJsonObject &json)
 {
-    Scope *scope = new Scope();
+    Scope *scope = new Scope(QByteArray::fromHex(json.value(Tags::scopeId)
+                                                 .toString().toLatin1()));
     const QJsonArray filesArray = json.value(Tags::parsedFiles).toArray();
     for (const auto &file : filesArray) {
         FileInfo fileInfo;
         fileInfo.fromJsonArray(file.toArray());
         scope->mParsedFiles.insert(fileInfo.path, fileInfo);
+    }    
+
+    const QJsonArray scopesArray = json.value(Tags::scopeDependencies).toArray();
+    for (const auto &scopeId : scopesArray) {
+        scope->mScopeDependencies.append(QByteArray::fromHex(scopeId.toString().toLatin1()));
     }
 
     scope->setTargetName(json.value(Tags::targetName).toString());
     scope->setTargetType(json.value(Tags::targetType).toString());
     scope->mTargetLibType = json.value(Tags::targetLib).toString();
+    scope->mQtDir = json.value(Tags::qtDir).toString();
     scope->setQtModules(scope->jsonArrayToStringList(json.value(Tags::qtModules).toArray()));
     scope->addDefines(scope->jsonArrayToStringList(json.value(Tags::defines).toArray()));
     //onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));
@@ -108,6 +127,7 @@ void Scope::mergeWith(const ScopePtr &other)
 
 void Scope::dependOn(const ScopePtr &other)
 {
+    // TODO: save this info in JSON cache!
     mScopeDependencies.append(other->id());
 }
 
@@ -514,7 +534,7 @@ QString Scope::findFile(const QString &file) const
 }
 
 // Protected constructor - used in fromJson().
-Scope::Scope()
+Scope::Scope(const QByteArray &id) : QObject(nullptr), mId(id)
 {
 }
 
@@ -691,8 +711,6 @@ void Scope::setQtIsMocInitialized(bool qtIsMocInitialized)
 
 void Scope::start(bool fromCache, bool isQuickMode)
 {
-    QByteArray tempScopeId;
-
     // First, check if any files need to be recompiled
     if (fromCache) {
             for (const auto &cached : parsedFiles()) {

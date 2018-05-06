@@ -168,6 +168,9 @@ void ProjectManager::loadCache()
     for (const auto &scopeJson : scopesArray) {
         ScopePtr scope(Scope::fromJson(scopeJson.toObject()));
         mScopes.insert(scope->id(), scope);
+        if (scope->name() == Tags::globalScope) {
+            mGlobalScope = scope;
+        }
     }
 
     if (mFlags.inputFile().isEmpty()) {
@@ -189,12 +192,14 @@ void ProjectManager::loadCommands()
     qInfo() << "Loading commands from command line";
 
     if (mGlobalScope.isNull()) {
-        mGlobalScope = ScopePtr::create("Global", mFlags.relativePath(),
+        mGlobalScope = ScopePtr::create(Tags::globalScope, mFlags.relativePath(),
                                         mFlags.prefix(), mFlags.qtDir());
         connect(mGlobalScope.data(), &Scope::error, this, &ProjectManager::error);
         connect(mGlobalScope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
         connect(mGlobalScope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
                 Qt::QueuedConnection);
+
+        mScopes.insert(mGlobalScope->id(), mGlobalScope);
     }
 
     CommandParser parser(mFlags.commands(), mGlobalScope.data());

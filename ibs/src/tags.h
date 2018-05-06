@@ -17,6 +17,7 @@ const QLatin1String auto_qt_modules_flag("auto-qt-modules");
 // General
 const QLatin1String ibsCacheFileName(".ibs.cache");
 const QLatin1String inputFile("inputFile");
+const QLatin1String globalScope("Global");
 // IBS comment scope
 const QLatin1String scopeOneLine("//i ");
 const QLatin1String scopeBegin("/*i");
@@ -68,5 +69,7 @@ const QLatin1String uic("uic");
 const QLatin1String parsedFiles("parsedFiles");
 const QLatin1String fileChecksum("fileChecksum");
 const QLatin1String fileModificationDate("fileModificationDate");
+const QLatin1String scopeId("scopeId");
 const QLatin1String scopes("scopes");
+const QLatin1String scopeDependencies("scopeDependencies");
 }
