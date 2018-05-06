@@ -70,6 +70,10 @@ const QLatin1String parsedFiles("parsedFiles");
 const QLatin1String fileChecksum("fileChecksum");
 const QLatin1String fileModificationDate("fileModificationDate");
 const QLatin1String scopeId("scopeId");
+const QLatin1String scopeName("scopeName");
+const QLatin1String scopeTargetName("targetName");
 const QLatin1String scopes("scopes");
 const QLatin1String scopeDependencies("scopeDependencies");
+const QLatin1String relativePath("relativePath");
+const QLatin1String targetLibType("targetLibType");
 }

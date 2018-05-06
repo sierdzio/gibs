@@ -53,6 +53,7 @@ protected slots:
 private:
     void runNextProcess();
     void scanForIncludes(const QString &path);
+    void connectScope(const ScopePtr &scope);
 
     bool mIsError = false;
     bool mCacheEnabled = false;

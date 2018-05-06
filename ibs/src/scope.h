@@ -101,7 +101,8 @@ protected slots:
 
 
 protected:
-    Scope(const QByteArray &id);
+    Scope(const QByteArray &id, const QString &name, const QString &relativePath,
+          const QString &prefix, const QString &qtDir);
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     void updateQtModules(const QStringList &modules);
     QString capitalizeFirstLetter(const QString &string) const;

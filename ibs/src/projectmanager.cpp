@@ -60,10 +60,7 @@ void ProjectManager::start()
     } else {
         ScopePtr scope = ScopePtr::create(mFlags.inputFile(), mFlags.relativePath(),
                                           mFlags.prefix(), mFlags.qtDir());
-        connect(scope.data(), &Scope::error, this, &ProjectManager::error);
-        connect(scope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
-        connect(scope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
-                Qt::QueuedConnection);
+        connectScope(scope);
 
         if (!mGlobalScope.isNull()) {
             scope->mergeWith(mGlobalScope);
@@ -171,6 +168,11 @@ void ProjectManager::loadCache()
         if (scope->name() == Tags::globalScope) {
             mGlobalScope = scope;
         }
+
+        connect(scope.data(), &Scope::error, this, &ProjectManager::error);
+        connect(scope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
+        connect(scope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
+                Qt::QueuedConnection);
     }
 
     if (mFlags.inputFile().isEmpty()) {
@@ -194,11 +196,7 @@ void ProjectManager::loadCommands()
     if (mGlobalScope.isNull()) {
         mGlobalScope = ScopePtr::create(Tags::globalScope, mFlags.relativePath(),
                                         mFlags.prefix(), mFlags.qtDir());
-        connect(mGlobalScope.data(), &Scope::error, this, &ProjectManager::error);
-        connect(mGlobalScope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
-        connect(mGlobalScope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
-                Qt::QueuedConnection);
-
+        connectScope(mGlobalScope);
         mScopes.insert(mGlobalScope->id(), mGlobalScope);
     }
 
@@ -223,10 +221,7 @@ void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path
                                       mFlags.prefix(),
                                       mFlags.qtDir());
     //qDebug() << "Subproject:" << scope->name() << "STARTING!";
-    connect(scope.data(), &Scope::error, this, &ProjectManager::error);
-    connect(scope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
-    connect(scope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
-            Qt::QueuedConnection);
+    connectScope(scope);
 
     // TODO: as subproject is being parsed, it should also set includepath and
     // LIBS in the depending scope
@@ -372,4 +367,12 @@ void ProjectManager::runNextProcess()
 
     if (mProcessQueue.isEmpty())
         emit jobQueueEmpty();
+}
+
+void ProjectManager::connectScope(const ScopePtr &scope)
+{
+    connect(scope.data(), &Scope::error, this, &ProjectManager::error);
+    connect(scope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
+    connect(scope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
+            Qt::QueuedConnection);
 }

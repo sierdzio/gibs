@@ -54,14 +54,18 @@ QJsonObject Scope::toJson() const
     }
 
     object.insert(Tags::scopeId, QString(id().toHex()));
-    object.insert(Tags::parsedFiles, filesArray);
-    object.insert(Tags::targetName, mTargetName);
-    object.insert(Tags::targetType, mTargetType);
-    object.insert(Tags::targetLib, mTargetLibType);
-    object.insert(Tags::scopeDependencies, scopesArray);
+    object.insert(Tags::scopeName, mName);
+    object.insert(Tags::relativePath, mRelativePath);
+    object.insert(Tags::prefix, mPrefix);
     object.insert(Tags::qtDir, mQtDir);
+    object.insert(Tags::parsedFiles, filesArray);
+    object.insert(Tags::scopeTargetName, mTargetName);
+    object.insert(Tags::targetType, mTargetType);
+    object.insert(Tags::targetLibType, mTargetLibType);
+    object.insert(Tags::scopeDependencies, scopesArray);
     object.insert(Tags::qtModules, QJsonArray::fromStringList(mQtModules));
     object.insert(Tags::defines, QJsonArray::fromStringList(mCustomDefines));
+    object.insert(Tags::includes, QJsonArray::fromStringList(mCustomIncludes));
     object.insert(Tags::libs, QJsonArray::fromStringList(mCustomLibs));
 
     return object;
@@ -74,26 +78,30 @@ QJsonObject Scope::toJson() const
 Scope *Scope::fromJson(const QJsonObject &json)
 {
     Scope *scope = new Scope(QByteArray::fromHex(json.value(Tags::scopeId)
-                                                 .toString().toLatin1()));
+                                                 .toString().toLatin1()),
+                             json.value(Tags::scopeName).toString(),
+                             json.value(Tags::relativePath).toString(),
+                             json.value(Tags::prefix).toString(),
+                             json.value(Tags::qtDir).toString());
     const QJsonArray filesArray = json.value(Tags::parsedFiles).toArray();
     for (const auto &file : filesArray) {
         FileInfo fileInfo;
         fileInfo.fromJsonArray(file.toArray());
         scope->mParsedFiles.insert(fileInfo.path, fileInfo);
-    }    
+    }
 
     const QJsonArray scopesArray = json.value(Tags::scopeDependencies).toArray();
     for (const auto &scopeId : scopesArray) {
         scope->mScopeDependencies.append(QByteArray::fromHex(scopeId.toString().toLatin1()));
+        // TODO: notify ProjectManager that it needs to connect the scopes!
     }
 
-    scope->setTargetName(json.value(Tags::targetName).toString());
+    scope->setTargetName(json.value(Tags::scopeTargetName).toString());
     scope->setTargetType(json.value(Tags::targetType).toString());
-    scope->mTargetLibType = json.value(Tags::targetLib).toString();
-    scope->mQtDir = json.value(Tags::qtDir).toString();
+    scope->mTargetLibType = json.value(Tags::targetLibType).toString();
     scope->setQtModules(scope->jsonArrayToStringList(json.value(Tags::qtModules).toArray()));
     scope->addDefines(scope->jsonArrayToStringList(json.value(Tags::defines).toArray()));
-    //onIncludes(jsonArrayToStringList(mainObject.value(Tags::includes).toArray()));
+    scope->addIncludePaths(scope->jsonArrayToStringList(json.value(Tags::includes).toArray()));
     scope->addLibs(scope->jsonArrayToStringList(json.value(Tags::libs).toArray()));
 
     return scope;
@@ -534,7 +542,13 @@ QString Scope::findFile(const QString &file) const
 }
 
 // Protected constructor - used in fromJson().
-Scope::Scope(const QByteArray &id) : QObject(nullptr), mId(id)
+Scope::Scope(const QByteArray &id,
+             const QString &name,
+             const QString &relativePath,
+             const QString &prefix,
+             const QString &qtDir)
+    : QObject(nullptr), mRelativePath(relativePath),
+      mPrefix(prefix), mName(name), mId(id), mQtDir(qtDir)
 {
 }
 
