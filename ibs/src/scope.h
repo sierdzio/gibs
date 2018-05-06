@@ -65,6 +65,8 @@ public:
 
     void setTargetLibType(const QString &targetLibType);
 
+    QVector<QByteArray> scopeDependencyIds() const;
+
 public slots:
     void start(bool fromCache, bool isQuickMode);
     void clean();
@@ -104,6 +106,7 @@ protected:
     Scope(const QByteArray &id, const QString &name, const QString &relativePath,
           const QString &prefix, const QString &qtDir);
     QString findFile(const QString &file, const QStringList &includeDirs) const;
+    bool isFromSubproject(const QString &file) const;
     void updateQtModules(const QStringList &modules);
     QString capitalizeFirstLetter(const QString &string) const;
     QStringList jsonArrayToStringList(const QJsonArray &array) const;    
@@ -139,7 +142,8 @@ protected:
     QStringList mCustomIncludes;
     QStringList mCustomIncludeFlags;
     QHash<QString, FileInfo> mParsedFiles;
-    QVector<QByteArray> mScopeDependencies;
+    QVector<QByteArray> mScopeDependencyIds;
+    QVector<ScopePtr> mScopeDependencies;
     // TODO: change into QStringList and use only file names here.
     // MetaProcessPtr can remain in ProjectManager, but not really here.
     QVector<MetaProcessPtr> mProcessQueue; // Local process queue

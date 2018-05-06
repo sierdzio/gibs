@@ -71,15 +71,12 @@ void ProjectManager::start()
         if (mFlags.autoIncludes())
             scope->autoScanForIncludes();
 
-        //onParseRequest(scope->id(), mFlags.inputFile());
         scope->start(false, mFlags.quickMode());
         tempScopeId = scope->id();
     }
 
     // When all jobs are done, notify main.cpp that we can quit
     connect(this, &ProjectManager::jobQueueEmpty, this, &ProjectManager::finished);
-//    // Parsing done, link it!
-//    link(tempScopeId);
     saveCache();
 }
 
@@ -173,6 +170,12 @@ void ProjectManager::loadCache()
         connect(scope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
         connect(scope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
                 Qt::QueuedConnection);
+    }
+
+    for (const auto &scope : qAsConst(mScopes)) {
+        for (const auto &scopeId : scope->scopeDependencyIds()) {
+            scope->dependOn(mScopes.value(scopeId));
+        }
     }
 
     if (mFlags.inputFile().isEmpty()) {

@@ -49,7 +49,7 @@ QJsonObject Scope::toJson() const
     }    
 
     QJsonArray scopesArray;
-    for (const auto &scope : qAsConst(mScopeDependencies)) {
+    for (const auto &scope : qAsConst(mScopeDependencyIds)) {
         scopesArray.append(QString(scope.toHex()));
     }
 
@@ -92,7 +92,7 @@ Scope *Scope::fromJson(const QJsonObject &json)
 
     const QJsonArray scopesArray = json.value(Tags::scopeDependencies).toArray();
     for (const auto &scopeId : scopesArray) {
-        scope->mScopeDependencies.append(QByteArray::fromHex(scopeId.toString().toLatin1()));
+        scope->mScopeDependencyIds.append(QByteArray::fromHex(scopeId.toString().toLatin1()));
         // TODO: notify ProjectManager that it needs to connect the scopes!
     }
 
@@ -135,8 +135,10 @@ void Scope::mergeWith(const ScopePtr &other)
 
 void Scope::dependOn(const ScopePtr &other)
 {
-    // TODO: save this info in JSON cache!
-    mScopeDependencies.append(other->id());
+    if (!mScopeDependencyIds.contains(other->id()))
+        mScopeDependencyIds.append(other->id());
+    if (!mScopeDependencies.contains(other))
+        mScopeDependencies.append(other);
 }
 
 bool Scope::isFinished() const
@@ -337,7 +339,7 @@ void Scope::link()
     MetaProcessPtr mp = MetaProcessPtr::create();
     mp->file = targetName();
     mp->fileDependencies = findAllDependencies();
-    mp->scopeDepenencies = mScopeDependencies;
+    mp->scopeDepenencies = mScopeDependencyIds;
     mProcessQueue.append(mp);
     emit runProcess(compiler, arguments, mp);
 }
@@ -427,6 +429,12 @@ void Scope::onParseRequest(const QString &file, const bool force)
         return;
     }
 
+    // Skip files from subprojects
+    // TODO: features are fine
+    if (isFromSubproject(file)) {
+        return;
+    }
+
     // Find file in include dirs
     const QString selectedFile(findFile(file));
 
@@ -437,6 +445,12 @@ void Scope::onParseRequest(const QString &file, const bool force)
 
     // Skip again, because name could have changed
     if (!force and isParsed(selectedFile)) {
+        return;
+    }
+
+    // Skip files from subprojects
+    // TODO: features are fine
+    if (isFromSubproject(file)) {
         return;
     }
 
@@ -578,6 +592,16 @@ QString Scope::findFile(const QString &file, const QStringList &includeDirs) con
     return result;
 }
 
+bool Scope::isFromSubproject(const QString &file) const
+{
+    for (const auto &scope : qAsConst(mScopeDependencies)) {
+        if (scope->isParsed(file))
+            return true;
+    }
+
+    return false;
+}
+
 void Scope::updateQtModules(const QStringList &modules)
 {
     mQtModules = modules;
@@ -701,6 +725,11 @@ bool Scope::initializeMoc()
     emit runProcess(compiler, arguments, mp);
     setQtIsMocInitialized(true);
     return qtIsMocInitialized();
+}
+
+QVector<QByteArray> Scope::scopeDependencyIds() const
+{
+    return mScopeDependencyIds;
 }
 
 void Scope::setTargetLibType(const QString &targetLibType)
