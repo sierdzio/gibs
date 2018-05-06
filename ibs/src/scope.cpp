@@ -432,6 +432,7 @@ void Scope::onParseRequest(const QString &file, const bool force)
     // Skip files from subprojects
     // TODO: features are fine
     if (isFromSubproject(file)) {
+        //qDebug() << "SKIPPING from subproject!" << file;
         return;
     }
 
@@ -450,7 +451,8 @@ void Scope::onParseRequest(const QString &file, const bool force)
 
     // Skip files from subprojects
     // TODO: features are fine
-    if (isFromSubproject(file)) {
+    if (isFromSubproject(selectedFile)) {
+        //qDebug() << "SKIPPING from subproject!" << selectedFile;
         return;
     }
 
