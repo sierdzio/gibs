@@ -576,6 +576,9 @@ QString Scope::findFile(const QString &file, const QStringList &includeDirs) con
     else
         result = mRelativePath + "/" + file;
 
+    // Sanitize the path
+    result = QFileInfo(result).canonicalFilePath();
+
     // Search through include paths
     if (QFileInfo::exists(result)) {
         //qDebug() << "RETURNING:" << result;
