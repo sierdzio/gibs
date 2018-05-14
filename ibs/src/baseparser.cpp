@@ -16,19 +16,21 @@ BaseParser::BaseParser(Scope *scope, QObject *parent) : QObject(parent),
 
 bool BaseParser::parseCommand(const QString &commandString)
 {
+    const QString command(commandString.startsWith(" ")? commandString : " " + commandString);
+
     // TODO: add error handling
     // TODO: handle spaces in target name
 
-    if(commandString.contains(tag(Tags::targetCommand))) {
-        if (commandString.contains(tag(Tags::targetName))) {
-            const QString arg(extractArguments(commandString, Tags::targetName));
+    if(command.contains(tag(Tags::targetCommand))) {
+        if (command.contains(tag(Tags::targetName))) {
+            const QString arg(extractArguments(command, Tags::targetName));
             qDebug() << "Target name:" << arg;
             mScope->setTargetName(arg);
             emit targetName(arg);
         }
 
-        if (commandString.contains(tag(Tags::targetType))) {
-            const QStringList args(extractArguments(commandString, Tags::targetType).split(" "));
+        if (command.contains(tag(Tags::targetType))) {
+            const QStringList args(extractArguments(command, Tags::targetType).split(" "));
 
             // TODO: optimize!
             if (args.at(0) == Tags::targetApp or args.at(0) == Tags::targetLib) {
@@ -46,38 +48,38 @@ bool BaseParser::parseCommand(const QString &commandString)
         }
     }
 
-    if (commandString.contains(tag(Tags::qtModules))) {
-        const QStringList args(extractArguments(commandString, Tags::qtModules).split(" "));
+    if (command.contains(tag(Tags::qtModules))) {
+        const QStringList args(extractArguments(command, Tags::qtModules).split(" "));
         qDebug() << "Enabling Qt modules:" << args;
         mScope->setQtModules(args);
         emit qtModules(args);
     }
 
-    if (commandString.contains(tag(Tags::defines))) {
-        const QStringList args(extractArguments(commandString, Tags::defines).split(" "));
+    if (command.contains(tag(Tags::defines))) {
+        const QStringList args(extractArguments(command, Tags::defines).split(" "));
         qDebug() << "Adding defines:" << args;
         mScope->addDefines(args);
         emit defines(args);
     }
 
-    if (commandString.contains(tag(Tags::includes))) {
-        const QStringList args(extractArguments(commandString, Tags::includes)
+    if (command.contains(tag(Tags::includes))) {
+        const QStringList args(extractArguments(command, Tags::includes)
                                .split(" ", QString::SkipEmptyParts));
         qDebug() << "Adding includes:" << args;
         mScope->addIncludePaths(args);
         emit includes(args);
     }
 
-    if (commandString.contains(tag(Tags::libs)) and
-            !commandString.contains(tag(Tags::targetCommand))) {
-        const QStringList args(extractArguments(commandString, Tags::libs).split(" "));
+    if (command.contains(tag(Tags::libs)) and
+            !command.contains(tag(Tags::targetCommand))) {
+        const QStringList args(extractArguments(command, Tags::libs).split(" "));
         qDebug() << "Adding libs:" << args;
         mScope->addLibs(args);
         emit libs(args);
     }
 
-    if (commandString.contains(tag(Tags::tool))) {
-        const QStringList args(extractArguments(commandString, Tags::tool).split(" "));
+    if (command.contains(tag(Tags::tool))) {
+        const QStringList args(extractArguments(command, Tags::tool).split(" "));
         qDebug() << "Running tool:" << args;
         if (args.size() > 0) {
             // TODO: that will modify the scope, but our local mScope will be "old"
@@ -86,12 +88,12 @@ bool BaseParser::parseCommand(const QString &commandString)
         }
     }
 
-    if (commandString.contains(tag(Tags::subproject))
-            || commandString.contains(tag(Tags::subprojects)))
+    if (command.contains(tag(Tags::subproject))
+            || command.contains(tag(Tags::subprojects)))
     {
         // Make sure we select proper tag
-        const QLatin1String tag = commandString.contains(Tags::subprojects)? Tags::subprojects : Tags::subproject;
-        const QStringList args(extractArguments(commandString, tag).split(" "));
+        const QLatin1String tag = command.contains(Tags::subprojects)? Tags::subprojects : Tags::subproject;
+        const QStringList args(extractArguments(command, tag).split(" "));
         qDebug() << "Subprojects(s):" << args;
         if (args.size() > 0) {
             for (const auto &arg : qAsConst(args)) {

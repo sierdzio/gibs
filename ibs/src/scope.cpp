@@ -117,11 +117,13 @@ Scope *Scope::fromJson(const QJsonObject &json)
  */
 void Scope::mergeWith(const ScopePtr &other)
 {
+    //qDebug() << "Merging with other scope:" << other->name();
     mQtDir = other->qtDir();
     mQtModules = other->qtModules();
     mQtIsMocInitialized = other->qtIsMocInitialized();
     mQtIncludes = other->qtIncludes();
     mQtDefines = other->qtDefines();
+    mQtLibs = other->qtLibs();
     mCustomDefines = other->mCustomDefines; //
     mCustomDefineFlags = other->customDefineFlags();
     mCustomLibs = other->customLibs();
