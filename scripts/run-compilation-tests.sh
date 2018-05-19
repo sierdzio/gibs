@@ -19,6 +19,7 @@ JOBS="1"
 QTDIR=""
 IBSEXE=""
 QMAKEEXE=""
+LOG="$PWD/compilation-summary.log"
 
 while getopts "j:q:i:m:" opt ;
 do
@@ -38,21 +39,26 @@ do
   esac
 done
 
+# Clear log file
+echo "" > $LOG
+
 for dir in ../testData/* ; do
   cd $dir
   echo "Entered: $dir"
   echo "Cleanup"
   # TODO: also remove moc def file
   rm -f .ibs.cache *.o moc_* .qmake* Makefile
-  echo "IBS compiling: $dir/main.cpp"
-  time $IBSEXE -j $JOBS --qt-dir $QTDIR main.cpp
+  echo "IBS compiling: $dir/main.cpp" >> $LOG
+  /usr/bin/time --append --output=$LOG --format="%E %U %S" $IBSEXE -j $JOBS --qt-dir $QTDIR main.cpp
   if [ -f "$QMAKEEXE" ]; then
-    echo "QMAKE compiling: $dir/main.cpp $QMAKEEXE $JOBS"
-    time sh -c "$QMAKEEXE && make -j $JOBS"
+    echo "QMAKE compiling: $dir" >> $LOG
+    /usr/bin/time --append --output=$LOG --format="%E %U %S" sh -c "$QMAKEEXE && make -j $JOBS"
   fi
   rm -f .ibs.cache *.o moc_* .qmake* Makefile
   echo "Finished: $dir"
   cd ..
 done
+
+cat $LOG
 
 echo "Done"
