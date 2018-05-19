@@ -1,6 +1,10 @@
 .ibs.cache
 SimpleTest
 SimpleTestQt
+simpletest
+simpletestqt
+simpletest_folder
+libsimpletest.so*
 
 build
 debug

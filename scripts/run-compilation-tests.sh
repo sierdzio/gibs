@@ -20,7 +20,7 @@ QTDIR=""
 IBSEXE=""
 QMAKEEXE=""
 
-while getopts "j:q:i:m" opt ;
+while getopts "j:q:i:m:" opt ;
 do
   case $opt in
   j) JOBS=$OPTARG
@@ -46,11 +46,12 @@ for dir in ../testData/* ; do
   rm -f .ibs.cache *.o moc_* .qmake* Makefile
   echo "IBS compiling: $dir/main.cpp"
   time $IBSEXE -j $JOBS --qt-dir $QTDIR main.cpp
-  if [ ! -z "$QMAKEEXE" ]; then
-    echo "QMAKE compiling: $dir/main.cpp"
-    time $($QMAKEEXE; make -j $JOBS)
+  if [ -f "$QMAKEEXE" ]; then
+    echo "QMAKE compiling: $dir/main.cpp $QMAKEEXE $JOBS"
+    time sh -c "$QMAKEEXE && make -j $JOBS"
   fi
   rm -f .ibs.cache *.o moc_* .qmake* Makefile
+  echo "Finished: $dir"
   cd ..
 done
 
