@@ -1,5 +1,6 @@
 .ibs.cache
 SimpleTest
+SimpleTestQt
 
 build
 debug
