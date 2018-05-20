@@ -62,8 +62,12 @@ bool BaseParser::parseCommand(const QString &commandString)
         emit defines(args);
     }
 
-    if (command.contains(tag(Tags::includes))) {
-        const QStringList args(extractArguments(command, Tags::includes)
+    if (command.contains(tag(Tags::include))
+            || command.contains(tag(Tags::includes))) {
+        // Make sure we select proper tag
+        const QLatin1String tag = command.contains(Tags::subprojects)?
+                    Tags::subprojects : Tags::subproject;
+        const QStringList args(extractArguments(command, tag)
                                .split(" ", QString::SkipEmptyParts));
         qDebug() << "Adding includes:" << args;
         mScope->addIncludePaths(args);

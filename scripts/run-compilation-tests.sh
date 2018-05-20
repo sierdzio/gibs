@@ -61,19 +61,27 @@ for dir in ../testData/* ; do
   # echo "Cleanup"
   # TODO: also remove moc def file
   cleanUp
-  echo "IBS compiling: $dir/main.cpp" | tee --append $LOG $DETAILS # >/dev/null
-  RESULT=$(/usr/bin/time --append --output=$LOG --format="%E %U %S" $IBSEXE -j $JOBS --qt-dir $QTDIR $SOURCE/main.cpp >> $DETAILS 2>&1)
+  ts=$(date +%s%N)
+  $IBSEXE -j $JOBS --qt-dir $QTDIR $SOURCE/main.cpp >> $DETAILS 2>&1
+  EXIT_CODE=$?
+  tt=$((($(date +%s%N) - $ts)/1000000))
+  echo "IBS compiling:\t$dir/main.cpp\t$tt" | tee --append $LOG $DETAILS # >/dev/null
 
-  if [ ! -z $RESULT ]; then
-    echo "FAILED" >> $LOG
+  if [ "$EXIT_CODE" != "0" ]; then
+    echo "IBS failed with: $EXIT_CODE after $tt"
+    exit $EXIT_CODE
   fi
 
   if [ -f "$QMAKEEXE" ]; then
-    echo "QMAKE compiling: $dir" | tee --append $LOG $DETAILS # >/dev/null
-    RESULT=$(/usr/bin/time --append --output=$LOG --format="%E %U %S" sh -c "$QMAKEEXE $SOURCE/ && make -j $JOBS" >> $DETAILS 2>&1)
+    ts=$(date +%s%N)
+    $QMAKEEXE $SOURCE/ && make -j $JOBS >> $DETAILS 2>&1
+    EXIT_CODE=$?
+    tt=$((($(date +%s%N) - $ts)/1000000))
+    echo "QMAKE compiling:\t$dir\t$tt" | tee --append $LOG $DETAILS # >/dev/null
 
-    if [ ! -z $RESULT ]; then
-      echo "FAILED" >> $LOG
+    if [ "$EXIT_CODE" != "0" ]; then
+      echo "QMAKE failed with: $EXIT_CODE after $tt"
+      exit $EXIT_CODE
     fi
   fi
   cleanUp

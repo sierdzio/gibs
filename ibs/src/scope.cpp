@@ -572,7 +572,15 @@ Scope::Scope(const QByteArray &id,
 
 QString Scope::findFile(const QString &file, const QStringList &includeDirs) const
 {
-    QString result;
+    QString result(file);
+
+    // If file exists, just return it right away
+    // TODO: check is this does not save absolute path to cache
+    if (QFileInfo::exists(result)) {
+        qDebug() << "RETURNING 1:" << result;
+        return result;
+    }
+
     if (file.contains(mRelativePath))
         result = file;
     else
@@ -583,7 +591,7 @@ QString Scope::findFile(const QString &file, const QStringList &includeDirs) con
 
     // Search through include paths
     if (QFileInfo::exists(result)) {
-        //qDebug() << "RETURNING:" << result;
+        qDebug() << "RETURNING 2:" << result;
         return result;
     }
 
