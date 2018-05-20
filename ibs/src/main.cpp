@@ -140,7 +140,8 @@ int main(int argc, char *argv[]) {
     ProjectManager manager(flags);
     manager.loadCache();
     manager.loadCommands();
-    QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::quit);
+    QObject::connect(&manager, &ProjectManager::finished, [](int retCode) { qDebug() << "RET CODE:" << retCode; });
+    QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::exit);
 
     if (flags.clean()) {
         QTimer::singleShot(1, &manager, &ProjectManager::clean);

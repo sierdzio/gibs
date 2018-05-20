@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Bail on errors.
-set -e
+# set -e
 
 if [ "${1}" = "-h" ] || [ "${1}" = "--help" ]; then
   echo "Usage: run-compilation-tests.sh -q qt-directory -i ibs-exe-path "
@@ -20,6 +20,7 @@ QTDIR=""
 IBSEXE=""
 QMAKEEXE=""
 LOG="$PWD/compilation-summary.log"
+DETAILS="$PWD/compilation-details.log"
 
 while getopts "j:q:i:m:" opt ;
 do
@@ -39,26 +40,50 @@ do
   esac
 done
 
+cleanUp() {
+  rm -f .ibs.cache *.o moc_* .qmake* Makefile
+}
+
 # Clear log file
 echo "" > $LOG
+echo "" > $DETAILS
+
+# Remove build dir
+rm -rf build/
 
 for dir in ../testData/* ; do
-  cd $dir
+  SOURCE=../../../testData/$dir
+  CURRENT=build/$dir
+  # echo "Source: $SOURCE destination: $CURRENT"
+  mkdir -p $CURRENT
+  cd $CURRENT
   echo "Entered: $dir"
-  echo "Cleanup"
+  # echo "Cleanup"
   # TODO: also remove moc def file
-  rm -f .ibs.cache *.o moc_* .qmake* Makefile
-  echo "IBS compiling: $dir/main.cpp" >> $LOG
-  /usr/bin/time --append --output=$LOG --format="%E %U %S" $IBSEXE -j $JOBS --qt-dir $QTDIR main.cpp
-  if [ -f "$QMAKEEXE" ]; then
-    echo "QMAKE compiling: $dir" >> $LOG
-    /usr/bin/time --append --output=$LOG --format="%E %U %S" sh -c "$QMAKEEXE && make -j $JOBS"
+  cleanUp
+  echo "IBS compiling: $dir/main.cpp" | tee --append $LOG $DETAILS # >/dev/null
+  RESULT=$(/usr/bin/time --append --output=$LOG --format="%E %U %S" $IBSEXE -j $JOBS --qt-dir $QTDIR $SOURCE/main.cpp >> $DETAILS 2>&1)
+
+  if [ ! -z $RESULT ]; then
+    echo "FAILED" >> $LOG
   fi
-  rm -f .ibs.cache *.o moc_* .qmake* Makefile
+
+  if [ -f "$QMAKEEXE" ]; then
+    echo "QMAKE compiling: $dir" | tee --append $LOG $DETAILS # >/dev/null
+    RESULT=$(/usr/bin/time --append --output=$LOG --format="%E %U %S" sh -c "$QMAKEEXE $SOURCE/ && make -j $JOBS" >> $DETAILS 2>&1)
+
+    if [ ! -z $RESULT ]; then
+      echo "FAILED" >> $LOG
+    fi
+  fi
+  cleanUp
   echo "Finished: $dir"
-  cd ..
+  cd ../..
 done
 
 cat $LOG
+
+# Remove build dir
+rm -rf build/
 
 echo "Done"

@@ -25,6 +25,11 @@ ProjectManager::ProjectManager(const Flags &flags, QObject *parent)
 {
     qRegisterMetaType<MetaProcess>("MetaProcess");
     qRegisterMetaType<MetaProcessPtr>("MetaProcessPtr");
+
+    // When all jobs are done, notify main.cpp that we can quit
+    connect(this, &ProjectManager::jobQueueEmpty, this, &ProjectManager::finished);
+
+    connect(this, &ProjectManager::error, this, &ProjectManager::onError);
 }
 
 ProjectManager::~ProjectManager()
@@ -75,8 +80,6 @@ void ProjectManager::start()
         tempScopeId = scope->id();
     }
 
-    // When all jobs are done, notify main.cpp that we can quit
-    connect(this, &ProjectManager::jobQueueEmpty, this, &ProjectManager::finished);
     saveCache();
 }
 
@@ -86,7 +89,7 @@ void ProjectManager::clean()
         scope->clean();
     }
 
-    emit finished();
+    emit finished(0);
 }
 
 void ProjectManager::onError(const QString &error)
@@ -338,6 +341,12 @@ void ProjectManager::runProcess(const QString &app, const QStringList &arguments
 
 void ProjectManager::runNextProcess()
 {
+    if (mIsError) {
+        // qDebug() << "Not running next process because of an error!";
+        emit jobQueueEmpty(true);
+        return;
+    }
+
     // TODO: use these counts to create a progress bar as in cmake!
     //qDebug() << "Running jobs:" << mRunningJobs.count() << "max jobs:" << mFlags.jobs << "process queue" << mProcessQueue.count();
 
@@ -369,7 +378,7 @@ void ProjectManager::runNextProcess()
     }
 
     if (mProcessQueue.isEmpty())
-        emit jobQueueEmpty();
+        emit jobQueueEmpty(mIsError);
 }
 
 void ProjectManager::connectScope(const ScopePtr &scope)
