@@ -221,6 +221,7 @@ void ProjectManager::loadCommands()
 void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path)
 {
     auto oldScope = mScopes.value(scopeId);
+    //qDebug() << "Subproject" << path << "AAA" << oldScope->relativePath() + "/" + path;
     const QString newRelativePath(QFileInfo(path).path());
     ScopePtr scope = ScopePtr::create(oldScope->relativePath() + "/" + path,
                                       newRelativePath,

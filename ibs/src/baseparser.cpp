@@ -65,8 +65,8 @@ bool BaseParser::parseCommand(const QString &commandString)
     if (command.contains(tag(Tags::include))
             || command.contains(tag(Tags::includes))) {
         // Make sure we select proper tag
-        const QLatin1String tag = command.contains(Tags::subprojects)?
-                    Tags::subprojects : Tags::subproject;
+        const QLatin1String tag = command.contains(Tags::includes)?
+                    Tags::includes : Tags::include;
         const QStringList args(extractArguments(command, tag)
                                .split(" ", QString::SkipEmptyParts));
         qDebug() << "Adding includes:" << args;

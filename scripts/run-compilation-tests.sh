@@ -52,20 +52,31 @@ echo "" > $DETAILS
 rm -rf build/
 
 for dir in ../testData/* ; do
-  SOURCE=../../../testData/$dir
-  CURRENT=build/$dir
-  # echo "Source: $SOURCE destination: $CURRENT"
+  SOURCE=../../$dir
+  CURRENT=build/$(basename $dir)
   mkdir -p $CURRENT
   cd $CURRENT
+  #echo "Source: $SOURCE destination: $CURRENT now in: $PWD"
   echo "Entered: $dir"
-  # echo "Cleanup"
   # TODO: also remove moc def file
   cleanUp
+
+  # Use custom compilation steps, if provided
+  CUSTOM_PATH="main.cpp"
+  CUSTOM_ARGS=""
+
+  if [ -f "$SOURCE/custom-test-run.sh" ]; then
+    echo "Extracting custom flags from custom-test-run.sh"
+    source "$SOURCE/custom-test-run.sh"
+  fi
+
+  #echo "CUSTOM: $CUSTOM_PATH $CUSTOM_ARGS"
+
   ts=$(date +%s%N)
-  $IBSEXE -j $JOBS --qt-dir $QTDIR $SOURCE/main.cpp >> $DETAILS 2>&1
+  $IBSEXE -j $JOBS --qt-dir $QTDIR $CUSTOM_ARGS $SOURCE/$CUSTOM_PATH >> $DETAILS 2>&1
   EXIT_CODE=$?
   tt=$((($(date +%s%N) - $ts)/1000000))
-  echo "IBS compiling:\t$dir/main.cpp\t$tt" | tee --append $LOG $DETAILS # >/dev/null
+  echo "IBS: $dir/main.cpp $tt" | tee --append $LOG $DETAILS # >/dev/null
 
   if [ "$EXIT_CODE" != "0" ]; then
     echo "IBS failed with: $EXIT_CODE after $tt"
@@ -77,7 +88,7 @@ for dir in ../testData/* ; do
     $QMAKEEXE $SOURCE/ && make -j $JOBS >> $DETAILS 2>&1
     EXIT_CODE=$?
     tt=$((($(date +%s%N) - $ts)/1000000))
-    echo "QMAKE compiling:\t$dir\t$tt" | tee --append $LOG $DETAILS # >/dev/null
+    echo "QMAKE: $dir $tt" | tee --append $LOG $DETAILS # >/dev/null
 
     if [ "$EXIT_CODE" != "0" ]; then
       echo "QMAKE failed with: $EXIT_CODE after $tt"
