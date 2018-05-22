@@ -20,6 +20,10 @@ bool BaseParser::parseCommand(const QString &commandString)
 
     // TODO: add error handling
     // TODO: handle spaces in target name
+    /* TODO: optimize! Ideas:
+     * make tag() into constexpr or inline
+     * scan first word instead of repeating contains() so much
+     */
 
     if(command.contains(tag(Tags::targetCommand))) {
         if (command.contains(tag(Tags::targetName))) {

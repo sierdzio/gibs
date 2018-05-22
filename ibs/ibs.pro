@@ -66,3 +66,6 @@ include(platforms/windows/windows.pri)
 include(../milo/mlog/mlog.pri)
 include(../milo/mconfig/mconfig.pri)
 include(../milo/mscripts/mscripts.pri)
+
+DISTFILES += \
+    ../LICENSE.txt
