@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QDir>
 #include <QFileInfo>
+#include <QDebug>
 
 #include <cmath>
 
@@ -98,6 +99,8 @@ public:
     {
         const QFileInfo info(inputFile);
         mRelativePath = info.path();
+        //qDebug() << "Set relative path to:" << mRelativePath
+        //         << "FROM" << inputFile;
     }
 
     QString prefix() const
@@ -159,5 +162,5 @@ private:
 
     // Paths
     QString mRelativePath; // pointing to dir where the input file is located
-    QString mPrefix = QDir::currentPath(); // where target will be put (== prefix)
+    QString mPrefix = "."; //QDir::currentPath(); // where target will be put (== prefix)
 };

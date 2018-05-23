@@ -574,10 +574,12 @@ QString Scope::findFile(const QString &file, const QStringList &includeDirs) con
 {
     QString result(file);
 
+    //qDebug() << "Looking for:" << file;
+
     // If file exists, just return it right away
     // TODO: check is this does not save absolute path to cache
     if (QFileInfo::exists(result)) {
-        qDebug() << "RETURNING 1:" << result;
+        //qDebug() << "RETURNING 1:" << result;
         return result;
     }
 
@@ -586,12 +588,14 @@ QString Scope::findFile(const QString &file, const QStringList &includeDirs) con
     else
         result = mRelativePath + "/" + file;
 
+    //qDebug() << "Pre-sanitize:" << result;
+
     // Sanitize the path
-    result = QFileInfo(result).canonicalFilePath();
+    result = QDir().relativeFilePath(QFileInfo(result).canonicalFilePath());
 
     // Search through include paths
     if (QFileInfo::exists(result)) {
-        qDebug() << "RETURNING 2:" << result;
+        //qDebug() << "RETURNING 2:" << result;
         return result;
     }
 

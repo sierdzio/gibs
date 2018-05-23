@@ -21,8 +21,9 @@ IBSEXE=""
 QMAKEEXE=""
 LOG="$PWD/compilation-summary.log"
 DETAILS="$PWD/compilation-details.log"
+CLEANUP="1"
 
-while getopts "j:q:i:m:" opt ;
+while getopts "j:q:i:m:n" opt ;
 do
   case $opt in
   j) JOBS=$OPTARG
@@ -32,6 +33,8 @@ do
   i) IBSEXE=$OPTARG
     ;;
   m) QMAKEEXE=$OPTARG
+    ;;
+  n) CLEANUP=""
     ;;
   :)
     echo "Option -$OPTARG requires an argument."
@@ -95,7 +98,11 @@ for dir in ../testData/* ; do
       exit $EXIT_CODE
     fi
   fi
-  cleanUp
+
+  if [ ! -z $CLEANUP ]; then
+    cleanUp
+  fi
+
   echo "Finished: $dir"
   cd ../..
 done
@@ -103,6 +110,8 @@ done
 cat $LOG
 
 # Remove build dir
-rm -rf build/
+if [ ! -z $CLEANUP ]; then
+    rm -rf build/
+  fi
 
 echo "Done"
