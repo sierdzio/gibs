@@ -27,7 +27,7 @@ SOFTWARE.
 */
 
 /*i
- target name ibs
+ target name gibs
  qt core
  */
 
@@ -39,6 +39,8 @@ SOFTWARE.
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QDebug>
+
+#include "mlog.h"
 
 #include "globals.h"
 #include "tags.h"
@@ -54,7 +56,7 @@ Q_LOGGING_CATEGORY(coreMain, "core.main")
   class, if present.
   */
 int main(int argc, char *argv[]) {
-    //MiloLog::instance();
+    MLog::instance();
     // Set up basic application data. Modify this to your needs
     QCoreApplication app(argc, argv);
 
@@ -64,7 +66,7 @@ int main(int argc, char *argv[]) {
     app.setApplicationVersion(APP_VERSION);
     app.setOrganizationName("");
     app.setOrganizationDomain("sierdzio.com");
-    app.setApplicationName("ibs");
+    app.setApplicationName("gibs");
     //logger()->enableLogToFile(app.applicationName());
     qCInfo(coreMain) << "\n\tName:" << app.applicationName()
                      << "\n\tOrganisation:" << app.organizationName()
@@ -77,7 +79,7 @@ int main(int argc, char *argv[]) {
     parser.setApplicationDescription("C++ in-source project builder. Compile your "
                                      "projects without all the hassle connected "
                                      "with preparing a project file. Just run "
-                                     "'ibs main.cpp' and enjoy your compiled "
+                                     "'gibs main.cpp' and enjoy your compiled "
                                      "binary! More info: "
                                      "https://github.com/sierdzio/ibs");
     parser.addHelpOption();
@@ -99,13 +101,13 @@ int main(int argc, char *argv[]) {
         {{"q", Tags::quick_flag},
         QCoreApplication::translate(scope, "'Convention over configuration' mode - parse files only up to first line of 'concrete code'. Do not check file checksums when doing incremental builds.")},
         {{"a", Tags::auto_include_flag},
-        QCoreApplication::translate(scope, "Automatically scan source directory for include paths. This can be used instead of ibs command 'include some/path' if the path is below input file.")},
+        QCoreApplication::translate(scope, "Automatically scan source directory for include paths. This can be used instead of gibs command 'include some/path' if the path is below input file.")},
         {{"j", Tags::jobs},
-        QCoreApplication::translate(scope, "Max number of threads used to compile and process the sources. If not specified, ibs will use max possible number of threads. If a fraction is specified, it will use given percentage of available cores (-j 0.5 means half of all CPU cores)"),
+        QCoreApplication::translate(scope, "Max number of threads used to compile and process the sources. If not specified, gibs will use max possible number of threads. If a fraction is specified, it will use given percentage of available cores (-j 0.5 means half of all CPU cores)"),
         QCoreApplication::translate(scope, "threads"),
         "0"},
         {{"c", Tags::commands},
-        QCoreApplication::translate(scope, "ibs syntax commands - same you can specify in c++ commends. All commands are suppored on the command line as well"),
+        QCoreApplication::translate(scope, "gibs syntax commands - same you can specify in c++ commends. All commands are suppored on the command line as well"),
         QCoreApplication::translate(scope, "commands"),
         ""}
     });

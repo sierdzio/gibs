@@ -15,14 +15,14 @@ const QLatin1String prefix("prefix");
 const QLatin1String auto_include_flag("auto-include");
 const QLatin1String auto_qt_modules_flag("auto-qt-modules");
 // General
-const QLatin1String ibsCacheFileName(".ibs.cache");
+const QLatin1String gibsCacheFileName(".gibs.cache");
 const QLatin1String inputFile("inputFile");
 const QLatin1String globalScope("Global");
-// IBS comment scope
+// GIBS comment scope
 const QLatin1String scopeOneLine("//i ");
 const QLatin1String scopeBegin("/*i");
 const QLatin1String scopeEnd("*/");
-// IBS commands
+// GIBS commands
 const QLatin1String source("source");
 const QLatin1String targetCommand("target");
 const QLatin1String targetName("name");

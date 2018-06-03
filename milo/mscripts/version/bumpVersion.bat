@@ -6,7 +6,7 @@ REM iOS, and Windows versions.
 REM
 @echo OFF
 
-set TEMPLATE_PROJECT_NAME=ibs
+set TEMPLATE_PROJECT_NAME=gibs
 
 echo Default bumpVersion.sh file. Please open it up and check.
 echo.

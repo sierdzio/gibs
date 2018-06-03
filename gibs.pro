@@ -2,7 +2,7 @@ CONFIG += tests
 
 TEMPLATE = subdirs
 
-SUBDIRS += ibs \
+SUBDIRS += gibs \
     qtheadermapper
 
 tests {

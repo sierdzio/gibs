@@ -1,6 +1,6 @@
 INCLUDEPATH += $$PWD
 
 mac:!ios {
-    ICON = $$PWD/ibs.icns
+    ICON = $$PWD/gibs.icns
     QMAKE_INFO_PLIST = $$PWD/Info.plist
 }

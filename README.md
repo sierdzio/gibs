@@ -1,11 +1,11 @@
 # Intro
 
-IBS (in-source build system) is a build tool that makes it easier to build C++
+GIBS (in-source build system) is a build tool that makes it easier to build C++
 projects by using the information from source code to compile it.
 
 In short, to compile a project it is enough to run:
 
-    ibs main.cpp
+    gibs main.cpp
 
 Instead of "the old way":
 
@@ -14,33 +14,33 @@ Instead of "the old way":
 
 # Usage
 
-A typical usage of ibs would be to call it on your main source file (of your
+A typical usage of gibs would be to call it on your main source file (of your
 app or libary):
 
-    ibs main.cpp
+    gibs main.cpp
 
 To clean the project, run:
 
-    ibs --clean main.cpp
+    gibs --clean main.cpp
 
-Specifying the source file is not necessary - it will be extracted from ibs
+Specifying the source file is not necessary - it will be extracted from gibs
 cache file generated during compilation.
 
 ## Command line flags
 
 To see all available commands, type:
 
-    ibs --help
+    gibs --help
 
 Most notable options are:
-* `-c "target name ibs; include someDir"` allows you to pass ibs commands via
-the command line. All available ibs commands are listed below
-* `-j 5` allows you to lower the maximum number of threads used by ibs. By
-default, ibs uses all CPU cores. Note: you can also specify a fraction as the
+* `-c "target name gibs; include someDir"` allows you to pass gibs commands via
+the command line. All available gibs commands are listed below
+* `-j 5` allows you to lower the maximum number of threads used by gibs. By
+default, gibs uses all CPU cores. Note: you can also specify a fraction as the
 argument to `j`. For example, `-j 0.5` will use half of all available CPU cores
-* `--clean` removes all build artefacts. Executable and ibs cache are left alone
+* `--clean` removes all build artefacts. Executable and gibs cache are left alone
 * `--auto-include` Automatically scans source directory for include paths. This
-can be used instead of ibs command 'include some/path' if the path is below
+can be used instead of gibs command 'include some/path' if the path is below
 input file
 * `--auto-qt-modules` Automatically guesses Qt modules used by the project. This
 is done using internal dictionary mapping Qt classes to modules
@@ -50,7 +50,7 @@ is done using internal dictionary mapping Qt classes to modules
 ## Syntax
 
 To get additional functionality and specify external libraries, sources etc.
-you can use ibs commands inside comments of your C++ code.
+you can use gibs commands inside comments of your C++ code.
 
 You can use one-line command syntax:
 
@@ -71,7 +71,7 @@ You can specify an extra source file to compile like this:
 
     //i source my_source_file.cpp
 
-This is especially useful for cases where ibs cannot guess the source file for
+This is especially useful for cases where gibs cannot guess the source file for
 given header.
 
 ### Target
@@ -111,7 +111,7 @@ Include paths are specified using `include` command:
 ### Libraries
 
 To include and link to an external library, you need to specify both the include
-and libs commands.
+and lgibs commands.
 
     //i include some/path
     //i lib -Lsome/path -llibrary1 -llibrary2
@@ -120,11 +120,11 @@ and libs commands.
 
 Ibs is written in Qt, and it makes it easier to build other Qt projects, too.
 In order to compile a Qt application or library, you need to specify Qt
-directory by runnig ibs with `--qt-dir` flag:
+directory by runnig gibs with `--qt-dir` flag:
 
-    ibs --qt-dir /home/qt/5.9.4/gcc_64 main.cpp
+    gibs --qt-dir /home/qt/5.9.4/gcc_64 main.cpp
 
-This will tell ibs which Qt version should it use. Then, in the source code of
+This will tell gibs which Qt version should it use. Then, in the source code of
 your application or library, you need to specify Qt modules which should be
 loaded.
 
@@ -134,7 +134,7 @@ To run Qt tools, use the `tools` command:
 
     //i tool rcc myResource.qrc myOtherResource.qrc
 
-You do not need to run MOC manually, ibs will run it automatically when needed.
+You do not need to run MOC manually, gibs will run it automatically when needed.
 
 ### Tools
 
@@ -153,13 +153,13 @@ in bigger projects, where you - for example - might have an application and a
 library used by that app.
 
 If a subproject is a library, it will be automatically linked with your main
-app. There is no need to manually specify include paths or libs in that case.
+app. There is no need to manually specify include paths or lgibs in that case.
 
 (not implemented) If a subproject is another application, it will not be
 connected to the "main" app. The executables will be placed in the same
 directory.
 
-(not implemented) If a subproject is a plugin, ibs will create the plugin and
+(not implemented) If a subproject is a plugin, gibs will create the plugin and
 copy it to the same directory as the main app. No further linking will be
 preformed.
 
@@ -168,7 +168,7 @@ Specifying a subproject is extremely easy:
     //i subproject path/to/subproject.h
 
 Ibs will not synchronise until it is absolutely necessary: main app and the
-subproject will be compiled in parallel. Only when linking, ibs will wait for
+subproject will be compiled in parallel. Only when linking, gibs will wait for
 the library to be ready before linking the app.
 
 ### Features
@@ -193,14 +193,14 @@ To define a feature, use this syntax:
 
 Then you can select the feature next time you build your project, like this:
 
-    ibs main.cpp --tts-support
+    gibs main.cpp --tts-support
 
 Or unselect it using:
 
-    ibs main.cpp --no-tts-support
+    gibs main.cpp --no-tts-support
 
 # Recommendations
 
-It's best to put ibs commands early in .cpp or .h file, so that they can be
+It's best to put gibs commands early in .cpp or .h file, so that they can be
 parsed before the rest of includes. Otherwise it may happen that you define
 include folder after it was needed.

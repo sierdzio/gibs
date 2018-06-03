@@ -6,7 +6,7 @@ TEMPLATE = subdirs
 SUBDIRS += \
 	../milo/mconfig/tst_mconfig \
 	../milo/mlog/tst_mlog \
-    tst_ibs
+    tst_gibs
 
 
 # Please use convenience includes:

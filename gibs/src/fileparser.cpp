@@ -60,13 +60,13 @@ bool FileParser::parse()
             emit runMoc(mFile);
         }
 
-        // Detect IBS comment scope
+        // Detect GIBS comment scope
         if (line == Tags::scopeBegin or line.startsWith(Tags::scopeBegin + " "))
             isCommentScope = true;
         if (isCommentScope and line.contains(Tags::scopeEnd))
             isCommentScope = false;
 
-        // Handle IBS comments (commands)
+        // Handle GIBS comments (commands)
         if (line.startsWith(Tags::scopeOneLine) or isCommentScope) {
             // Override default source file location or name
             if (line.contains(Tags::source))

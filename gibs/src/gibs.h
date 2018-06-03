@@ -1,9 +1,9 @@
 #pragma once
 
-// IBS code
+// GIBS code
 #include <QFile>
 #include <QDebug>
 
-namespace Ibs {
+namespace Gibs {
 void removeFile(const QString &path);
 }

@@ -1,5 +1,5 @@
 #include "scope.h"
-#include "ibs.h"
+#include "gibs.h"
 #include "tags.h"
 #include "metaprocess.h"
 #include "fileparser.h"
@@ -829,11 +829,11 @@ void Scope::clean()
 {
     for (const auto &info : parsedFiles()) {
         if (!info.objectFile.isEmpty())
-            Ibs::removeFile(info.objectFile);
+            Gibs::removeFile(info.objectFile);
         if (!info.generatedFile.isEmpty())
-            Ibs::removeFile(info.generatedFile);
+            Gibs::removeFile(info.generatedFile);
         if (!info.generatedObjectFile.isEmpty())
-            Ibs::removeFile(info.generatedObjectFile);
+            Gibs::removeFile(info.generatedObjectFile);
     }
 
     if (!qtModules().isEmpty()) {

@@ -23,7 +23,7 @@ increment_version ()
   VERSION=$new
 } 
 
-TEMPLATE_PROJECT_NAME="ibs"
+TEMPLATE_PROJECT_NAME="gibs"
 
 echo Default bumpVersion.sh file. Please open it up and check.
 echo

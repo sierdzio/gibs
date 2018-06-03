@@ -1,5 +1,5 @@
 #include "projectmanager.h"
-#include "ibs.h"
+#include "gibs.h"
 #include "fileparser.h"
 #include "commandparser.h"
 
@@ -99,17 +99,17 @@ void ProjectManager::onError(const QString &error)
 }
 
 /*!
- * Save necessary build info into IBS cache file
+ * Save necessary build info into GIBS cache file
  */
 void ProjectManager::saveCache() const
 {
-    QFile file(Tags::ibsCacheFileName);
+    QFile file(Tags::gibsCacheFileName);
 
     if (file.exists())
         file.remove();
 
     if (!file.open(QFile::WriteOnly | QFile::Text)) {
-        qFatal("Could not open IBS cache file for writing!");
+        qFatal("Could not open GIBS cache file for writing!");
     }
 
     QJsonObject mainObject;
@@ -138,22 +138,22 @@ void ProjectManager::saveCache() const
 }
 
 /*!
- * Load necessary build info from IBS cache file
+ * Load necessary build info from GIBS cache file
  */
 void ProjectManager::loadCache()
 {
-    QFile file(Tags::ibsCacheFileName);
+    QFile file(Tags::gibsCacheFileName);
 
     if (!file.exists()) {
-        qInfo("Cannot find IBS cache file");
+        qInfo("Cannot find GIBS cache file");
         return;
     }
 
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        qFatal("Could not open IBS cache file for reading!");
+        qFatal("Could not open GIBS cache file for reading!");
     }
 
-    qInfo() << "Loading ibs cache file" << Tags::ibsCacheFileName;
+    qInfo() << "Loading gibs cache file" << Tags::gibsCacheFileName;
 
     //const auto document = QJsonDocument::fromBinaryData(file.readAll());
     const auto document = QJsonDocument::fromJson(file.readAll());

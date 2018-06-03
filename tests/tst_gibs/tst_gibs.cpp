@@ -24,7 +24,7 @@ SOFTWARE.
 #include <QtTest>
 #include <QCoreApplication>
 
-class TestIbs : public QObject
+class TestGibs : public QObject
 {
     Q_OBJECT
 
@@ -34,16 +34,16 @@ private slots:
 
 };
 
-void TestIbs::initTestCase()
+void TestGibs::initTestCase()
 {
-    QCoreApplication::setApplicationName("ibs Unit Test");
+    QCoreApplication::setApplicationName("gibs Unit Test");
     QCoreApplication::setOrganizationName("");
 }
 
-void TestIbs::cleanupTestCase()
+void TestGibs::cleanupTestCase()
 {
 }
 
-QTEST_MAIN(TestIbs)
+QTEST_MAIN(TestGibs)
 
-#include "tst_ibs.moc"
+#include "tst_gibs.moc"

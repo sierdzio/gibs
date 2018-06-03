@@ -82,8 +82,8 @@ MLog::MLog()
     // use backslash between '%' and '{' symbols in the pattern below to avoid shadowing
     // of placeholders by variables from wizard.json (for example, 'category' variable
     // shadows 'category' placeholder)
-    qSetMessagePattern("%\{time}|%\{type}%\{if-category}|%\{category}%\{endif}|%\{function}: "
-                       "%\{message}");
+    qSetMessagePattern("%{time} | %{type}%{if-category} | %{category}%{endif} | "
+                       "%{function}: %{message}");
     qInstallMessageHandler(&messageHandler);
 }
 

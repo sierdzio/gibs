@@ -13,7 +13,7 @@ QMAKE_CXXFLAGS += -Werror
 
 TEMPLATE = app
 CONFIG += c++14
-TARGET = ibs
+TARGET = gibs
 
 HEADERS += src/globals.h \
     src/fileparser.h \
@@ -25,7 +25,7 @@ HEADERS += src/globals.h \
     src/baseparser.h \
     src/commandparser.h \
     src/scope.h \
-    src/ibs.h
+    src/gibs.h
 
 SOURCES += src/main.cpp \ 
     src/fileparser.cpp \
@@ -35,14 +35,14 @@ SOURCES += src/main.cpp \
     src/baseparser.cpp \
     src/commandparser.cpp \
     src/scope.cpp \
-    src/ibs.cpp
+    src/gibs.cpp
 
 RESOURCES +=  \
     qml/qml.qrc \
     resources/resources.qrc
 
 OTHER_FILES += \
-    ../ibs.doxyfile \
+    ../gibs.doxyfile \
     ../README.md \
     ../Release.md \
     ../.gitignore \

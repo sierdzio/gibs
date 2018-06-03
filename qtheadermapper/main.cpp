@@ -14,7 +14,7 @@
 
 /*!
  * The purpose of this app is to extract Qt header information and store it
- * in a simple JSON object, so that ibs can use it later to auto-detect Qt
+ * in a simple JSON object, so that gibs can use it later to auto-detect Qt
  * modules.
  */
 

@@ -157,7 +157,7 @@ private:
     QString mQtDir;
     QString mInputFile;
 
-    // Ibs commands passed on the command line
+    // Gibs commands passed on the command line
     QString mCommands;
 
     // Paths
