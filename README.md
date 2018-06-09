@@ -1,3 +1,7 @@
+# GIBS
+
+*Generally In-source Build System*
+
 # Intro
 
 GIBS (in-source build system) is a build tool that makes it easier to build C++
