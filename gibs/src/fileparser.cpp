@@ -91,7 +91,8 @@ bool FileParser::parse()
 
             // Search through include paths
             if (ext.isEmpty()) {
-                for (const QString &inc : mScope->includePaths()) {
+                const auto includePaths = mScope->includePaths();
+                for (const QString &inc : includePaths) {
                     const QString incBase(inc + "/" + header.baseName());
                     ext = findFileExtension(incBase);
                     if (!ext.isEmpty()) {

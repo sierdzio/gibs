@@ -46,7 +46,7 @@ public:
 
     QStringList includePaths() const;
     QStringList customIncludeFlags() const;
-    void autoScanForIncludes();    
+    void autoScanForIncludes();
 
     QString findFile(const QString &file) const;
 
@@ -90,7 +90,7 @@ signals:
 protected:
     QString compile(const QString &file);
     void link();
-    void parseFile(const QString &file);    
+    void parseFile(const QString &file);
     bool isFileDirty(const QString &file, const bool isQuickMode) const;
 
 protected slots:
@@ -113,7 +113,7 @@ protected:
     bool isFromSubproject(const QString &file) const;
     void updateQtModules(const QStringList &modules);
     QString capitalizeFirstLetter(const QString &string) const;
-    QStringList jsonArrayToStringList(const QJsonArray &array) const;    
+    QStringList jsonArrayToStringList(const QJsonArray &array) const;
 
     MetaProcessPtr findDependency(const QString &file) const;
     QVector<MetaProcessPtr> findDependencies(const QString &file) const;
@@ -124,7 +124,7 @@ protected:
     const QString mRelativePath;
     const QString mPrefix;
     const QString mName;
-    QVersionNumber mVersion;
+    QVersionNumber mVersion = QVersionNumber(1, 0, 0);
     const QByteArray mId;
 
     bool mIsError = false;

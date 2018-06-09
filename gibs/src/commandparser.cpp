@@ -10,7 +10,6 @@ CommandParser::CommandParser(const QString &commands, Scope *scope, QObject *par
 bool CommandParser::parse()
 {
     const QStringList commands(mCommandsRaw.split(Tags::commandSeparator));
-
     for (const QString &command : commands) {
         parseCommand(command);
     }

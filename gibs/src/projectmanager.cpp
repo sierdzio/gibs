@@ -59,12 +59,15 @@ void ProjectManager::start()
 
     // First, check if any files need to be recompiled
     if (mCacheEnabled) {
-        for (const auto &scope : mScopes.values()) {
+        const auto scopes = mScopes.values();
+        for (const auto &scope : scopes) {
             scope->start(true, mFlags.quickMode());
         }
     } else {
-        ScopePtr scope = ScopePtr::create(mFlags.inputFile(), mFlags.relativePath(),
-                                          mFlags.prefix(), mFlags.qtDir());
+        ScopePtr scope = ScopePtr::create(mFlags.inputFile(),
+                                          mFlags.relativePath(),
+                                          mFlags.prefix(),
+                                          mFlags.qtDir());
         connectScope(scope);
 
         if (!mGlobalScope.isNull()) {
@@ -85,7 +88,8 @@ void ProjectManager::start()
 
 void ProjectManager::clean()
 {
-    for (const auto &scope : mScopes.values()) {
+    const auto scopes = mScopes.values();
+    for (const auto &scope : scopes) {
         scope->clean();
     }
 
@@ -118,7 +122,8 @@ void ProjectManager::saveCache() const
     mainObject.insert(Tags::inputFile, mFlags.inputFile());
 
     QJsonArray scopesArray;
-    for (const auto &scope : mScopes.values()) {
+    const auto scopes = mScopes.values();
+    for (const auto &scope : scopes) {
         scopesArray.append(scope->toJson());
     }
     mainObject.insert(Tags::scopes, scopesArray);
@@ -176,7 +181,8 @@ void ProjectManager::loadCache()
     }
 
     for (const auto &scope : qAsConst(mScopes)) {
-        for (const auto &scopeId : scope->scopeDependencyIds()) {
+        const auto scopeIds = scope->scopeDependencyIds();
+        for (const auto &scopeId : scopeIds) {
             scope->dependOn(mScopes.value(scopeId));
         }
     }
@@ -354,7 +360,7 @@ void ProjectManager::runNextProcess()
     // Run next process if max number of jobs is not exceeded
     if ((mProcessQueue.count() > 0) and (mRunningJobs.count() < mFlags.jobs())) {
         for (int i = 0; i < mProcessQueue.count() and (mRunningJobs.count() < mFlags.jobs()); ++i) {
-            const auto & mp = mProcessQueue.at(i);
+            const auto mp = mProcessQueue.at(i);
             if (mp->hasFinished or !mp->canRun() or mp->process->state() == QProcess::Running
                     or mp->process->state() == QProcess::Starting) {
                 continue;

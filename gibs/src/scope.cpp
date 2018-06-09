@@ -44,7 +44,8 @@ QJsonObject Scope::toJson() const
 {
     QJsonObject object;
     QJsonArray filesArray;
-    for (const auto &file : mParsedFiles.values()) {
+    const auto files = mParsedFiles.values();
+    for (const auto &file : files) {
         if (!file.isEmpty())
             filesArray.append(file.toJsonArray());
     }    
@@ -302,7 +303,8 @@ void Scope::link()
         return;
 
     QStringList objectFiles;
-    for (const auto &info : parsedFiles()) {
+    const auto parsed = parsedFiles();
+    for (const auto &info : parsed) {
         if (!info.objectFile.isEmpty())
             objectFiles.append(info.objectFile);
         if (!info.generatedObjectFile.isEmpty())
@@ -317,9 +319,11 @@ void Scope::link()
 
     if (targetType() == Tags::targetLib) {
         if (targetLibType() == Tags::targetLibDynamic) {
-            arguments.append({ "-shared", "-Wl,-soname,lib" + targetName() + ".so.1",
-                               "-o", mPrefix + "/" + "lib" + targetName() + ".so"
-                               //".1.0.0"
+            arguments.append({ "-shared", "-Wl,-soname,lib"
+                               + targetName() + ".so.1",
+                               "-o", mPrefix + "/" + "lib"
+                               + targetName() + ".so"
+                               + mVersion.toString()
                              });
         }
     } else {
@@ -786,47 +790,48 @@ void Scope::start(bool fromCache, bool isQuickMode)
 {
     // First, check if any files need to be recompiled
     if (fromCache) {
-            for (const auto &cached : parsedFiles()) {
-                // Check if object file exists. If somebody removed it, or used
-                // --clean, then we have to recompile!
+        const auto files = parsedFiles();
+        for (const auto &cached : files) {
+            // Check if object file exists. If somebody removed it, or used
+            // --clean, then we have to recompile!
 
-                if (mIsError)
-                    return;
+            if (mIsError)
+                return;
 
-                if (isFileDirty(cached.path, isQuickMode)) {
-                    if (cached.type == FileInfo::Cpp) {
-                        parseFile(cached.path);
-                    } else if (cached.type == FileInfo::QRC) {
-                        onRunTool(Tags::rcc, QStringList({ cached.path }));
-                    }
-                } else if (!cached.objectFile.isEmpty()) {
-                    // There should be an object file on disk - let's check
-                    const QFileInfo objFile(cached.objectFile);
-                    if (!objFile.exists()) {
-                        qDebug() << "Object file missing - recompiling";
-                        compile(cached.path);
-                    }
-                } else if (!cached.generatedObjectFile.isEmpty()) {
-                    // There should be an object file on disk - let's check
-                    const QFileInfo objFile(cached.generatedObjectFile);
-                    if (!objFile.exists()) {
-                        qDebug() << "Generated object file missing - recompiling";
-                        const QFileInfo genFile(cached.generatedFile);
-                        if (!genFile.exists()) {
-                            qDebug() << "Generated file missing - regenerating";
-                            if (cached.type == FileInfo::Cpp) {
-                                // Moc file needs to be regenerated
-                                onRunMoc(cached.path);
-                            } else if (cached.type == FileInfo::QRC) {
-                                // QRC c++ file needs to be regenerated
-                                onRunTool(Tags::rcc, QStringList({ cached.path }));
-                            }
+            if (isFileDirty(cached.path, isQuickMode)) {
+                if (cached.type == FileInfo::Cpp) {
+                    parseFile(cached.path);
+                } else if (cached.type == FileInfo::QRC) {
+                    onRunTool(Tags::rcc, QStringList({ cached.path }));
+                }
+            } else if (!cached.objectFile.isEmpty()) {
+                // There should be an object file on disk - let's check
+                const QFileInfo objFile(cached.objectFile);
+                if (!objFile.exists()) {
+                    qDebug() << "Object file missing - recompiling";
+                    compile(cached.path);
+                }
+            } else if (!cached.generatedObjectFile.isEmpty()) {
+                // There should be an object file on disk - let's check
+                const QFileInfo objFile(cached.generatedObjectFile);
+                if (!objFile.exists()) {
+                    qDebug() << "Generated object file missing - recompiling";
+                    const QFileInfo genFile(cached.generatedFile);
+                    if (!genFile.exists()) {
+                        qDebug() << "Generated file missing - regenerating";
+                        if (cached.type == FileInfo::Cpp) {
+                            // Moc file needs to be regenerated
+                            onRunMoc(cached.path);
+                        } else if (cached.type == FileInfo::QRC) {
+                            // QRC c++ file needs to be regenerated
+                            onRunTool(Tags::rcc, QStringList({ cached.path }));
                         }
-
-                        //compile(cached.generatedFile);
                     }
+
+                    //compile(cached.generatedFile);
                 }
             }
+        }
     } else {
         //qDebug() << "I SHOULD BE HERE!" << mName;
         onParseRequest(mName);
@@ -838,7 +843,8 @@ void Scope::start(bool fromCache, bool isQuickMode)
 
 void Scope::clean()
 {
-    for (const auto &info : parsedFiles()) {
+    const auto files = parsedFiles();
+    for (const auto &info : files) {
         if (!info.objectFile.isEmpty())
             Gibs::removeFile(info.objectFile);
         if (!info.generatedFile.isEmpty())
