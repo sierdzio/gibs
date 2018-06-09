@@ -11,7 +11,8 @@
 
 #include <QDebug>
 
-Scope::Scope(const QString &name, const QString &relativePath, const QString &prefix,
+Scope::Scope(const QString &name, const QString &relativePath,
+             const QString &prefix,
              const QString &qtDir,
              QObject *parent)
     : QObject(parent),
@@ -744,6 +745,16 @@ bool Scope::initializeMoc()
     emit runProcess(compiler, arguments, mp);
     setQtIsMocInitialized(true);
     return qtIsMocInitialized();
+}
+
+void Scope::setVersion(const QVersionNumber &version)
+{
+    mVersion = version;
+}
+
+QVersionNumber Scope::version() const
+{
+    return mVersion;
 }
 
 QVector<QByteArray> Scope::scopeDependencyIds() const

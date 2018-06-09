@@ -4,6 +4,7 @@
 
 #include <QObject>
 #include <QPointer>
+#include <QVersionNumber>
 
 class BaseParser : public QObject
 {
@@ -23,6 +24,7 @@ signals:
     void libs(const QStringList &libs) const;
     void runTool(const QString &tool, const QStringList &args) const;
     void subproject(const QByteArray &scopeId, const QString &path) const;
+    void version(const QVersionNumber &version) const;
     void scopeUpdated(const Scope &scope) const;
 
 public slots:

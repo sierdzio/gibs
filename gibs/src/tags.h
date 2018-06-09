@@ -41,6 +41,7 @@ const QLatin1String subproject("subproject");
 const QLatin1String depends("depends on");
 const QLatin1String link("link(");
 const QLatin1String linkEnd(")");
+const QLatin1String version("version");
 // Qt support
 const QLatin1String qtDir("qtDir");
 // Qt modules

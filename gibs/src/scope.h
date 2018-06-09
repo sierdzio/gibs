@@ -5,6 +5,7 @@
 #include <QString>
 #include <QHash>
 #include <QScopedPointer>
+#include <QVersionNumber>
 
 #include <QJsonObject>
 #include <QJsonArray>
@@ -67,6 +68,9 @@ public:
 
     QVector<QByteArray> scopeDependencyIds() const;
 
+    QVersionNumber version() const;
+    void setVersion(const QVersionNumber &version);
+
 public slots:
     void start(bool fromCache, bool isQuickMode);
     void clean();
@@ -120,6 +124,7 @@ protected:
     const QString mRelativePath;
     const QString mPrefix;
     const QString mName;
+    QVersionNumber mVersion;
     const QByteArray mId;
 
     bool mIsError = false;

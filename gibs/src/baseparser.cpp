@@ -110,6 +110,14 @@ bool BaseParser::parseCommand(const QString &commandString)
         }
     }
 
+    if (command.contains(tag(Tags::version))) {
+        const QString arg(extractArguments(command, Tags::version));
+        const QVersionNumber ver(QVersionNumber::fromString(arg));
+        qDebug() << "Setting project version:" << ver.toString();
+        mScope->setVersion(ver);
+        emit version(ver);
+    }
+
     return true;
 }
 
