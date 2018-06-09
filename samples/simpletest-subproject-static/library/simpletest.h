@@ -2,7 +2,7 @@
 
 /*i
  * target name simpletest
- * target type lib dynamic
+ * target type lib static
  * qt core
  */
 
