@@ -325,6 +325,10 @@ void Scope::link()
                                + targetName() + ".so"
                                + mVersion.toString()
                              });
+        } else if (targetLibType() == Tags::targetLibStatic) {
+            arguments.append({ "-o", mPrefix + "/" + targetName() });
+            // TODO: run "`"ar cqs targetname.a targetname.o" to create the
+            // static lib
         }
     } else {
         arguments.append({ "-o", mPrefix + "/" + targetName() });

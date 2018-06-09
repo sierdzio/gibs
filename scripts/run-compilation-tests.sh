@@ -4,7 +4,7 @@
 # set -e
 
 if [ "${1}" = "-h" ] || [ "${1}" = "--help" ]; then
-  echo "Usage: run-compilation-tests.sh -q qt-directory -i ibs-exe-path "
+  echo "Usage: run-compilation-tests.sh -q qt-directory -i gibs-exe-path "
   echo "[-j jobs] [-m qmake-path]"
   echo ""
   echo "Compiles all tests located in ibs/testData using -j jobs, -q Qt directory,"
@@ -54,7 +54,7 @@ echo "" > $DETAILS
 # Remove build dir
 rm -rf build/
 
-for dir in ../testData/* ; do
+for dir in ../samples/* ; do
   SOURCE=../../$dir
   CURRENT=build/$(basename $dir)
   mkdir -p $CURRENT
