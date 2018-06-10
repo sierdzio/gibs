@@ -230,7 +230,7 @@ void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path
     //qDebug() << "Subproject" << path << "AAA" << oldScope->relativePath() + "/" + path;
     const QString newRelativePath(QFileInfo(path).path());
     ScopePtr scope = ScopePtr::create(oldScope->relativePath() + "/" + path,
-                                      newRelativePath,
+                                      oldScope->relativePath() + "/" + newRelativePath,
                                       mFlags.prefix(),
                                       mFlags.qtDir());
     //qDebug() << "Subproject:" << scope->name() << "STARTING!";

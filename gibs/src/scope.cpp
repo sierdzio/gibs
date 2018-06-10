@@ -172,7 +172,16 @@ FileInfo Scope::parsedFile(const QString &path) const
 
 bool Scope::isParsed(const QString &path) const
 {
-    return mParsedFiles.contains(path);
+    const auto fileName = QFileInfo(path).fileName();
+    const auto files = mParsedFiles.keys();
+    for (const auto &file : files) {
+        if (QFileInfo(file).fileName() == fileName) {
+            return true;
+        }
+    }
+
+    return false;
+    //return mParsedFiles.contains(path);
 }
 
 void Scope::addIncludePaths(const QStringList &includes)
@@ -320,13 +329,25 @@ void Scope::link()
     if (targetType() == Tags::targetLib) {
         if (targetLibType() == Tags::targetLibDynamic) {
             arguments.append({ "-shared", "-Wl,-soname,lib"
-                               + targetName() + ".so.1",
+                               + targetName() + ".so."
+                               + QString::number(mVersion.majorVersion()),
                                "-o", mPrefix + "/" + "lib"
-                               + targetName() + ".so"
+                               + targetName() + ".so."
                                + mVersion.toString()
                              });
         } else if (targetLibType() == Tags::targetLibStatic) {
-            arguments.append({ "-o", mPrefix + "/" + targetName() });
+            // Run ar to create the static library file
+            MetaProcessPtr mp = MetaProcessPtr::create();
+            mp->file = targetName() + ".a";
+            mp->fileDependencies = findAllDependencies();
+            mp->scopeDepenencies = mScopeDependencyIds;
+            mProcessQueue.append(mp);
+            emit runProcess("ar", QStringList {
+                                "cqs",
+                                targetName() + ".o",
+                                mp->file
+                            }, mp);
+            return;
         }
     } else {
         arguments.append({ "-o", mPrefix + "/" + targetName() });
@@ -352,15 +373,24 @@ void Scope::link()
     mProcessQueue.append(mp);
     emit runProcess(compiler, arguments, mp);
 
-    if (targetType() == Tags::targetLib
-            and targetLibType() == Tags::targetLibStatic) {
-        // Run ar to create the static library file
-        MetaProcessPtr mp = MetaProcessPtr::create();
-        mp->file = targetName() + ".a";
-        mp->fileDependencies = findAllDependencies();
-        mp->scopeDepenencies = mScopeDependencyIds;
-        mProcessQueue.append(mp);
-        emit runProcess("ar", QStringList {"cqs"}, mp);
+    if (targetType() == Tags::targetLib) {
+        if (targetLibType() == Tags::targetLibDynamic) {
+            // Create unversioned symlink to library
+            MetaProcessPtr mp = MetaProcessPtr::create();
+            mp->file = targetName() + ".so."
+                    + QString::number(mVersion.majorVersion());
+            mp->fileDependencies = findAllDependencies();
+            mp->scopeDepenencies = mScopeDependencyIds;
+            mProcessQueue.append(mp);
+            emit runProcess("ln", QStringList {
+                                "-s",
+                                mPrefix + "/" + "lib" + targetName() + ".so."
+                                + mVersion.toString(),
+                                mPrefix + "/" + "lib" + targetName() + ".so"
+                                //mPrefix + "/" + "lib" + targetName() + ".so."
+                                //+ QString::number(mVersion.majorVersion())
+                            }, mp);
+        }
     }
 }
 
@@ -609,7 +639,8 @@ QString Scope::findFile(const QString &file, const QStringList &includeDirs) con
     //qDebug() << "Pre-sanitize:" << result;
 
     // Sanitize the path
-    result = QDir().relativeFilePath(QFileInfo(result).canonicalFilePath());
+    //result = QDir(mRelativePath).relativeFilePath(
+    //            QFileInfo(result).canonicalFilePath());
 
     // Search through include paths
     if (QFileInfo::exists(result)) {
