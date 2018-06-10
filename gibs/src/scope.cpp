@@ -327,8 +327,6 @@ void Scope::link()
                              });
         } else if (targetLibType() == Tags::targetLibStatic) {
             arguments.append({ "-o", mPrefix + "/" + targetName() });
-            // TODO: run "`"ar cqs targetname.a targetname.o" to create the
-            // static lib
         }
     } else {
         arguments.append({ "-o", mPrefix + "/" + targetName() });
@@ -353,6 +351,17 @@ void Scope::link()
     mp->scopeDepenencies = mScopeDependencyIds;
     mProcessQueue.append(mp);
     emit runProcess(compiler, arguments, mp);
+
+    if (targetType() == Tags::targetLib
+            and targetLibType() == Tags::targetLibStatic) {
+        // Run ar to create the static library file
+        MetaProcessPtr mp = MetaProcessPtr::create();
+        mp->file = targetName() + ".a";
+        mp->fileDependencies = findAllDependencies();
+        mp->scopeDepenencies = mScopeDependencyIds;
+        mProcessQueue.append(mp);
+        emit runProcess("ar", QStringList {"cqs"}, mp);
+    }
 }
 
 void Scope::parseFile(const QString &file)
