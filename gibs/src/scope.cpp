@@ -338,14 +338,14 @@ void Scope::link()
         } else if (targetLibType() == Tags::targetLibStatic) {
             // Run ar to create the static library file
             MetaProcessPtr mp = MetaProcessPtr::create();
-            mp->file = targetName() + ".a";
+            mp->file = "lib" + targetName() + ".a";
             mp->fileDependencies = findAllDependencies();
             mp->scopeDepenencies = mScopeDependencyIds;
             mProcessQueue.append(mp);
             emit runProcess("ar", QStringList {
                                 "cqs",
-                                targetName() + ".o",
-                                mp->file
+                                mp->file,
+                                targetName() + ".o"
                             }, mp);
             return;
         }
