@@ -23,6 +23,10 @@ Scope::Scope(const QString &name, const QString &relativePath,
       mQtDir(qtDir)
 {
     addIncludePaths({"."});
+
+    // Pre-set target name. If this (sub)project defines it's own name,
+    // this pre-set name will be replaced.
+    setTargetName(QFileInfo(name).dir().dirName());
 }
 
 QString Scope::name() const
