@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=gibs
+Exec=gibs %F
+Icon=gibs
+GenericName=Gibs
+Comment=Generally In-source Build System - build C++ projects without a project file
+Terminal=true
+Categories=Development;Building;Qt;

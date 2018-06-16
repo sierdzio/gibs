@@ -47,7 +47,11 @@ OTHER_FILES += \
     ../Release.md \
     ../.gitignore \
     ../license-Qt.txt \
-    ../.gitlab-ci.yml
+    ../.gitlab-ci.yml \
+    ../deployment/gibs.desktop \
+    ../deployment/gibs.png \
+    ../scripts/deploy-linux.sh \
+    ../scripts/run-compilation-tests.sh
 
 ## Put all build files into build directory
 ##  This also works with shadow building, so don't worry!
@@ -56,7 +60,19 @@ OBJECTS_DIR = $$BUILD_DIR
 MOC_DIR = $$BUILD_DIR
 RCC_DIR = $$BUILD_DIR
 UI_DIR = $$BUILD_DIR
-DESTDIR = $$BUILD_DIR/bin
+DESTDIR = $$BUILD_DIR/out
+
+# Run qmake with CONFIG+=deploy to run the deployment step automatically
+deploy {
+    message("Copying deployment files. You need to run linuxdeployqt manually.")
+    QMAKE_POST_LINK += $$QMAKE_COPY $$quote($$PWD/../deployment/gibs.desktop) $$quote($$DESTDIR/) $$escape_expand(\\n\\t)
+    QMAKE_POST_LINK += $$QMAKE_COPY $$quote($$PWD/../deployment/gibs.png) $$quote($$DESTDIR/) $$escape_expand(\\n\\t)
+    QMAKE_POST_LINK += $$QMAKE_COPY $$quote($$PWD/../scripts/deploy-linux.sh) $$quote($$DESTDIR/) $$escape_expand(\\n\\t)
+    auto-deploy {
+        QMAKE_POST_LINK += $$quote($$DESTDIR/deploy-linux.sh) $$quote($$OUT_PWD/../../linuxdeployqt-continuous-x86_64.AppImage) $$quote($$QMAKE_QMAKE) $$quote($$DESTDIR/gibs.desktop) $$escape_expand(\\n\\t)
+        QMAKE_POST_LINK += $$QMAKE_COPY $$quote($$OUT_PWD/gibs-x86_64.AppImage) $$quote($$OUT_PWD/../) $$escape_expand(\\n\\t)
+    }
+}
 
 ## Platforms
 include(platforms/mac/mac.pri)
@@ -64,7 +80,7 @@ include(platforms/windows/windows.pri)
 
 ## Modules
 include(../milo/mlog/mlog.pri)
-include(../milo/mconfig/mconfig.pri)
+#include(../milo/mconfig/mconfig.pri)
 include(../milo/mscripts/mscripts.pri)
 
 DISTFILES += \
