@@ -78,4 +78,17 @@ const QLatin1String scopes("scopes");
 const QLatin1String scopeDependencies("scopeDependencies");
 const QLatin1String relativePath("relativePath");
 const QLatin1String targetLibType("targetLibType");
+// Platform ifdefs
+// TODO: keeping them stored here is a horrible idea. Gibs should understand
+// ifdefs dynamically!
+const QLatin1String osUnix("Q_OS_UNIX");
+const QLatin1String osLinux("Q_OS_LINUX");
+const QLatin1String osHurd("Q_OS_HURD");
+const QLatin1String osAndroid("Q_OS_ANDROID");
+const QLatin1String osWin("Q_OS_WIN");
+const QLatin1String osWin32("Q_OS_WIN32");
+const QLatin1String osWin64("Q_OS_WIN64");
+const QLatin1String osDarwin("Q_OS_DARWIN");
+const QLatin1String osMac("Q_OS_MAC");
+const QLatin1String osMacOs("Q_OS_MACOS");
 }

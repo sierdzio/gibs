@@ -2,7 +2,18 @@
 
 #include "baseparser.h"
 
+#include <QByteArray>
+#include <QString>
+#include <QVector>
 #include <QObject>
+
+struct ParseBlock {
+    //! Set to true when current line is inside a gibs comment block
+    bool isComment = false;
+    //! Set to true when current line is inside a disabled block (inside an
+    //! ifdef for example)
+    bool isDisabled = false;
+};
 
 class FileParser : public BaseParser
 {
@@ -26,6 +37,8 @@ public slots:
 
 protected:
     QString findFileExtension(const QString &filePath) const;
+    bool scopeBegins(const QString &line) const;
+    bool scopeEnds(const QString &line, const ParseBlock &block) const;
 
     const QString mFile;
 };

@@ -30,7 +30,7 @@ bool FileParser::parse()
 
     qInfo() << "Parsing:" << mFile;
 
-    bool isCommentScope = false;
+    ParseBlock block;
     QString source;
     QCryptographicHash checksum(QCryptographicHash::Sha1);
 
@@ -60,14 +60,20 @@ bool FileParser::parse()
             emit runMoc(mFile);
         }
 
+        // TODO: use clang to detects blocks properly?
+        // Detect disabled block
+        if (line.contains("#ifdef") and (line.contains(Tags::osLinux))
+
+                // line.contains("#if")
+
         // Detect GIBS comment scope
-        if (line == Tags::scopeBegin or line.startsWith(Tags::scopeBegin + " "))
-            isCommentScope = true;
-        if (isCommentScope and line.contains(Tags::scopeEnd))
-            isCommentScope = false;
+        if (scopeBegins(line))
+            block.isComment = true;
+        if (scopeEnds(line, block))
+            block.isComment = false;
 
         // Handle GIBS comments (commands)
-        if (line.startsWith(Tags::scopeOneLine) or isCommentScope) {
+        if (line.startsWith(Tags::scopeOneLine) or block.isComment) {
             // Override default source file location or name
             if (line.contains(Tags::source))
                 source = extractArguments(line, Tags::source);
@@ -130,4 +136,14 @@ QString FileParser::findFileExtension(const QString &filePath) const
     if (QFileInfo::exists(filePath + ".c")) return ".c";
     if (QFileInfo::exists(filePath + ".cc")) return ".cc";
     return QString();
+}
+
+bool FileParser::scopeBegins(const QString &line) const
+{
+    return (line == Tags::scopeBegin or line.startsWith(Tags::scopeBegin + " "));
+}
+
+bool FileParser::scopeEnds(const QString &line, const ParseBlock &block) const
+{
+    return (block.isComment and line.contains(Tags::scopeEnd));
 }
