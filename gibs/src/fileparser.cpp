@@ -60,9 +60,30 @@ bool FileParser::parse()
             emit runMoc(mFile);
         }
 
-        // TODO: use clang to detects blocks properly?
+        // TODO: use clang to detects blocks properly. Or write a proper lexer
         // Detect disabled block
-        if (line.contains("#ifdef") and (line.contains(Tags::osLinux))
+        if (line.startsWith('#')) {
+            // If this is an ifdef line, we don't need to do any further parsing
+            bool skipParsing = true;
+            if (line.contains("#ifdef") or (line.contains("#elif"))) {
+
+
+            } else if (line.contains("#else")) {
+                // TODO: this won't work for nested ifdefs... :-(
+                if (block.isDisabled) block.isDisabled = !block.isDisabled;
+            } else if (line.contains("#endif")) {
+
+            } else {
+                skipParsing = false;
+            }
+
+            if (skipParsing) {
+                continue;
+            }
+        }
+
+
+                // (line.contains(Tags::osLinux))
 
                 // line.contains("#if")
 
