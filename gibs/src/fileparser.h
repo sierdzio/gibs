@@ -1,6 +1,7 @@
 #pragma once
 
 #include "baseparser.h"
+#include "tags.h"
 
 #include <QByteArray>
 #include <QString>
@@ -13,6 +14,29 @@ struct ParseBlock {
     //! Set to true when current line is inside a disabled block (inside an
     //! ifdef for example)
     bool isDisabled = false;
+
+    QHash<QString, bool> activeBlocks =
+#ifdef Q_OS_LINUX
+    {
+        { Tags::osUnix, true },
+        { Tags::osLinux, true }
+    }
+#elif Q_OS_WIN
+
+    {
+        { Tags::osWin, true },
+        { Tags::osWin32, true },
+        { Tags::osWin64, true }
+    }
+#elif Q_OS_MAC
+
+    {
+        { Tags::osMac, true },
+        { Tags::osMacOs, true },
+        { Tags::osDarwin, true }
+    }
+#endif
+    ;
 };
 
 class FileParser : public BaseParser

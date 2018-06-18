@@ -61,18 +61,40 @@ bool FileParser::parse()
         }
 
         // TODO: use clang to detects blocks properly. Or write a proper lexer
-        // Detect disabled block
+        // Detect block
         if (line.startsWith('#')) {
             // If this is an ifdef line, we don't need to do any further parsing
             bool skipParsing = true;
-            if (line.contains("#ifdef") or (line.contains("#elif"))) {
+            const QStringList w(line.split(' ', QString::SkipEmptyParts));
+            QStringList words;
 
+            // Glue words together
+            for (int i = 0; i < w.length(); ++i) {
+                // TODO: support line breaks by backslashes
+                if ((i < w.length() - 1) and
+                        (w.at(i) == '#' or w.at(i) == '!'
+                         or w.at(i) == "defined" or w.at(i) == "("))
+                {
+                    words.append(w.at(i) + w.at(i + 1));
+                    ++i;
+                    continue;
+                }
 
-            } else if (line.contains("#else")) {
-                // TODO: this won't work for nested ifdefs... :-(
-                if (block.isDisabled) block.isDisabled = !block.isDisabled;
-            } else if (line.contains("#endif")) {
+                words.append(w.at(i));
+            }
 
+            if (words.at(0) == "#ifdef" or words.at(0) == "#elif") {
+                // #ifdef STH
+                // #ifdef ! STH
+
+                if (words.at(1).startsWith('!') == false)
+                    block.activeBlocks.insert(words.at(1), true);
+            } else if (words.at(0) == "#if") {
+                // #if defined(STH)
+            } else if (words.at(0) == "#else") {
+                // Nothing
+            } else if (words.at(0) == "#endif") {
+                // Nothing
             } else {
                 skipParsing = false;
             }
@@ -81,11 +103,6 @@ bool FileParser::parse()
                 continue;
             }
         }
-
-
-                // (line.contains(Tags::osLinux))
-
-                // line.contains("#if")
 
         // Detect GIBS comment scope
         if (scopeBegins(line))
