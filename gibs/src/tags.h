@@ -14,6 +14,7 @@ const QLatin1String commandSeparator(";");
 const QLatin1String prefix("prefix");
 const QLatin1String auto_include_flag("auto-include");
 const QLatin1String auto_qt_modules_flag("auto-qt-modules");
+const QLatin1String parse_whole_files("parse-whole-files");
 // General
 const QLatin1String gibsCacheFileName(".gibs.cache");
 const QLatin1String inputFile("inputFile");

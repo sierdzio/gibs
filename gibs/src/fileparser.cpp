@@ -9,8 +9,10 @@
 // TODO: add categorized logging!
 #include <QDebug>
 
-FileParser::FileParser(const QString &file, Scope *scope, BaseParser *parent)
+FileParser::FileParser(const QString &file, const bool parseWholeFiles,
+                       Scope *scope, BaseParser *parent)
     : BaseParser (scope, parent),
+      mParseWholeFiles(parseWholeFiles),
       mFile(file)
 {    
 }
@@ -31,6 +33,7 @@ bool FileParser::parse()
     qInfo() << "Parsing:" << mFile;
 
     ParseBlock block;
+    block.active = block.defined;
     QString source;
     QCryptographicHash checksum(QCryptographicHash::Sha1);
 
@@ -40,24 +43,14 @@ bool FileParser::parse()
         const QByteArray rawLine(file.readLine());
         const QString line(rawLine.trimmed());
 
-        checksum.addData(rawLine);
-
-        // TODO: add comment and scope detection
-        // TODO: add ifdef detection
-        if (line.startsWith("#include")) {
-            if (line.contains('<')) {
-                // Library include - skip it
-            } else if (line.contains('"')) {
-                // Local include - parse it!
-                QString include(line.mid(line.indexOf('"') + 1));
-                include.chop(1);
-
-                emit parseRequest(include, false);
-            }
-        }
-
-        if (line.startsWith("Q_OBJECT") or line.startsWith("Q_GADGET")) {
-            emit runMoc(mFile);
+        if (mParseWholeFiles == true) {
+            // TODO: what to do with checksum if we are not parsing whole files?
+            // Most probably this needs to be removed.
+            checksum.addData(rawLine);
+        } else {
+            // TODO: make "real code" detector more robust
+            if (line.contains("::") or line.contains(" class "))
+                break;
         }
 
         // TODO: use clang to detects blocks properly. Or write a proper lexer
@@ -86,15 +79,23 @@ bool FileParser::parse()
             if (words.at(0) == "#ifdef" or words.at(0) == "#elif") {
                 // #ifdef STH
                 // #ifdef ! STH
+                const QStringList keys(block.active.keys());
+                for (const QString &key : keys) {
+                    block.active.insert(key, false);
+                }
 
                 if (words.at(1).startsWith('!') == false)
-                    block.activeBlocks.insert(words.at(1), true);
+                    block.active.insert(words.at(1), true);
             } else if (words.at(0) == "#if") {
                 // #if defined(STH)
             } else if (words.at(0) == "#else") {
-                // Nothing
+                const QStringList keys(block.active.keys());
+                for (const QString &key : keys) {
+                    block.active.insert(key, false);
+                }
             } else if (words.at(0) == "#endif") {
-                // Nothing
+                // Reset active blocks
+                block.active = block.defined;
             } else {
                 skipParsing = false;
             }
@@ -102,6 +103,29 @@ bool FileParser::parse()
             if (skipParsing) {
                 continue;
             }
+        }
+
+        //qDebug() << "Blocks: Active:" << block.active << "### Defined:" << block.defined;
+
+        const bool canRead = canReadIncludes(block);
+
+        // TODO: add comment and scope detection
+        if (line.startsWith("#include")) {
+            if (line.contains('<')) {
+                // Library include - skip it
+            } else if (line.contains('"')) {
+                if (canRead) {
+                    // Local include - parse it!
+                    QString include(line.mid(line.indexOf('"') + 1));
+                    include.chop(1);
+
+                    emit parseRequest(include, false);
+                }
+            }
+        }
+
+        if (line.startsWith("Q_OBJECT") or line.startsWith("Q_GADGET")) {
+            emit runMoc(mFile);
         }
 
         // Detect GIBS comment scope
@@ -184,4 +208,19 @@ bool FileParser::scopeBegins(const QString &line) const
 bool FileParser::scopeEnds(const QString &line, const ParseBlock &block) const
 {
     return (block.isComment and line.contains(Tags::scopeEnd));
+}
+
+/*!
+ * Returns true if ifdefs set in current \a block allow includes to be read.
+ */
+bool FileParser::canReadIncludes(const ParseBlock &block) const
+{
+    const QList<QString> activeKeys(block.active.keys(true));
+    for (const QString &key : activeKeys) {
+        if (block.defined.value(key, false) == true) {
+            return true;
+        }
+    }
+
+    return false;
 }

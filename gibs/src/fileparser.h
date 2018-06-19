@@ -15,7 +15,9 @@ struct ParseBlock {
     //! ifdef for example)
     bool isDisabled = false;
 
-    QHash<QString, bool> activeBlocks =
+    // TODO: use QVector<QString> instead
+    QHash<QString, bool> active;
+    QHash<QString, bool> defined =
 #ifdef Q_OS_LINUX
     {
         { Tags::osUnix, true },
@@ -43,7 +45,9 @@ class FileParser : public BaseParser
 {
     Q_OBJECT
 public:
-    explicit FileParser(const QString &file, Scope *scope,
+    explicit FileParser(const QString &file,
+                        const bool parseWholeFiles,
+                        Scope *scope,
                         BaseParser *parent = nullptr);
 
 signals:
@@ -63,6 +67,8 @@ protected:
     QString findFileExtension(const QString &filePath) const;
     bool scopeBegins(const QString &line) const;
     bool scopeEnds(const QString &line, const ParseBlock &block) const;
+    bool canReadIncludes(const ParseBlock &block) const;
 
+    const bool mParseWholeFiles;
     const QString mFile;
 };

@@ -10,7 +10,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-#include "flags.h"
 #include "fileinfo.h"
 #include "tags.h"
 #include "metaprocess.h"
@@ -26,6 +25,7 @@ class Scope : public QObject
 public:
     explicit Scope(const QString &name, const QString &relativePath,
                    const QString &prefix, const QString &qtDir,
+                   const bool parseWholeFiles,
                    QObject *parent = nullptr);
 
     QString name() const;
@@ -108,7 +108,8 @@ protected slots:
 
 protected:
     Scope(const QByteArray &id, const QString &name, const QString &relativePath,
-          const QString &prefix, const QString &qtDir);
+          const QString &prefix, const QString &qtDir,
+          const bool parseWholeFiles);
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     bool isFromSubproject(const QString &file) const;
     void updateQtModules(const QStringList &modules);
@@ -121,6 +122,7 @@ protected:
 
     bool initializeMoc();
 
+    const bool mParseWholeFiles;
     const QString mRelativePath;
     const QString mPrefix;
     const QString mName;

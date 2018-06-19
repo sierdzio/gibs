@@ -145,12 +145,23 @@ public:
         mAutoIncludes = autoIncludes;
     }
 
+    bool parseWholeFiles() const
+    {
+        return mParseWholeFiles;
+    }
+
+    void setParseWholeFiles(bool parseWholeFiles)
+    {
+        mParseWholeFiles = parseWholeFiles;
+    }
+
 private:
     bool mRun = false;
     bool mClean = false;
     bool mQuickMode = false;
     bool mQtAutoModules = false;
     bool mAutoIncludes = false;
+    bool mParseWholeFiles = false;
 
     int mJobs = 0;
 

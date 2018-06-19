@@ -67,7 +67,8 @@ void ProjectManager::start()
         ScopePtr scope = ScopePtr::create(mFlags.inputFile(),
                                           mFlags.relativePath(),
                                           mFlags.prefix(),
-                                          mFlags.qtDir());
+                                          mFlags.qtDir(),
+                                          mFlags.parseWholeFiles());
         connectScope(scope);
 
         if (!mGlobalScope.isNull()) {
@@ -207,7 +208,8 @@ void ProjectManager::loadCommands()
 
     if (mGlobalScope.isNull()) {
         mGlobalScope = ScopePtr::create(Tags::globalScope, mFlags.relativePath(),
-                                        mFlags.prefix(), mFlags.qtDir());
+                                        mFlags.prefix(), mFlags.qtDir(),
+                                        mFlags.parseWholeFiles());
         connectScope(mGlobalScope);
         mScopes.insert(mGlobalScope->id(), mGlobalScope);
     }
@@ -232,7 +234,8 @@ void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path
     ScopePtr scope = ScopePtr::create(oldScope->relativePath() + "/" + path,
                                       oldScope->relativePath() + "/" + newRelativePath,
                                       mFlags.prefix(),
-                                      mFlags.qtDir());
+                                      mFlags.qtDir(),
+                                      mFlags.parseWholeFiles());
     //qDebug() << "Subproject:" << scope->name() << "STARTING!";
     connectScope(scope);
 

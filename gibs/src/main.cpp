@@ -109,7 +109,9 @@ int main(int argc, char *argv[]) {
         {{"c", Tags::commands},
         QCoreApplication::translate(scope, "gibs syntax commands - same you can specify in c++ commends. All commands are suppored on the command line as well"),
         QCoreApplication::translate(scope, "commands"),
-        ""}
+        ""},
+        {{"w", Tags::parse_whole_files},
+        QCoreApplication::translate(scope, "Parse whole files instead of just their beginning. By default, only code up to first class declaration or function definition is parsed.")},
     });
 
     // Process the actual command line arguments given by the user
@@ -124,6 +126,7 @@ int main(int argc, char *argv[]) {
     flags.setQuickMode(parser.isSet(Tags::quick_flag));
     flags.setQtAutoModules(parser.isSet(Tags::auto_qt_modules_flag));
     flags.setAutoIncludes(parser.isSet(Tags::auto_include_flag));
+    flags.setParseWholeFiles(parser.isSet(Tags::parse_whole_files));
     flags.setJobs(parser.value(Tags::jobs).toFloat(&jobsOk));
     flags.setQtDir(parser.value(Tags::qt_dir_flag));
     if (!args.isEmpty())

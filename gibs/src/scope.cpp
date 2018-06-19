@@ -11,11 +11,14 @@
 
 #include <QDebug>
 
-Scope::Scope(const QString &name, const QString &relativePath,
+Scope::Scope(const QString &name,
+             const QString &relativePath,
              const QString &prefix,
              const QString &qtDir,
+             const bool parseWholeFiles,
              QObject *parent)
     : QObject(parent),
+      mParseWholeFiles(parseWholeFiles),
       mRelativePath(relativePath),
       mPrefix(prefix),
       mName(name),
@@ -64,6 +67,7 @@ QJsonObject Scope::toJson() const
     object.insert(Tags::relativePath, mRelativePath);
     object.insert(Tags::prefix, mPrefix);
     object.insert(Tags::qtDir, mQtDir);
+    object.insert(Tags::parse_whole_files, mParseWholeFiles);
     object.insert(Tags::parsedFiles, filesArray);
     object.insert(Tags::scopeTargetName, mTargetName);
     object.insert(Tags::targetType, mTargetType);
@@ -88,7 +92,8 @@ Scope *Scope::fromJson(const QJsonObject &json)
                              json.value(Tags::scopeName).toString(),
                              json.value(Tags::relativePath).toString(),
                              json.value(Tags::prefix).toString(),
-                             json.value(Tags::qtDir).toString());
+                             json.value(Tags::qtDir).toString(),
+                             json.value(Tags::parse_whole_files).toBool());
     const QJsonArray filesArray = json.value(Tags::parsedFiles).toArray();
     for (const auto &file : filesArray) {
         FileInfo fileInfo;
@@ -400,7 +405,7 @@ void Scope::link()
 
 void Scope::parseFile(const QString &file)
 {
-    FileParser parser(file, this);
+    FileParser parser(file, mParseWholeFiles, this);
     connect(&parser, &FileParser::error, this, &Scope::error);
     connect(&parser, &FileParser::parsed, this, &Scope::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &Scope::onParseRequest);
@@ -616,8 +621,10 @@ Scope::Scope(const QByteArray &id,
              const QString &name,
              const QString &relativePath,
              const QString &prefix,
-             const QString &qtDir)
-    : QObject(nullptr), mRelativePath(relativePath),
+             const QString &qtDir,
+             const bool parseWholeFiles)
+    : QObject(nullptr), mParseWholeFiles(parseWholeFiles),
+      mRelativePath(relativePath),
       mPrefix(prefix), mName(name), mId(id), mQtDir(qtDir)
 {
 }
