@@ -48,6 +48,9 @@ can be used instead of gibs command 'include some/path' if the path is below
 input file
 * `--auto-qt-modules` Automatically guesses Qt modules used by the project. This
 is done using internal dictionary mapping Qt classes to modules
+* `--parse-whole-files` Parse whole files instead of just their beginning. By
+default, only code up to first class declaration or function definition is
+parsed.
 
 # Commands
 
