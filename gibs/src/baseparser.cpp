@@ -23,10 +23,20 @@ bool BaseParser::parseCommand(const QString &commandString)
      * scan first word instead of repeating contains() so much
      */
 
-    const QStringList arguments(commandString.split(" ",
-        QString::SkipEmptyParts));
-    const QString &command(arguments.at(0));
+    const QStringList allArguments(commandString.split(" ",
+                                                       QString::SkipEmptyParts));
 
+    if (allArguments.size() < 2) return true;
+
+    const bool startsWithComment = (allArguments.at(0) == Tags::scopeOneLine
+                                    or allArguments.at(0) == Tags::scopeBegin)?
+                                    true : false;
+    const QString &command(startsWithComment?
+        allArguments.at(1) : allArguments.at(0));
+    const QStringList arguments(startsWithComment?
+        QStringList(allArguments.mid(1)) : allArguments);
+
+    qDebug() << "Parsing command:" << commandString << "command is:" << command << "arguments:" << arguments;
     if(command == Tags::targetCommand) {
         if (arguments.at(1) == Tags::targetName) {
             const QString &arg(arguments.at(2));
@@ -35,8 +45,8 @@ bool BaseParser::parseCommand(const QString &commandString)
             emit targetName(arg);
         }
 
-        if (command == Tags::targetType) {
-            const QStringList args(arguments.mid(3));
+        if (arguments.at(1) == Tags::targetType) {
+            const QStringList args(arguments.mid(2));
 
             // TODO: optimize!
             if (args.at(0) == Tags::targetApp or args.at(0) == Tags::targetLib) {
@@ -84,7 +94,7 @@ bool BaseParser::parseCommand(const QString &commandString)
         const QStringList args(arguments.mid(1));
         qDebug() << "Subprojects(s):" << args;
         if (args.size() > 0) {
-            for (const auto &arg : qAsConst(args)) {
+            for (const auto &arg : args) {
                 emit subproject(mScope->id(), arg);
             }
         }

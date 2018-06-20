@@ -135,7 +135,7 @@ bool FileParser::parse()
             block.isComment = false;
 
         // Handle GIBS comments (commands)
-        if (line.startsWith(Tags::scopeOneLine) or block.isComment) {
+        if (line.startsWith(Tags::scopeOneLine + " ") or block.isComment) {
             // Override default source file location or name
             if (line.contains(Tags::source))
                 source = extractArguments(line, Tags::source);

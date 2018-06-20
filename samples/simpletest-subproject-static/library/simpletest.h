@@ -1,9 +1,9 @@
 #pragma once
 
 /*i
- * target name simpletest
- * target type lib static
- * qt core
+ target name simpletest
+ target type lib static
+ qt core
  */
 
 #include "library_global.h"

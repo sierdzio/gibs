@@ -20,7 +20,7 @@ const QLatin1String gibsCacheFileName(".gibs.cache");
 const QLatin1String inputFile("inputFile");
 const QLatin1String globalScope("Global");
 // GIBS comment scope
-const QLatin1String scopeOneLine("//i ");
+const QLatin1String scopeOneLine("//i");
 const QLatin1String scopeBegin("/*i");
 const QLatin1String scopeEnd("*/");
 // GIBS commands
