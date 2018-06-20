@@ -43,6 +43,10 @@ const QLatin1String depends("depends on");
 const QLatin1String link("link(");
 const QLatin1String linkEnd(")");
 const QLatin1String version("version");
+const QLatin1String feature("feature");
+const QLatin1String featureDefault("default");
+const QLatin1String featureOn("on");
+const QLatin1String featureOff("off");
 // Qt support
 const QLatin1String qtDir("qtDir");
 // Qt modules

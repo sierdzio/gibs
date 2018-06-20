@@ -16,8 +16,6 @@ BaseParser::BaseParser(Scope *scope, QObject *parent) : QObject(parent),
 
 bool BaseParser::parseCommand(const QString &commandString)
 {
-    const QString command(commandString.startsWith(" ")? commandString : " " + commandString);
-
     // TODO: add error handling
     // TODO: handle spaces in target name
     /* TODO: optimize! Ideas:
@@ -25,16 +23,20 @@ bool BaseParser::parseCommand(const QString &commandString)
      * scan first word instead of repeating contains() so much
      */
 
-    if(command.contains(tag(Tags::targetCommand))) {
-        if (command.contains(tag(Tags::targetName))) {
-            const QString arg(extractArguments(command, Tags::targetName));
+    const QStringList arguments(commandString.split(" ",
+        QString::SkipEmptyParts));
+    const QString &command(arguments.at(0));
+
+    if(command == Tags::targetCommand) {
+        if (arguments.at(1) == Tags::targetName) {
+            const QString &arg(arguments.at(2));
             qDebug() << "Target name:" << arg;
             mScope->setTargetName(arg);
             emit targetName(arg);
         }
 
-        if (command.contains(tag(Tags::targetType))) {
-            const QStringList args(extractArguments(command, Tags::targetType).split(" "));
+        if (command == Tags::targetType) {
+            const QStringList args(arguments.mid(3));
 
             // TODO: optimize!
             if (args.at(0) == Tags::targetApp or args.at(0) == Tags::targetLib) {
@@ -42,7 +44,8 @@ bool BaseParser::parseCommand(const QString &commandString)
                 mScope->setTargetType(args.at(0));
                 emit targetType(args.at(0));
                 if (args.length() > 1 and (args.at(1) == Tags::targetLibDynamic
-                                           or args.at(1) == Tags::targetLibStatic)) {
+                                           or args.at(1) == Tags::targetLibStatic))
+                {
                     mScope->setTargetLibType(args.at(1));
                     emit targetLibType(args.at(1));
                 }
@@ -50,68 +53,50 @@ bool BaseParser::parseCommand(const QString &commandString)
                 qFatal("Invalid target type: %s", qPrintable(args.join(" ")));
             }
         }
-    }
-
-    if (command.contains(tag(Tags::qtModules))) {
-        const QStringList args(extractArguments(command, Tags::qtModules).split(" "));
+    } else if (command == Tags::qtModules) {
+        const QStringList args(arguments.mid(1));
         qDebug() << "Enabling Qt modules:" << args;
         mScope->setQtModules(args);
         emit qtModules(args);
-    }
-
-    if (command.contains(tag(Tags::defines))) {
-        const QStringList args(extractArguments(command, Tags::defines).split(" "));
+    } else if (command == Tags::defines) {
+        const QStringList args(arguments.mid(1));
         qDebug() << "Adding defines:" << args;
         mScope->addDefines(args);
         emit defines(args);
-    }
-
-    if (command.contains(tag(Tags::include))
-            || command.contains(tag(Tags::includes))) {
-        // Make sure we select proper tag
-        const QLatin1String tag = command.contains(Tags::includes)?
-                    Tags::includes : Tags::include;
-        const QStringList args(extractArguments(command, tag)
-                               .split(" ", QString::SkipEmptyParts));
+    } else if (command == Tags::include || command == Tags::includes) {
+        const QStringList args(arguments.mid(1));
         qDebug() << "Adding includes:" << args;
         mScope->addIncludePaths(args);
         emit includes(args);
-    }
-
-    if (command.contains(tag(Tags::libs)) and
-            !command.contains(tag(Tags::targetCommand))) {
-        const QStringList args(extractArguments(command, Tags::libs).split(" "));
+    } else if (command == Tags::libs and command != Tags::targetCommand) {
+        const QStringList args(arguments.mid(1));
         qDebug() << "Adding libs:" << args;
         mScope->addLibs(args);
         emit libs(args);
-    }
-
-    if (command.contains(tag(Tags::tool))) {
-        const QStringList args(extractArguments(command, Tags::tool).split(" "));
+    } else if (command == Tags::tool) {
+        const QStringList args(arguments.mid(1));
         qDebug() << "Running tool:" << args;
         if (args.size() > 0) {
             // TODO: that will modify the scope, but our local mScope will be "old"
-            // We need to synchronise them or switch to pointers (yep).
             emit runTool(args.at(0), args.mid(1));
         }
-    }
-
-    if (command.contains(tag(Tags::subproject))
-            || command.contains(tag(Tags::subprojects)))
-    {
-        // Make sure we select proper tag
-        const QLatin1String tag = command.contains(Tags::subprojects)? Tags::subprojects : Tags::subproject;
-        const QStringList args(extractArguments(command, tag).split(" "));
+    } else if (command == Tags::subproject or command == Tags::subprojects) {
+        const QStringList args(arguments.mid(1));
         qDebug() << "Subprojects(s):" << args;
         if (args.size() > 0) {
             for (const auto &arg : qAsConst(args)) {
                 emit subproject(mScope->id(), arg);
             }
         }
-    }
-
-    if (command.contains(tag(Tags::version))) {
-        const QString arg(extractArguments(command, Tags::version));
+    } else if (command == Tags::feature) {
+        const QStringList args(arguments.mid(1));
+        qDebug() << "Adding feature:" << args;
+        if (args.size() > 0) {
+            bool defaultOn = args.length() > 3? (args.at(3) == Tags::featureOn? true : false) : true;
+            emit feature(args.at(0), args.at(1), defaultOn);
+        }
+    } else if (command == Tags::version) {
+        const QString &arg(arguments.at(1));
         const QVersionNumber ver(QVersionNumber::fromString(arg));
         qDebug() << "Setting project version:" << ver.toString();
         mScope->setVersion(ver);
@@ -121,12 +106,8 @@ bool BaseParser::parseCommand(const QString &commandString)
     return true;
 }
 
-QString BaseParser::extractArguments(const QString &line, const QLatin1String &tag) const
+QString BaseParser::extractArguments(const QString &line,
+                                     const QLatin1String &tag) const
 {
     return line.mid(line.indexOf(tag) + tag.size() + 1);
-}
-
-QString BaseParser::tag(const QLatin1String &rawTag) const
-{
-    return QString(" " + rawTag + " ");
 }
