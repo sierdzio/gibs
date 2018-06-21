@@ -607,9 +607,12 @@ void Scope::onRunTool(const QString &tool, const QStringList &args)
     }
 }
 
-//void Scope::onSubproject(const QByteArray &scopeId, const QString &path)
-//{
-//}
+void Scope::onFeature(const QString &name, const bool isOn)
+{
+    if (isOn) {
+        addDefines(QStringList {name});
+    }
+}
 
 QString Scope::findFile(const QString &file) const
 {

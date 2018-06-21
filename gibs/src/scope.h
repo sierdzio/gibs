@@ -81,11 +81,13 @@ public slots:
     void setQtModules(const QStringList &modules);
     void addDefines(const QStringList &defines);
     void addLibs(const QStringList &libs);
+    void onFeature(const QString &name, const bool isOn);
 
 signals:
     void error(const QString &error) const;
     void runProcess(const QString &app, const QStringList &arguments, const MetaProcessPtr &mp) const;
-    void subproject(const QByteArray &scopeId, const QString &path) const;
+    void subproject(const QByteArray &scopeId, const QString &path) const;    
+    void feature(const QString &name, const bool defaultOn) const;
 
 protected:
     QString compile(const QString &file);
@@ -103,8 +105,6 @@ protected slots:
     bool onRunMoc(const QString &file);
     void onRunTool(const QString &tool,
                    const QStringList &args);
-    //void onSubproject(const QByteArray &scopeId, const QString &path);
-
 
 protected:
     Scope(const QByteArray &id, const QString &name, const QString &relativePath,

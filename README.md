@@ -180,8 +180,6 @@ the library to be ready before linking the app.
 
 ### Features
 
-(not implemented yet)
-
 Feature is a compile-time piece of functionality that can be turned on or off.
 Internally, features are just Subprojects with some extra bits attached.
 
@@ -196,7 +194,7 @@ by feature definition.
 
 To define a feature, use this syntax:
 
-    //i feature tts-support ../path/to/feature.h [default on|off]
+    //i feature tts-support [default on|off]
 
 Then you can select the feature next time you build your project, like this:
 

@@ -25,8 +25,7 @@ signals:
     void runTool(const QString &tool, const QStringList &args) const;
     void subproject(const QByteArray &scopeId, const QString &path) const;
     void version(const QVersionNumber &version) const;
-    void feature(const QString &name, const QString &path,
-                 const bool defaultOn) const;
+    void feature(const QString &name, const bool defaultOn) const;
     void scopeUpdated(const Scope &scope) const;
 
 public slots:

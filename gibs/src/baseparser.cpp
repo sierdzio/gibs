@@ -12,6 +12,9 @@ BaseParser::BaseParser(Scope *scope, QObject *parent) : QObject(parent),
     connect(this, &BaseParser::defines, scope, &Scope::addDefines);
     connect(this, &BaseParser::includes, scope, &Scope::addIncludePaths);
     connect(this, &BaseParser::libs, scope, &Scope::addLibs);
+    connect(this, &BaseParser::feature, scope, &Scope::feature);
+    // ProjectManager is responsible for this
+    //connect(this, &BaseParser::feature, scope, &Scope::onFeature);
 }
 
 bool BaseParser::parseCommand(const QString &commandString)
@@ -102,8 +105,8 @@ bool BaseParser::parseCommand(const QString &commandString)
         const QStringList args(arguments.mid(1));
         qDebug() << "Adding feature:" << args;
         if (args.size() > 0) {
-            bool defaultOn = args.length() > 3? (args.at(3) == Tags::featureOn? true : false) : true;
-            emit feature(args.at(0), args.at(1), defaultOn);
+            bool defaultOn = args.length() > 2? (args.at(2) == Tags::featureOn? true : false) : true;
+            emit feature(args.at(0), defaultOn);
         }
     } else if (command == Tags::version) {
         const QString &arg(arguments.at(1));

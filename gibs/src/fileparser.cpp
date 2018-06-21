@@ -61,6 +61,9 @@ bool FileParser::parse()
             const QStringList w(line.split(' ', QString::SkipEmptyParts));
             QStringList words;
 
+            // TODO: if new define was added, we should update block.active
+            // and block.defined here!
+
             // Glue words together
             for (int i = 0; i < w.length(); ++i) {
                 // TODO: support line breaks by backslashes
