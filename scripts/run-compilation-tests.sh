@@ -17,7 +17,7 @@ fi
 
 JOBS="1"
 QTDIR=""
-IBSEXE=""
+GIBSEXE=""
 QMAKEEXE=""
 LOG="$PWD/compilation-summary.log"
 DETAILS="$PWD/compilation-details.log"
@@ -30,7 +30,7 @@ do
     ;;
   q) QTDIR=$OPTARG
     ;;
-  i) IBSEXE=$OPTARG
+  i) GIBSEXE=$OPTARG
     ;;
   m) QMAKEEXE=$OPTARG
     ;;
@@ -44,7 +44,7 @@ do
 done
 
 cleanUp() {
-  rm -f .ibs.cache *.o moc_* .qmake* Makefile
+  rm -f .gibs.cache *.o moc_* .qmake* Makefile
 }
 
 # Clear log file
@@ -76,13 +76,13 @@ for dir in ../samples/* ; do
   #echo "CUSTOM: $CUSTOM_PATH $CUSTOM_ARGS"
 
   ts=$(date +%s%N)
-  $IBSEXE -j $JOBS --qt-dir $QTDIR $CUSTOM_ARGS $SOURCE/$CUSTOM_PATH >> $DETAILS 2>&1
+  $GIBSEXE -j $JOBS --qt-dir $QTDIR $SOURCE/$CUSTOM_PATH $CUSTOM_ARGS >> $DETAILS 2>&1
   EXIT_CODE=$?
   tt=$((($(date +%s%N) - $ts)/1000000))
-  echo "IBS: $dir/main.cpp $tt" | tee --append $LOG $DETAILS # >/dev/null
+  echo "GIBS: $dir/main.cpp $tt" | tee --append $LOG $DETAILS # >/dev/null
 
   if [ "$EXIT_CODE" != "0" ]; then
-    echo "IBS failed with: $EXIT_CODE after $tt"
+    echo "GIBS failed with: $EXIT_CODE after $tt"
     exit $EXIT_CODE
   fi
 

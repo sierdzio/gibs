@@ -72,7 +72,8 @@ int main(int argc, char *argv[]) {
                      << "\n\tOrganisation:" << app.organizationName()
                      << "\n\tDomain:" << app.organizationDomain()
                      << "\n\tVersion:" << app.applicationVersion()
-                     << "\n\tSHA:" << GIT_COMMIT_ID;
+                     << "\n\tSHA:" << GIT_COMMIT_ID
+                     << "\n\tArgs:" << app.arguments();
 
 
     QCommandLineParser parser;
@@ -143,21 +144,21 @@ int main(int argc, char *argv[]) {
     }
 
     // Extract features:
+    QHash<QString, Gibs::Feature> features;
     if (args.length() > 1) {
         const auto commands = args.mid(1);
-        qDebug() << "Features:" << commands;
-        QHash<QString, Gibs::Feature> features;
         for (const auto &command: commands) {
             const auto &feature = Gibs::commandLineToFeature(command);
             features.insert(feature.name, feature);
-            qDebug() << "Feature:" << feature.name << feature.define << feature.defined << feature.enabled;
+            qDebug() << "Feature:" << feature.name
+                     << "enabled:" << feature.enabled;
         }
     }
 
     ProjectManager manager(flags);
     manager.loadCache();
     manager.loadCommands();
-    // TODO: pass features to manager
+    manager.loadFeatures(features);
     QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::exit);
 
     if (flags.clean()) {

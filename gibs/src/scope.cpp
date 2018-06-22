@@ -624,11 +624,13 @@ void Scope::onFeature(const QString &name, const bool isOn)
         feat.name = name;
         feat.define = Gibs::normalizeFeatureName(name);
         result = feat;
-        emit feature(feat);
     }
 
+    emit feature(result);
+    //qDebug() << "Processed feature:" << result.name << result.define << result.defined << result.enabled;
+
     if (result.enabled) {
-        addDefines(QStringList {name});
+        addDefines(QStringList {result.define});
     }
 }
 
@@ -825,6 +827,11 @@ bool Scope::initializeMoc()
     emit runProcess(compiler, arguments, mp);
     setQtIsMocInitialized(true);
     return qtIsMocInitialized();
+}
+
+QHash<QString, Gibs::Feature> Scope::features() const
+{
+    return mFeatures;
 }
 
 void Scope::setVersion(const QVersionNumber &version)

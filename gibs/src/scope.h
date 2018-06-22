@@ -73,6 +73,8 @@ public:
     QVersionNumber version() const;
     void setVersion(const QVersionNumber &version);
 
+    QHash<QString, Gibs::Feature> features() const;
+
 public slots:
     void start(bool fromCache, bool isQuickMode);
     void clean();

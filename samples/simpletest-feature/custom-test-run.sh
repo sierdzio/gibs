@@ -2,5 +2,5 @@
 
 # This is a helper script for scripts/run-compilation-tests.sh
 
-CUSTOM_PATH=""
+CUSTOM_PATH="main.cpp"
 CUSTOM_ARGS="-- --my-feature"

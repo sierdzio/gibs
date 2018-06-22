@@ -37,7 +37,7 @@ bool BaseParser::parseCommand(const QString &commandString)
     const QStringList arguments(startsWithComment?
         QStringList(allArguments.mid(1)) : allArguments);
 
-    qDebug() << "Parsing command:" << commandString << "command is:" << command << "arguments:" << arguments;
+    //qDebug() << "Parsing command:" << commandString << "command is:" << command << "arguments:" << arguments;
     if(command == Tags::targetCommand) {
         if (arguments.at(1) == Tags::targetName) {
             const QString &arg(arguments.at(2));

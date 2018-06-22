@@ -406,8 +406,13 @@ void ProjectManager::runNextProcess()
 
 void ProjectManager::connectScope(const ScopePtr &scope)
 {
-    connect(scope.data(), &Scope::error, this, &ProjectManager::error);
-    connect(scope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
-    connect(scope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
+    connect(scope.data(), &Scope::error,
+            this, &ProjectManager::error);
+    connect(scope.data(), &Scope::subproject,
+            this, &ProjectManager::onSubproject);
+    connect(scope.data(), &Scope::runProcess,
+            this, &ProjectManager::runProcess,
             Qt::QueuedConnection);
+    connect(scope.data(), &Scope::feature,
+            this, &ProjectManager::onFeatureUpdated);
 }

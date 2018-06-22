@@ -36,6 +36,9 @@ bool FileParser::parse()
     block.active = block.defined;
     QString source;
     QCryptographicHash checksum(QCryptographicHash::Sha1);
+    // Cache:
+    int scopeFeatureCount = mScope->features().count();
+    int previousFeatureCount = 0;
 
     //QTextStream in(&file);
     while (!file.atEnd()) {
@@ -63,6 +66,16 @@ bool FileParser::parse()
 
             // TODO: if new define was added, we should update block.active
             // and block.defined here!
+            scopeFeatureCount = mScope->features().count();
+            if (scopeFeatureCount != previousFeatureCount) {
+                previousFeatureCount = scopeFeatureCount;
+                const auto &features = mScope->features().values();
+                for (const auto &feature : features) {
+                    if (!block.defined.contains(feature.define)) {
+                        block.defined.insert(feature.define, feature.enabled);
+                    }
+                }
+            }
 
             // Glue words together
             for (int i = 0; i < w.length(); ++i) {
