@@ -198,11 +198,11 @@ To define a feature, use this syntax:
 
 Then you can select the feature next time you build your project, like this:
 
-    gibs main.cpp --tts-support
+    gibs main.cpp -- --tts-support
 
 Or unselect it using:
 
-    gibs main.cpp --no-tts-support
+    gibs main.cpp -- --no-tts-support
 
 # Recommendations
 

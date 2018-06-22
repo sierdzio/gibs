@@ -13,6 +13,7 @@
 #include "fileinfo.h"
 #include "tags.h"
 #include "metaprocess.h"
+#include "gibs.h"
 
 class Scope;
 
@@ -149,6 +150,8 @@ protected:
     QStringList mCustomIncludes;
     QStringList mCustomIncludeFlags;
     QHash<QString, FileInfo> mParsedFiles;
+    // Name, Feature
+    QHash<QString, Gibs::Feature> mFeatures;
     QVector<QByteArray> mScopeDependencyIds;
     QVector<ScopePtr> mScopeDependencies;
     // TODO: change into QStringList and use only file names here.

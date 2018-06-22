@@ -609,7 +609,23 @@ void Scope::onRunTool(const QString &tool, const QStringList &args)
 
 void Scope::onFeature(const QString &name, const bool isOn)
 {
-    if (isOn) {
+    Gibs::Feature result;
+    if (mFeatures.contains(name)) {
+        auto feat = mFeatures.value(name);
+        feat.defined = true;
+        mFeatures.insert(name, feat);
+        result = feat;
+    } else {
+        Gibs::Feature feat;
+        feat.enabled = isOn;
+        feat.defined = true;
+        feat.name = name;
+        feat.define = Gibs::normalizeFeatureName(name);
+        result = feat;
+        emit feature(name, isOn);
+    }
+
+    if (result.enabled) {
         addDefines(QStringList {name});
     }
 }
