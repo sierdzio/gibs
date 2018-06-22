@@ -68,7 +68,8 @@ void ProjectManager::start()
                                           mFlags.relativePath(),
                                           mFlags.prefix(),
                                           mFlags.qtDir(),
-                                          mFlags.parseWholeFiles());
+                                          mFlags.parseWholeFiles(),
+                                          mFeatures);
         connectScope(scope);
 
         if (!mGlobalScope.isNull()) {
@@ -209,7 +210,8 @@ void ProjectManager::loadCommands()
     if (mGlobalScope.isNull()) {
         mGlobalScope = ScopePtr::create(Tags::globalScope, mFlags.relativePath(),
                                         mFlags.prefix(), mFlags.qtDir(),
-                                        mFlags.parseWholeFiles());
+                                        mFlags.parseWholeFiles(),
+                                        mFeatures);
         connectScope(mGlobalScope);
         mScopes.insert(mGlobalScope->id(), mGlobalScope);
     }
@@ -218,6 +220,11 @@ void ProjectManager::loadCommands()
     connect(&parser, &CommandParser::error, this, &ProjectManager::error);
     connect(&parser, &CommandParser::subproject, this, &ProjectManager::onSubproject);
     parser.parse();
+}
+
+void ProjectManager::loadFeatures(const QHash<QString, Gibs::Feature> &features)
+{
+    mFeatures = features;
 }
 
 /*!
@@ -235,7 +242,8 @@ void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path
                                       oldScope->relativePath() + "/" + newRelativePath,
                                       mFlags.prefix(),
                                       mFlags.qtDir(),
-                                      mFlags.parseWholeFiles());
+                                      mFlags.parseWholeFiles(),
+                                      mFeatures);
     //qDebug() << "Subproject:" << scope->name() << "STARTING!";
     connectScope(scope);
 
@@ -260,6 +268,11 @@ void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path
                           "-L" + mFlags.prefix(),
                           "-l" + scope->targetName()
                       });
+}
+
+void ProjectManager::onFeatureUpdated(const Gibs::Feature &feature)
+{
+    mFeatures.insert(feature.name, feature);
 }
 
 void ProjectManager::onProcessErrorOccurred(QProcess::ProcessError _error)

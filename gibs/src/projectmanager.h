@@ -30,6 +30,7 @@ public:
 
     void loadCache();
     void loadCommands();
+    void loadFeatures(const QHash<QString, Gibs::Feature> &features);
 
 signals:
     void error(const QString &error) const;
@@ -45,6 +46,7 @@ protected slots:
     void onError(const QString &error);
     void saveCache() const;
     void onSubproject(const QByteArray &scopeId, const QString &path);
+    void onFeatureUpdated(const Gibs::Feature &feature);
 
     // Process handling
     void onProcessErrorOccurred(QProcess::ProcessError _error);
@@ -63,6 +65,8 @@ private:
 
     // scopeId, scope
     QHash<QByteArray, ScopePtr> mScopes;
+    // name, Feature
+    QHash<QString, Gibs::Feature> mFeatures;
 
     QVector<MetaProcessPtr> mProcessQueue;
     QVector<ProcessPtr> mRunningJobs;

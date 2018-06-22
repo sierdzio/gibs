@@ -12,9 +12,7 @@ BaseParser::BaseParser(Scope *scope, QObject *parent) : QObject(parent),
     connect(this, &BaseParser::defines, scope, &Scope::addDefines);
     connect(this, &BaseParser::includes, scope, &Scope::addIncludePaths);
     connect(this, &BaseParser::libs, scope, &Scope::addLibs);
-    connect(this, &BaseParser::feature, scope, &Scope::feature);
-    // ProjectManager is responsible for this
-    //connect(this, &BaseParser::feature, scope, &Scope::onFeature);
+    connect(this, &BaseParser::feature, scope, &Scope::onFeature);
 }
 
 bool BaseParser::parseCommand(const QString &commandString)

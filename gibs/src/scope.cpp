@@ -16,6 +16,7 @@ Scope::Scope(const QString &name,
              const QString &prefix,
              const QString &qtDir,
              const bool parseWholeFiles,
+             const QHash<QString, Gibs::Feature> &features,
              QObject *parent)
     : QObject(parent),
       mParseWholeFiles(parseWholeFiles),
@@ -23,7 +24,8 @@ Scope::Scope(const QString &name,
       mPrefix(prefix),
       mName(name),
       mId(QCryptographicHash::hash(name.toUtf8(), QCryptographicHash::Sha1)),
-      mQtDir(qtDir)
+      mQtDir(qtDir),
+      mFeatures(features)
 {
     addIncludePaths({"."});
 
@@ -622,7 +624,7 @@ void Scope::onFeature(const QString &name, const bool isOn)
         feat.name = name;
         feat.define = Gibs::normalizeFeatureName(name);
         result = feat;
-        emit feature(name, isOn);
+        emit feature(feat);
     }
 
     if (result.enabled) {

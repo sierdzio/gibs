@@ -27,6 +27,7 @@ public:
     explicit Scope(const QString &name, const QString &relativePath,
                    const QString &prefix, const QString &qtDir,
                    const bool parseWholeFiles,
+                   const QHash<QString, Gibs::Feature> &features,
                    QObject *parent = nullptr);
 
     QString name() const;
@@ -88,7 +89,7 @@ signals:
     void error(const QString &error) const;
     void runProcess(const QString &app, const QStringList &arguments, const MetaProcessPtr &mp) const;
     void subproject(const QByteArray &scopeId, const QString &path) const;    
-    void feature(const QString &name, const bool defaultOn) const;
+    void feature(const Gibs::Feature &feature) const;
 
 protected:
     QString compile(const QString &file);
