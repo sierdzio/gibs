@@ -31,7 +31,8 @@ Scope::Scope(const QString &name,
 
     // Pre-set target name. If this (sub)project defines it's own name,
     // this pre-set name will be replaced.
-    setTargetName(QFileInfo(name).dir().dirName());
+    setTargetName(QFileInfo(name).absoluteDir().dirName());
+    qDebug() << "Target name is:" << targetName();
 }
 
 QString Scope::name() const
@@ -288,7 +289,8 @@ QString Scope::compile(const QString &file)
 
     const QFileInfo info(file);
     const QString objectFile(info.baseName() + ".o");
-    const QString compiler("g++");
+    // TODO: improve compiler detection!
+    const QString compiler(info.suffix() == "c"? "gcc" : "g++");
 
     if (!qtModules().isEmpty()) {
         if (mQtDir.isEmpty()) {
