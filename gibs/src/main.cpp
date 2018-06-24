@@ -90,6 +90,8 @@ int main(int argc, char *argv[]) {
     parser.addPositionalArgument(Tags::inputFile, QCoreApplication::translate(scope, "Input file, usually main.cpp"), "[input]");
 
     parser.addOptions({
+        {{"d", Tags::debug},
+        QCoreApplication::translate(scope, "Compile in debug mode. By default, gibs compiles release binaries")},
         {{"r", Tags::run},
         QCoreApplication::translate(scope, "Run the executable immediately after building")},
         {Tags::qt_dir_flag,
@@ -122,6 +124,10 @@ int main(int argc, char *argv[]) {
     bool jobsOk = false;
 
     Flags flags;
+    flags.setDebugBuild(parser.isSet(Tags::debug));
+    // TODO: support debug-and-release maybe.
+    if (flags.debugBuild())
+        flags.setReleaseBuild(false);
     flags.setRun(parser.isSet(Tags::run));
     flags.setClean(parser.isSet(Tags::clean));
     flags.setQuickMode(parser.isSet(Tags::quick_flag));

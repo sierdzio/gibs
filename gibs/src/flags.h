@@ -155,6 +155,24 @@ public:
         mParseWholeFiles = parseWholeFiles;
     }
 
+    bool debugBuild() const
+    {
+        return mDebugBuild;
+    }
+    void setDebugBuild(bool debugBuild)
+    {
+        mDebugBuild = debugBuild;
+    }
+
+    bool releaseBuild() const
+    {
+        return mReleaseBuild;
+    }
+    void setReleaseBuild(bool releaseBuild)
+    {
+        mReleaseBuild = releaseBuild;
+    }
+
 private:
     bool mRun = false;
     bool mClean = false;
@@ -162,6 +180,8 @@ private:
     bool mQtAutoModules = false;
     bool mAutoIncludes = false;
     bool mParseWholeFiles = false;
+    bool mDebugBuild = false;
+    bool mReleaseBuild = true;
 
     int mJobs = 0;
 

@@ -14,6 +14,7 @@
 #include "tags.h"
 #include "metaprocess.h"
 #include "gibs.h"
+#include "flags.h"
 
 class Scope;
 
@@ -25,8 +26,7 @@ class Scope : public QObject
 
 public:
     explicit Scope(const QString &name, const QString &relativePath,
-                   const QString &prefix, const QString &qtDir,
-                   const bool parseWholeFiles,
+                   const Flags &flags,
                    const QHash<QString, Gibs::Feature> &features,
                    QObject *parent = nullptr);
 
@@ -35,7 +35,7 @@ public:
     QString relativePath() const;
 
     QJsonObject toJson() const;
-    static Scope *fromJson(const QJsonObject &json);
+    static Scope *fromJson(const QJsonObject &json, const Flags &flags);
 
     void mergeWith(const ScopePtr &other);
     void dependOn(const ScopePtr &other);
@@ -112,8 +112,7 @@ protected slots:
 
 protected:
     Scope(const QByteArray &id, const QString &name, const QString &relativePath,
-          const QString &prefix, const QString &qtDir,
-          const bool parseWholeFiles);
+          const Flags &flags);
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     bool isFromSubproject(const QString &file) const;
     void updateQtModules(const QStringList &modules);
@@ -126,16 +125,15 @@ protected:
 
     bool initializeMoc();
 
-    const bool mParseWholeFiles;
+    Flags mFlags;
+
     const QString mRelativePath;
-    const QString mPrefix;
     const QString mName;
     QVersionNumber mVersion = QVersionNumber(1, 0, 0);
     const QByteArray mId;
 
     bool mIsError = false;
 
-    QString mQtDir;
     QStringList mQtModules;
     bool mQtIsMocInitialized = false;
     QStringList mQtIncludes;

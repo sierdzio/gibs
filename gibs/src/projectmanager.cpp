@@ -66,9 +66,7 @@ void ProjectManager::start()
     } else {
         ScopePtr scope = ScopePtr::create(mFlags.inputFile(),
                                           mFlags.relativePath(),
-                                          mFlags.prefix(),
-                                          mFlags.qtDir(),
-                                          mFlags.parseWholeFiles(),
+                                          mFlags,
                                           mFeatures);
         connectScope(scope);
 
@@ -170,7 +168,7 @@ void ProjectManager::loadCache()
 
     const QJsonArray scopesArray = mainObject.value(Tags::scopes).toArray();
     for (const auto &scopeJson : scopesArray) {
-        ScopePtr scope(Scope::fromJson(scopeJson.toObject()));
+        ScopePtr scope(Scope::fromJson(scopeJson.toObject(), mFlags));
         mScopes.insert(scope->id(), scope);
         if (scope->name() == Tags::globalScope) {
             mGlobalScope = scope;
@@ -209,8 +207,7 @@ void ProjectManager::loadCommands()
 
     if (mGlobalScope.isNull()) {
         mGlobalScope = ScopePtr::create(Tags::globalScope, mFlags.relativePath(),
-                                        mFlags.prefix(), mFlags.qtDir(),
-                                        mFlags.parseWholeFiles(),
+                                        mFlags,
                                         mFeatures);
         connectScope(mGlobalScope);
         mScopes.insert(mGlobalScope->id(), mGlobalScope);
@@ -240,9 +237,7 @@ void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path
     const QString newRelativePath(QFileInfo(path).path());
     ScopePtr scope = ScopePtr::create(oldScope->relativePath() + "/" + path,
                                       oldScope->relativePath() + "/" + newRelativePath,
-                                      mFlags.prefix(),
-                                      mFlags.qtDir(),
-                                      mFlags.parseWholeFiles(),
+                                      mFlags,
                                       mFeatures);
     //qDebug() << "Subproject:" << scope->name() << "STARTING!";
     connectScope(scope);

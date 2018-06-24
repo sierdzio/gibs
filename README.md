@@ -52,6 +52,12 @@ is done using internal dictionary mapping Qt classes to modules
 default, only code up to first class declaration or function definition is
 parsed.
 
+Gibs builds in *release* mode by default. If you want to compile a debug build,
+use `--debug` or `-d`.
+
+Optimization level can be set with `-o level`, for example
+`-o 2` (not implemented yet).
+
 # Commands
 
 ## Syntax

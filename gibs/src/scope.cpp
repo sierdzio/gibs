@@ -13,18 +13,14 @@
 
 Scope::Scope(const QString &name,
              const QString &relativePath,
-             const QString &prefix,
-             const QString &qtDir,
-             const bool parseWholeFiles,
+             const Flags &flags,
              const QHash<QString, Gibs::Feature> &features,
              QObject *parent)
     : QObject(parent),
-      mParseWholeFiles(parseWholeFiles),
+      mFlags(flags),
       mRelativePath(relativePath),
-      mPrefix(prefix),
       mName(name),
       mId(QCryptographicHash::hash(name.toUtf8(), QCryptographicHash::Sha1)),
-      mQtDir(qtDir),
       mFeatures(features)
 {
     addIncludePaths({"."});
@@ -33,6 +29,17 @@ Scope::Scope(const QString &name,
     // this pre-set name will be replaced.
     setTargetName(QFileInfo(name).absoluteDir().dirName());
     qDebug() << "Target name is:" << targetName();
+}
+
+// Protected constructor - used in fromJson().
+Scope::Scope(const QByteArray &id,
+             const QString &name,
+             const QString &relativePath,
+             const Flags &flags)
+    : QObject(nullptr), mFlags(flags),
+      mRelativePath(relativePath),
+      mName(name), mId(id)
+{
 }
 
 QString Scope::name() const
@@ -68,9 +75,9 @@ QJsonObject Scope::toJson() const
     object.insert(Tags::scopeId, QString(id().toHex()));
     object.insert(Tags::scopeName, mName);
     object.insert(Tags::relativePath, mRelativePath);
-    object.insert(Tags::prefix, mPrefix);
-    object.insert(Tags::qtDir, mQtDir);
-    object.insert(Tags::parse_whole_files, mParseWholeFiles);
+    //object.insert(Tags::prefix, mFlags.prefix());
+    //object.insert(Tags::qtDir, mFlags.qtDir());
+    //object.insert(Tags::parse_whole_files, mFlags.parseWholeFiles());
     object.insert(Tags::parsedFiles, filesArray);
     object.insert(Tags::scopeTargetName, mTargetName);
     object.insert(Tags::targetType, mTargetType);
@@ -88,15 +95,13 @@ QJsonObject Scope::toJson() const
  * Constructs new Scope from \a json data and returns a pointer to it. The caller
  * is responsible for deleting the pointer.
  */
-Scope *Scope::fromJson(const QJsonObject &json)
+Scope *Scope::fromJson(const QJsonObject &json, const Flags &flags)
 {
     Scope *scope = new Scope(QByteArray::fromHex(json.value(Tags::scopeId)
                                                  .toString().toLatin1()),
                              json.value(Tags::scopeName).toString(),
                              json.value(Tags::relativePath).toString(),
-                             json.value(Tags::prefix).toString(),
-                             json.value(Tags::qtDir).toString(),
-                             json.value(Tags::parse_whole_files).toBool());
+                             flags);
     const QJsonArray filesArray = json.value(Tags::parsedFiles).toArray();
     for (const auto &file : filesArray) {
         FileInfo fileInfo;
@@ -117,6 +122,7 @@ Scope *Scope::fromJson(const QJsonObject &json)
     scope->addDefines(scope->jsonArrayToStringList(json.value(Tags::defines).toArray()));
     scope->addIncludePaths(scope->jsonArrayToStringList(json.value(Tags::includes).toArray()));
     scope->addLibs(scope->jsonArrayToStringList(json.value(Tags::libs).toArray()));
+    // TODO: missing some properties
 
     return scope;
 }
@@ -132,7 +138,7 @@ Scope *Scope::fromJson(const QJsonObject &json)
 void Scope::mergeWith(const ScopePtr &other)
 {
     //qDebug() << "Merging with other scope:" << other->name();
-    mQtDir = other->qtDir();
+    mFlags.setQtDir(other->qtDir());
     mQtModules = other->qtModules();
     mQtIsMocInitialized = other->qtIsMocInitialized();
     mQtIncludes = other->qtIncludes();
@@ -293,7 +299,7 @@ QString Scope::compile(const QString &file)
     const QString compiler(info.suffix() == "c"? "gcc" : "g++");
 
     if (!qtModules().isEmpty()) {
-        if (mQtDir.isEmpty()) {
+        if (mFlags.qtDir().isEmpty()) {
             qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
                    "with --qt-dir argument");
         }
@@ -302,7 +308,15 @@ QString Scope::compile(const QString &file)
 
     //qInfo() << "Compiling:" << file << "into:" << objectFile;
     // TODO: add ProjectManager class and schedule compilation there (threaded!).
-    QStringList arguments { "-c", "-pipe", "-g", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
+    QStringList arguments { "-c", "-pipe", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
+
+    if (mFlags.debugBuild()) {
+        arguments.append("-g");
+    }
+
+    if (mFlags.releaseBuild()) {
+        arguments.append("-O2");
+    }
 
     arguments.append(customDefineFlags());
     arguments.append(qtDefines());
@@ -344,7 +358,7 @@ void Scope::link()
             arguments.append({ "-shared", "-Wl,-soname,lib"
                                + targetName() + ".so."
                                + QString::number(mVersion.majorVersion()),
-                               "-o", mPrefix + "/" + "lib"
+                               "-o", mFlags.prefix() + "/" + "lib"
                                + targetName() + ".so."
                                + mVersion.toString()
                              });
@@ -363,13 +377,13 @@ void Scope::link()
             return;
         }
     } else {
-        arguments.append({ "-o", mPrefix + "/" + targetName() });
+        arguments.append({ "-o", mFlags.prefix() + "/" + targetName() });
     }
 
     arguments.append(objectFiles);
 
     if (!qtModules().isEmpty()) {
-        if (mQtDir.isEmpty()) {
+        if (mFlags.qtDir().isEmpty()) {
             qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
                    "with --qt-dir argument");
         }
@@ -397,9 +411,11 @@ void Scope::link()
             mProcessQueue.append(mp);
             emit runProcess("ln", QStringList {
                                 "-s",
-                                mPrefix + "/" + "lib" + targetName() + ".so."
+                                mFlags.prefix() + "/" + "lib"
+                                + targetName() + ".so."
                                 + mVersion.toString(),
-                                mPrefix + "/" + "lib" + targetName() + ".so"
+                                mFlags.prefix() + "/" + "lib"
+                                + targetName() + ".so"
                                 //mPrefix + "/" + "lib" + targetName() + ".so."
                                 //+ QString::number(mVersion.majorVersion())
                             }, mp);
@@ -409,7 +425,7 @@ void Scope::link()
 
 void Scope::parseFile(const QString &file)
 {
-    FileParser parser(file, mParseWholeFiles, this);
+    FileParser parser(file, mFlags.parseWholeFiles(), this);
     connect(&parser, &FileParser::error, this, &Scope::error);
     connect(&parser, &FileParser::parsed, this, &Scope::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &Scope::onParseRequest);
@@ -531,9 +547,9 @@ bool Scope::onRunMoc(const QString &file)
     if (mIsError)
         return false;
 
-    if (mQtDir.isEmpty()) {
-        emit error("Can't run MOC because Qt dir is not set. See 'ibs --help' for "
-                   "more info.");
+    if (mFlags.qtDir().isEmpty()) {
+        emit error("Can't run MOC because Qt dir is not set. See 'ibs --help' "
+                   "for more info.");
     }
 
     if (qtIsMocInitialized() == false) {
@@ -543,7 +559,7 @@ bool Scope::onRunMoc(const QString &file)
 
     const QFileInfo header(file);
     const QString mocFile("moc_" + header.baseName() + ".cpp");
-    const QString compiler(mQtDir + "/bin/moc");
+    const QString compiler(mFlags.qtDir() + "/bin/moc");
     const QString predefs("moc_predefs.h");
 
     QStringList arguments;
@@ -593,7 +609,7 @@ void Scope::onRunTool(const QString &tool, const QStringList &args)
             MetaProcessPtr mp = MetaProcessPtr::create();
             mp->file = cppFile;
             mProcessQueue.append(mp);
-            emit runProcess(mQtDir + "/bin/" + tool, arguments, mp);
+            emit runProcess(mFlags.qtDir() + "/bin/" + tool, arguments, mp);
 
             FileInfo info = parsedFile(qrcFile);
             info.type = FileInfo::QRC;
@@ -639,19 +655,6 @@ void Scope::onFeature(const QString &name, const bool isOn)
 QString Scope::findFile(const QString &file) const
 {
     return findFile(file, mCustomIncludes);
-}
-
-// Protected constructor - used in fromJson().
-Scope::Scope(const QByteArray &id,
-             const QString &name,
-             const QString &relativePath,
-             const QString &prefix,
-             const QString &qtDir,
-             const bool parseWholeFiles)
-    : QObject(nullptr), mParseWholeFiles(parseWholeFiles),
-      mRelativePath(relativePath),
-      mPrefix(prefix), mName(name), mId(id), mQtDir(qtDir)
-{
 }
 
 QString Scope::findFile(const QString &file, const QStringList &includeDirs) const
@@ -717,12 +720,21 @@ void Scope::updateQtModules(const QStringList &modules)
         mQtDefines.append("-DQT_" + module.toUpper() + "_LIB");
     }
 
-    mQtIncludes.append("-I" + mQtDir + "/include");
-    mQtIncludes.append("-I" + mQtDir + "/mkspecs/linux-g++");
+    if(mFlags.debugBuild()) {
+        mQtDefines.append("-DQT_QML_DEBUG");
+    }
+
+    if (mFlags.releaseBuild()) {
+        mQtDefines.append("-DQT_NO_DEBUG");
+        mQtLibs.append("-Wl,-O1 ");
+    }
+
+    mQtIncludes.append("-I" + mFlags.qtDir() + "/include");
+    mQtIncludes.append("-I" + mFlags.qtDir() + "/mkspecs/linux-g++");
 
     // TODO: pre-capitalize module letters to do both loops faster
     for(const QString &module : qAsConst(mQtModules)) {
-        const QString dir("-I" + mQtDir + "/include/Qt");
+        const QString dir("-I" + mFlags.qtDir() + "/include/Qt");
         if (module == Tags::quickcontrols2) {
             mQtIncludes.append(dir + "QuickControls2");
         } else if (module == Tags::quickwidgets) {
@@ -732,8 +744,8 @@ void Scope::updateQtModules(const QStringList &modules)
         }
     }
 
-    mQtLibs.append("-Wl,-rpath," + mQtDir + "/lib");
-    mQtLibs.append("-L" + mQtDir + "/lib");
+    mQtLibs.append("-Wl,-rpath," + mFlags.qtDir() + "/lib");
+    mQtLibs.append("-L" + mFlags.qtDir() + "/lib");
 
     for(const QString &module : qAsConst(mQtModules)) {
         // TODO: use correct mkspecs
@@ -812,8 +824,8 @@ bool Scope::initializeMoc()
     const QString compiler("g++");
     const QString predefs("moc_predefs.h");
     const QStringList arguments({ "-pipe", "-g", "-Wall", "-W", "-dM", "-E",
-                            "-o", predefs,
-                            mQtDir + "/mkspecs/features/data/dummy.cpp" });
+        "-o", predefs,
+        mFlags.qtDir() + "/mkspecs/features/data/dummy.cpp" });
 
     FileInfo info;
     info.path = predefs;
@@ -858,7 +870,7 @@ void Scope::setTargetLibType(const QString &targetLibType)
 
 QString Scope::qtDir() const
 {
-    return mQtDir;
+    return mFlags.qtDir();
 }
 
 bool Scope::qtIsMocInitialized() const
