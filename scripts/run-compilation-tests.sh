@@ -5,10 +5,10 @@
 
 if [ "${1}" = "-h" ] || [ "${1}" = "--help" ]; then
   echo "Usage: run-compilation-tests.sh -q qt-directory -i gibs-exe-path "
-  echo "[-j jobs] [-m qmake-path]"
+  echo "[-j jobs] [-m qmake-path] [-d]"
   echo ""
   echo "Compiles all tests located in ibs/testData using -j jobs, -q Qt directory,"
-  echo "-i ibs path and optional -m qmake path."
+  echo "-i ibs path and optional -m qmake path. -d will produce debug builds."
   echo ""
   echo "Where skin is optional. If specified, results will be limited to specified"
   echo "skin and global changes."
@@ -22,6 +22,7 @@ QMAKEEXE=""
 LOG="$PWD/compilation-summary.log"
 DETAILS="$PWD/compilation-details.log"
 CLEANUP="1"
+DEBUG=""
 
 while getopts "j:q:i:m:n" opt ;
 do
@@ -36,6 +37,8 @@ do
     ;;
   n) CLEANUP=""
     ;;
+  d) DEBUG="1"
+      ;;
   :)
     echo "Option -$OPTARG requires an argument."
     exit 1
@@ -67,6 +70,7 @@ for dir in ../samples/* ; do
   # Use custom compilation steps, if provided
   CUSTOM_PATH="main.cpp"
   CUSTOM_ARGS=""
+  QMAKE_CUSTOM_ARGS=""
 
   if [ -f "$SOURCE/custom-test-run.sh" ]; then
     echo "Extracting custom flags from custom-test-run.sh"
@@ -74,6 +78,10 @@ for dir in ../samples/* ; do
   fi
 
   #echo "CUSTOM: $CUSTOM_PATH $CUSTOM_ARGS"
+  if [ ! -z "$DEBUG" ]; then
+    CUSTOM_ARGS+="--debug"
+    QMAKE_CUSTOM_ARGS+="-debug"
+  fi
 
   ts=$(date +%s%N)
   $GIBSEXE -j $JOBS --qt-dir $QTDIR $SOURCE/$CUSTOM_PATH $CUSTOM_ARGS >> $DETAILS 2>&1
@@ -88,7 +96,7 @@ for dir in ../samples/* ; do
 
   if [ -f "$QMAKEEXE" ]; then
     ts=$(date +%s%N)
-    $QMAKEEXE $SOURCE/ && make -j $JOBS >> $DETAILS 2>&1
+    $QMAKEEXE $QMAKE_CUSTOM_ARGS $SOURCE/ && make -j $JOBS >> $DETAILS 2>&1
     EXIT_CODE=$?
     tt=$((($(date +%s%N) - $ts)/1000000))
     echo "QMAKE: $dir $tt" | tee --append $LOG $DETAILS # >/dev/null
