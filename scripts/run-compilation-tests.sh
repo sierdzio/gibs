@@ -22,9 +22,9 @@ QMAKEEXE=""
 LOG="$PWD/compilation-summary.log"
 DETAILS="$PWD/compilation-details.log"
 CLEANUP="1"
-DEBUG=""
+DEBUG_BUILD=""
 
-while getopts "j:q:i:m:n" opt ;
+while getopts "j:q:i:m:nd" opt ;
 do
   case $opt in
   j) JOBS=$OPTARG
@@ -37,8 +37,8 @@ do
     ;;
   n) CLEANUP=""
     ;;
-  d) DEBUG="1"
-      ;;
+  d) DEBUG_BUILD="1"
+    ;;
   :)
     echo "Option -$OPTARG requires an argument."
     exit 1
@@ -78,9 +78,10 @@ for dir in ../samples/* ; do
   fi
 
   #echo "CUSTOM: $CUSTOM_PATH $CUSTOM_ARGS"
-  if [ ! -z "$DEBUG" ]; then
+  if [ ! -z "$DEBUG_BUILD" ]; then
+    echo "Building in debug mode"
     CUSTOM_ARGS+="--debug"
-    QMAKE_CUSTOM_ARGS+="-debug"
+    QMAKE_CUSTOM_ARGS+="CONFIG+=debug"
   fi
 
   ts=$(date +%s%N)
