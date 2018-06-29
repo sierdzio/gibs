@@ -16,6 +16,13 @@ Instead of "the old way":
     qmake project.pro
     make
 
+# How to get it
+
+Precompiled gibs releases can be found on https://github.com/sierdzio/gibs/releases
+
+Alternatively, get the source code and compile gibs using Qt Creator. Any recent
+Qt version would do. C++11 is required.
+
 # Usage
 
 A typical usage of gibs would be to call it on your main source file (of your
