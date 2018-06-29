@@ -173,6 +173,16 @@ public:
         mReleaseBuild = releaseBuild;
     }
 
+    QString deployTool() const
+    {
+        return mDeployTool;
+    }
+
+    void setDeployTool(const QString &deployTool)
+    {
+        mDeployTool = deployTool;
+    }
+
 private:
     bool mRun = false;
     bool mClean = false;
@@ -194,4 +204,7 @@ private:
     // Paths
     QString mRelativePath; // pointing to dir where the input file is located
     QString mPrefix = "."; //QDir::currentPath(); // where target will be put (== prefix)
+
+    // Deployment
+    QString mDeployTool;
 };

@@ -17,6 +17,7 @@ const QLatin1String auto_qt_modules_flag("auto-qt-modules");
 const QLatin1String parse_whole_files("parse-whole-files");
 const QLatin1String release("release");
 const QLatin1String debug("debug");
+const QLatin1String deploy_tool("deploy-tool");
 // General
 const QLatin1String gibsCacheFileName(".gibs.cache");
 const QLatin1String inputFile("inputFile");

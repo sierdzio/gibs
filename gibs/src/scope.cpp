@@ -423,6 +423,34 @@ void Scope::link()
     }
 }
 
+void Scope::deploy()
+{
+    const QString deployTool = mFlags.deployTool();
+    QString suffix;
+    QStringList arguments;
+
+    MetaProcessPtr mp = MetaProcessPtr::create();
+    mp->file = targetName() + "." + suffix;
+    mp->fileDependencies = findAllDependencies();
+    mp->scopeDepenencies = mScopeDependencyIds;
+    mProcessQueue.append(mp);
+
+    if (deployTool.endsWith("AppImage")) {
+        suffix = "AppImage";
+        // TODO: parametrize, of course! Add .desktop file support!
+        arguments.append({
+                             mFlags.prefix() + "/" + targetName(),
+                             "-verbose=1",
+                             "-qmake=\"" + qtDir() + "/bin/qmake\"",
+                             "-no-translations",
+                             "-no-copy-copyright-files",
+                             "-appimage"
+                         });
+    }
+
+    emit runProcess(mFlags.deployTool(), arguments, mp);
+}
+
 void Scope::parseFile(const QString &file)
 {
     FileParser parser(file, mFlags.parseWholeFiles(), this);
@@ -936,6 +964,12 @@ void Scope::start(bool fromCache, bool isQuickMode)
 
     // Parsing done, link it!
     link();
+
+    // Linking is scheduled, deploy it!
+    if (!mFlags.deployTool().isEmpty() and targetType() == Tags::targetApp) {
+        // Use the deployment tool!
+        deploy();
+    }
 }
 
 void Scope::clean()

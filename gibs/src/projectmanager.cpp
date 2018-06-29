@@ -395,8 +395,9 @@ void ProjectManager::runNextProcess()
         QCoreApplication::instance()->processEvents();
     }
 
-    if (mProcessQueue.isEmpty())
+    if (mProcessQueue.isEmpty()) {
         emit jobQueueEmpty(mIsError);
+    }
 }
 
 void ProjectManager::connectScope(const ScopePtr &scope)

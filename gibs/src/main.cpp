@@ -115,6 +115,9 @@ int main(int argc, char *argv[]) {
         ""},
         {{"w", Tags::parse_whole_files},
         QCoreApplication::translate(scope, "Parse whole files instead of just their beginning. By default, only code up to first class declaration or function definition is parsed.")},
+        {Tags::deploy_tool,
+        QCoreApplication::translate(scope, "path to deployment tool to use, for example linuxdeployqt.AppImage"),
+        QCoreApplication::translate(scope, "path")},
     });
 
     // Process the actual command line arguments given by the user
@@ -140,6 +143,7 @@ int main(int argc, char *argv[]) {
         flags.setInputFile(args.at(0));
     flags.setCommands(parser.value(Tags::commands));
     flags.setRelativePath(flags.inputFile());
+    flags.setDeployTool(parser.value(Tags::deploy_tool));
 
     if (!jobsOk) {
         qFatal("Invalid number of jobs specified. Use '-j NUM'. Got: %s",
@@ -167,11 +171,11 @@ int main(int argc, char *argv[]) {
     manager.loadFeatures(features);
     QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::exit);
 
+    int result = 1;
     if (flags.clean()) {
         QTimer::singleShot(1, &manager, &ProjectManager::clean);
-        int result = app.exec();
+        result = app.exec();
         qInfo() << "Cleaning took:" << timer.elapsed() << "ms";
-        return result;
     } else {
         if (!flags.qtDir().isEmpty() && (flags.qtDir() != manager.qtDir()))
             manager.setQtDir(flags.qtDir());
@@ -181,10 +185,9 @@ int main(int argc, char *argv[]) {
             qInfo() << "Running compiled binary";
         }
 
-        int result = app.exec();
+        result = app.exec();
         qInfo() << "Build took:" << timer.elapsed() << "ms";
-        return result;
     }
 
-    return 1;
+    return result;
 }

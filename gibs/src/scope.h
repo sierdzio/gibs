@@ -96,6 +96,7 @@ signals:
 protected:
     QString compile(const QString &file);
     void link();
+    void deploy();
     void parseFile(const QString &file);
     bool isFileDirty(const QString &file, const bool isQuickMode) const;
 
