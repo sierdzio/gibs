@@ -16,6 +16,7 @@
 #include <QDirIterator>
 #include <QFileInfo>
 #include <QFile>
+#include <QTimer>
 
 // TODO: add categorized logging!
 #include <QDebug>
@@ -381,7 +382,9 @@ void ProjectManager::runNextProcess()
                 const QString blockee(nextBlockingScopeName(mp));
                 if (!blockee.isEmpty()) {
                     qDebug() << "Waiting for scope:" << blockee;
-                    continue;
+                    //QCoreApplication::instance()->processEvents();
+                    //continue;
+                    QTimer::singleShot(16, this, &ProjectManager::runNextProcess);
                 }
             }
 

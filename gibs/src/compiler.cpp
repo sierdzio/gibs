@@ -15,6 +15,7 @@ QJsonObject Compiler::toJson() const
 
 Compiler Compiler::fromJson(const QJsonObject &json)
 {
+    Q_UNUSED(json);
     Compiler compiler;
     // json.value(Tags::scopeTargetName)
     return compiler;
