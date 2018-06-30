@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 #include <QJsonObject>
 
 class Compiler
@@ -14,14 +15,16 @@ public:
     QString name = "gcc";
     QString compiler = "g++";
     QString ccompiler = "gcc";
-    QString compilerDebugFlags;
-    QString compilerReleaseFlags;
+    QStringList compilerFlags = { "-c", "-pipe", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
+    QStringList compilerDebugFlags = { "-g" };
+    QStringList compilerReleaseFlags = { "-O2" };
 
     QString linker = "g++";
     QString staticArchiver = "ar";
     QString librarySuffix = ".so";
     QString staticLibrarySuffix = ".a";
 
-    QString linkerDebugFlags;
-    QString linkerReleaseFlags;
+    QStringList linkerFlags;
+    QStringList linkerDebugFlags;
+    QStringList linkerReleaseFlags;
 };
