@@ -25,7 +25,8 @@ HEADERS += src/globals.h \
     src/baseparser.h \
     src/commandparser.h \
     src/scope.h \
-    src/gibs.h
+    src/gibs.h \
+    src/compiler.h
 
 SOURCES += src/main.cpp \ 
     src/fileparser.cpp \
@@ -35,7 +36,8 @@ SOURCES += src/main.cpp \
     src/baseparser.cpp \
     src/commandparser.cpp \
     src/scope.cpp \
-    src/gibs.cpp
+    src/gibs.cpp \
+    src/compiler.cpp
 
 RESOURCES +=  \
     qml/qml.qrc \

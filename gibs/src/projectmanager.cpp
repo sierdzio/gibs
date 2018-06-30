@@ -378,11 +378,10 @@ void ProjectManager::runNextProcess()
             }
 
             if (mp->scopeDepenencies.isEmpty() == false) {
-                for (const auto &scopeId : qAsConst(mp->scopeDepenencies)) {
-                    if (mScopes.value(scopeId)->isFinished() == false) {
-                        qDebug() << "Waiting for scope:" << mScopes.value(scopeId)->name();
-                        continue;
-                    }
+                const QString blockee(nextBlockingScopeName(mp));
+                if (!blockee.isEmpty()) {
+                    qDebug() << "Waiting for scope:" << blockee;
+                    continue;
                 }
             }
 
@@ -398,6 +397,17 @@ void ProjectManager::runNextProcess()
     if (mProcessQueue.isEmpty()) {
         emit jobQueueEmpty(mIsError);
     }
+}
+
+QString ProjectManager::nextBlockingScopeName(const MetaProcessPtr &mp) const
+{
+    for (const auto &scopeId : qAsConst(mp->scopeDepenencies)) {
+        if (mScopes.value(scopeId)->isFinished() == false) {
+            return mScopes.value(scopeId)->name();
+        }
+    }
+
+    return QString();
 }
 
 void ProjectManager::connectScope(const ScopePtr &scope)

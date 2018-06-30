@@ -54,6 +54,7 @@ protected slots:
 
 private:
     void runNextProcess();
+    QString nextBlockingScopeName(const MetaProcessPtr &mp) const;
     void scanForIncludes(const QString &path);
     void connectScope(const ScopePtr &scope);
 
