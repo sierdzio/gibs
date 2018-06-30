@@ -1,5 +1,6 @@
 #include "gibs.h"
 
+#include <QJsonArray>
 #include <QDebug>
 
 void Gibs::removeFile(const QString &path) {
@@ -50,6 +51,22 @@ Gibs::Feature Gibs::commandLineToFeature(const QString &command)
     result.define = Gibs::normalizeFeatureName(result.name);
     // result.defined is intentionally left out. Scope is responsible for setting
     // it.
+
+    return result;
+}
+
+QString Gibs::capitalizeFirstLetter(const QString &string)
+{
+    return (string[0].toUpper() + string.mid(1));
+}
+
+QStringList Gibs::jsonArrayToStringList(const QJsonArray &array)
+{
+    QStringList result;
+
+    for (const auto &value : array) {
+        result.append(value.toString());
+    }
 
     return result;
 }

@@ -99,4 +99,18 @@ const QLatin1String osWin64("Q_OS_WIN64");
 const QLatin1String osDarwin("Q_OS_DARWIN");
 const QLatin1String osMac("Q_OS_MAC");
 const QLatin1String osMacOs("Q_OS_MACOS");
+// Compilers
+const QLatin1String compilerName("name");
+const QLatin1String compiler("compiler");
+const QLatin1String ccompiler("ccompiler");
+const QLatin1String compilerFlags("flags");
+const QLatin1String compilerDebugFlags("debugFlags");
+const QLatin1String compilerReleaseFlags("releaseFlags");
+const QLatin1String linker("linker");
+const QLatin1String staticArchiver("staticArchiver");
+const QLatin1String librarySuffix("librarySuffix");
+const QLatin1String staticLibrarySuffix("staticLibrarySuffix");
+const QLatin1String linkerFlags("linkerFlags");
+const QLatin1String linkerStaticFlags("linkerStaticFlags");
+const QLatin1String linkerDynamicFlags("linkerDynamicFlags");
 }

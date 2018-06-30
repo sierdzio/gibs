@@ -118,10 +118,14 @@ Scope *Scope::fromJson(const QJsonObject &json, const Flags &flags)
     scope->setTargetName(json.value(Tags::scopeTargetName).toString());
     scope->setTargetType(json.value(Tags::targetType).toString());
     scope->mTargetLibType = json.value(Tags::targetLibType).toString();
-    scope->setQtModules(scope->jsonArrayToStringList(json.value(Tags::qtModules).toArray()));
-    scope->addDefines(scope->jsonArrayToStringList(json.value(Tags::defines).toArray()));
-    scope->addIncludePaths(scope->jsonArrayToStringList(json.value(Tags::includes).toArray()));
-    scope->addLibs(scope->jsonArrayToStringList(json.value(Tags::libs).toArray()));
+    scope->setQtModules(
+                Gibs::jsonArrayToStringList(json.value(Tags::qtModules).toArray()));
+    scope->addDefines(
+                Gibs::jsonArrayToStringList(json.value(Tags::defines).toArray()));
+    scope->addIncludePaths(
+                Gibs::jsonArrayToStringList(json.value(Tags::includes).toArray()));
+    scope->addLibs(
+                Gibs::jsonArrayToStringList(json.value(Tags::libs).toArray()));
     // TODO: missing some properties
 
     return scope;
@@ -768,7 +772,7 @@ void Scope::updateQtModules(const QStringList &modules)
         } else if (module == Tags::quickwidgets) {
             mQtIncludes.append(dir + "QuickWidgets");
         } else {
-            mQtIncludes.append(dir + capitalizeFirstLetter(module));
+            mQtIncludes.append(dir + Gibs::capitalizeFirstLetter(module));
         }
     }
 
@@ -784,27 +788,11 @@ void Scope::updateQtModules(const QStringList &modules)
         } else if (module == Tags::quickwidgets) {
             mQtLibs.append(lib + "QuickWidgets");
         } else {
-            mQtLibs.append(lib + capitalizeFirstLetter(module));
+            mQtLibs.append(lib + Gibs::capitalizeFirstLetter(module));
         }
     }
 
     mQtLibs.append("-lpthread");
-}
-
-QString Scope::capitalizeFirstLetter(const QString &string) const
-{
-    return (string[0].toUpper() + string.mid(1));
-}
-
-QStringList Scope::jsonArrayToStringList(const QJsonArray &array) const
-{
-    QStringList result;
-
-    for (const auto &value : array) {
-        result.append(value.toString());
-    }
-
-    return result;
 }
 
 MetaProcessPtr Scope::findDependency(const QString &file) const

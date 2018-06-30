@@ -15,16 +15,16 @@ public:
     QString name = "gcc";
     QString compiler = "g++";
     QString ccompiler = "gcc";
-    QStringList compilerFlags = { "-c", "-pipe", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
-    QStringList compilerDebugFlags = { "-g" };
-    QStringList compilerReleaseFlags = { "-O2" };
+    QStringList flags = { "-c", "-pipe", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
+    QStringList debugFlags = { "-g" };
+    QStringList releaseFlags = { "-O2" };
 
     QString linker = "g++";
     QString staticArchiver = "ar";
     QString librarySuffix = ".so";
     QString staticLibrarySuffix = ".a";
 
-    QStringList linkerFlags;
-    QStringList linkerDebugFlags;
-    QStringList linkerReleaseFlags;
+    QStringList linkerFlags = { "-shared", "-Wl,-soname,lib" };
+    QStringList linkerStaticFlags;
+    QStringList linkerDynamicFlags;
 };

@@ -16,4 +16,6 @@ struct Feature {
 void removeFile(const QString &path);
 QString normalizeFeatureName(const QString &name);
 Feature commandLineToFeature(const QString &command);
+QString capitalizeFirstLetter(const QString &string);
+QStringList jsonArrayToStringList(const QJsonArray &array);
 }
