@@ -4,11 +4,8 @@
 #include <QStringList>
 #include <QJsonObject>
 
-class Compiler
+struct Compiler
 {
-public:
-    Compiler();
-
     QJsonObject toJson() const;
     static Compiler fromJson(const QJsonObject &json);
 

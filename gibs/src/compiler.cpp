@@ -4,10 +4,6 @@
 
 #include <QJsonArray>
 
-Compiler::Compiler()
-{
-}
-
 QJsonObject Compiler::toJson() const
 {
     QJsonObject object;
