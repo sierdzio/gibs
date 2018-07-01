@@ -300,7 +300,8 @@ QString Scope::compile(const QString &file)
     const QFileInfo info(file);
     const QString objectFile(info.baseName() + ".o");
     // TODO: improve compiler detection!
-    const QString compiler(info.suffix() == "c"? "gcc" : "g++");
+    const QString compiler(info.suffix() == "c"? mCompiler.ccompiler
+                                               : mCompiler.compiler);
 
     if (!qtModules().isEmpty()) {
         if (mFlags.qtDir().isEmpty()) {
@@ -311,15 +312,14 @@ QString Scope::compile(const QString &file)
 
 
     //qInfo() << "Compiling:" << file << "into:" << objectFile;
-    // TODO: add ProjectManager class and schedule compilation there (threaded!).
-    QStringList arguments { "-c", "-pipe", "-D_REENTRANT", "-fPIC", "-Wall", "-W", };
+    QStringList arguments(mCompiler.flags);
 
     if (mFlags.debugBuild()) {
-        arguments.append("-g");
+        arguments.append(mCompiler.debugFlags);
     }
 
     if (mFlags.releaseBuild()) {
-        arguments.append("-O2");
+        arguments.append(mCompiler.releaseFlags);
     }
 
     arguments.append(customDefineFlags());
@@ -354,7 +354,7 @@ void Scope::link()
     // TODO: add dependent scopes (from other subprojects)
 
     qInfo() << "Linking:" << objectFiles;
-    const QString compiler("g++");
+    const QString compiler(mCompiler.linker);
     QStringList arguments;
 
     if (targetType() == Tags::targetLib) {
@@ -369,11 +369,12 @@ void Scope::link()
         } else if (targetLibType() == Tags::targetLibStatic) {
             // Run ar to create the static library file
             MetaProcessPtr mp = MetaProcessPtr::create();
-            mp->file = "lib" + targetName() + ".a";
+            mp->file = "lib" + targetName() + mCompiler.staticLibrarySuffix;
             mp->fileDependencies = findAllDependencies();
             mp->scopeDepenencies = mScopeDependencyIds;
             mProcessQueue.append(mp);
-            emit runProcess("ar", QStringList {
+            emit runProcess(mCompiler.staticArchiver,
+                            QStringList {
                                 "cqs",
                                 mp->file,
                                 targetName() + ".o"

@@ -15,6 +15,7 @@
 #include "metaprocess.h"
 #include "gibs.h"
 #include "flags.h"
+#include "compiler.h"
 
 class Scope;
 
@@ -125,6 +126,7 @@ protected:
     bool initializeMoc();
 
     Flags mFlags;
+    Compiler mCompiler;
 
     const QString mRelativePath;
     const QString mName;
