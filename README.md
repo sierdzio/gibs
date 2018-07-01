@@ -44,26 +44,54 @@ To see all available commands, type:
     gibs --help
 
 Most notable options are:
-* `-c "target name gibs; include someDir"` allows you to pass gibs commands via
-the command line. All available gibs commands are listed below
-* `-j 5` allows you to lower the maximum number of threads used by gibs. By
-default, gibs uses all CPU cores. Note: you can also specify a fraction as the
-argument to `j`. For example, `-j 0.5` will use half of all available CPU cores
-* `--clean` removes all build artefacts. Executable and gibs cache are left alone
-* `--auto-include` Automatically scans source directory for include paths. This
-can be used instead of gibs command 'include some/path' if the path is below
-input file
-* `--auto-qt-modules` Automatically guesses Qt modules used by the project. This
-is done using internal dictionary mapping Qt classes to modules
-* `--parse-whole-files` Parse whole files instead of just their beginning. By
-default, only code up to first class declaration or function definition is
-parsed.
+C++ in-source project builder. Compile your projects without all the hassle connected with preparing a project file. Just run 'gibs main.cpp' and enjoy your compiled binary! More info: https://github.com/sierdzio/ibs
+
+Options:
+```
+  -h, --help                  Displays this help.
+  -v, --version               Displays version information.
+  -d, --debug                 Compile in debug mode. By default, gibs compiles
+                              release binaries
+  -r, --run                   Run the executable immediately after building
+  --qt-dir <Qt dir>           Specify Qt directory for Qt apps
+  -m, --auto-qt-modules       Automatically guess Qt modules used by the
+                              project. This is done using internal dictionary
+                              mapping Qt classes to modules.
+  --clean                     Clear build directory
+  -q, --quick                 'Convention over configuration' mode - parse
+                              files only up to first line of 'concrete code'. Do
+                              not check file checksums when doing incremental
+                              builds.
+  -a, --auto-include          Automatically scan source directory for include
+                              paths. This can be used instead of gibs command
+                              'include some/path' if the path is below input
+                              file.
+  -j, --jobs <threads>        Max number of threads used to compile and process
+                              the sources. If not specified, gibs will use max
+                              possible number of threads. If a fraction is
+                              specified, it will use given percentage of
+                              available cores (-j 0.5 means half of all CPU
+                              cores)
+  -c, --commands <commands>   gibs syntax commands - same you can specify in
+                              c++ commends. All commands are suppored on the
+                              command line as well
+  -w, --parse-whole-files     Parse whole files instead of just their
+                              beginning. By default, only code up to first class
+                              declaration or function definition is parsed.
+  --deploy-tool <path>        path to deployment tool to use, for example
+                              linuxdeployqt.AppImage
+  --compiler <compiler name>  compiler name. If specified, Gibs will search for
+                              compiler definitions in $HOME/.gibs/compilers.
+                              Built-in compiler definitions are: gcc, clang.
+                              Once Gibs learns to parse mkspecs, it will be a
+                              source of compiler configs as well
+
+Arguments:
+  inputFile                   Input file, usually main.cpp
+```
 
 Gibs builds in *release* mode by default. If you want to compile a debug build,
 use `--debug` or `-d`.
-
-Optimization level can be set with `-o level`, for example
-`-o 2` (not implemented yet).
 
 # Commands
 

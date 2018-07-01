@@ -18,6 +18,8 @@ struct Compiler
 {
     QJsonObject toJson() const;
     static Compiler fromJson(const QJsonObject &json);
+    static Compiler fromFile(const QString &jsonFile);
+    static QString findCompiler(const QString &name);
 
     QString name = "gcc";
     QString compiler = "g++";

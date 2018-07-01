@@ -183,6 +183,15 @@ public:
         mDeployTool = deployTool;
     }
 
+    QString compilerName() const
+    {
+        return mCompilerName;
+    }
+    void setCompilerName(const QString &compilerName)
+    {
+        mCompilerName = compilerName;
+    }
+
 private:
     bool mRun = false;
     bool mClean = false;
@@ -207,4 +216,7 @@ private:
 
     // Deployment
     QString mDeployTool;
+
+    // Compilation
+    QString mCompilerName;
 };

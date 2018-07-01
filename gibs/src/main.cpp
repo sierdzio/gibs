@@ -118,6 +118,9 @@ int main(int argc, char *argv[]) {
         {Tags::deploy_tool,
         QCoreApplication::translate(scope, "path to deployment tool to use, for example linuxdeployqt.AppImage"),
         QCoreApplication::translate(scope, "path")},
+        {Tags::compiler_tool,
+        QCoreApplication::translate(scope, "compiler name. If specified, Gibs will search for compiler definitions in $HOME/gibs/compilers. Built-in compiler definitions are: gcc, clang. Once Gibs learns to parse mkspecs, it will be a source of compiler configs as well"),
+        QCoreApplication::translate(scope, "compiler name")},
     });
 
     // Process the actual command line arguments given by the user
@@ -144,6 +147,7 @@ int main(int argc, char *argv[]) {
     flags.setCommands(parser.value(Tags::commands));
     flags.setRelativePath(flags.inputFile());
     flags.setDeployTool(parser.value(Tags::deploy_tool));
+    flags.setCompilerName(parser.value(Tags::compiler_tool));
 
     if (!jobsOk) {
         qFatal("Invalid number of jobs specified. Use '-j NUM'. Got: %s",

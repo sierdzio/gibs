@@ -10,7 +10,7 @@
 #include <QProcess>
 
 #include <QDebug>
-
+#include <QJsonDocument>
 Scope::Scope(const QString &name,
              const QString &relativePath,
              const Flags &flags,
@@ -683,6 +683,11 @@ void Scope::onFeature(const QString &name, const bool isOn)
     if (result.enabled) {
         addDefines(QStringList {result.define});
     }
+}
+
+void Scope::setCompiler(const Compiler &compiler)
+{
+    mCompiler = compiler;
 }
 
 QString Scope::findFile(const QString &file) const

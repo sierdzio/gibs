@@ -1,0 +1,31 @@
+{
+    "ccompiler": "gcc",
+    "compiler": "g++",
+    "debugFlags": [
+        "-g"
+    ],
+    "flags": [
+        "-c",
+        "-pipe",
+        "-D_REENTRANT",
+        "-fPIC",
+        "-Wall",
+        "-W"
+    ],
+    "librarySuffix": ".so",
+    "linker": "g++",
+    "linkerDynamicFlags": [
+    ],
+    "linkerFlags": [
+        "-shared",
+        "-Wl,-soname,lib"
+    ],
+    "linkerStaticFlags": [
+    ],
+    "name": "gcc",
+    "releaseFlags": [
+        "-O2"
+    ],
+    "staticArchiver": "ar",
+    "staticLibrarySuffix": ".a"
+}

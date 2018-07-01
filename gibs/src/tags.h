@@ -18,6 +18,7 @@ const QLatin1String parse_whole_files("parse-whole-files");
 const QLatin1String release("release");
 const QLatin1String debug("debug");
 const QLatin1String deploy_tool("deploy-tool");
+const QLatin1String compiler_tool("compiler");
 // General
 const QLatin1String gibsCacheFileName(".gibs.cache");
 const QLatin1String inputFile("inputFile");

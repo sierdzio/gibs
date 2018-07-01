@@ -88,6 +88,8 @@ public slots:
     void addLibs(const QStringList &libs);
     void onFeature(const QString &name, const bool isOn);
 
+    void setCompiler(const Compiler &compiler);
+
 signals:
     void error(const QString &error) const;
     void runProcess(const QString &app, const QStringList &arguments, const MetaProcessPtr &mp) const;

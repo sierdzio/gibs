@@ -71,6 +71,16 @@ void ProjectManager::start()
                                           mFeatures);
         connectScope(scope);
 
+        if (mFlags.compilerName() != "gcc") {
+            const QString compiler(Compiler::findCompiler(mFlags.compilerName()));
+            if (compiler.isEmpty()) {
+                qFatal("Could not find compiler named: %s in $HOME/.gibs, nor in "
+                       "internal database", qPrintable(compiler));
+            } else {
+                scope->setCompiler(Compiler::fromFile(compiler));
+            }
+        }
+
         if (!mGlobalScope.isNull()) {
             scope->mergeWith(mGlobalScope);
         }
