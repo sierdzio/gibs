@@ -114,4 +114,8 @@ const QLatin1String staticLibrarySuffix("staticLibrarySuffix");
 const QLatin1String linkerFlags("linkerFlags");
 const QLatin1String linkerStaticFlags("linkerStaticFlags");
 const QLatin1String linkerDynamicFlags("linkerDynamicFlags");
+// Deployers
+const QLatin1String deployerName("name");
+const QLatin1String deployerSuffix("suffix");
+const QLatin1String deployerFlags("flags");
 }

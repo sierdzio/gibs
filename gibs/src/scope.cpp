@@ -435,10 +435,8 @@ void Scope::deploy()
     QStringList arguments;
 
     MetaProcessPtr mp = MetaProcessPtr::create();
-    mp->file = targetName() + "." + suffix;
     mp->fileDependencies = findAllDependencies();
     mp->scopeDepenencies = mScopeDependencyIds;
-    mProcessQueue.append(mp);
 
     if (deployTool.endsWith("AppImage")) {
         suffix = "AppImage";
@@ -453,6 +451,8 @@ void Scope::deploy()
                          });
     }
 
+    mp->file = targetName() + "." + suffix;
+    mProcessQueue.append(mp);
     emit runProcess(mFlags.deployTool(), arguments, mp);
 }
 

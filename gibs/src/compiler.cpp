@@ -60,14 +60,7 @@ Compiler Compiler::fromJson(const QJsonObject &json)
 Compiler Compiler::fromFile(const QString &jsonFile)
 {
     qDebug() << "Loading compiler:" << jsonFile;
-    QFile file(jsonFile);
-    if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        qFatal("Could not open compiler definition file for reading. %s",
-               qPrintable(jsonFile));
-    }
-
-    auto doc = QJsonDocument::fromJson(file.readAll());
-    return Compiler::fromJson(doc.object());
+    return fromJson(Gibs::readJsonFile(jsonFile).object());
 }
 
 /*!
@@ -76,38 +69,6 @@ Compiler Compiler::fromFile(const QString &jsonFile)
  */
 QString Compiler::findCompiler(const QString &name)
 {
-    QString result;
-    // First, check $HOME/.gibs
-    {
-        QDir homeDir(QDir::homePath());
-        homeDir.cd(".gibs");
-        homeDir.cd("compilers");
-        if (homeDir.exists()) {
-            const QStringList compilers(homeDir.entryList(
-                QDir::Files | QDir::NoDotAndDotDot));
-            const QString fileName(name + ".json");
-            const int index = compilers.indexOf(fileName);
-            if (index != -1) {
-                qDebug() << "Found compiler:" << homeDir.path() + "/" + fileName;
-                return homeDir.path() + "/" + fileName;
-            }
-        } else {
-            qDebug() << "No compilers found in" << homeDir.path();
-        }
-    }
-    // Second, check internal database
-    {
-        const QDir homeDir(":/compilers");
-        const QStringList compilers(homeDir.entryList(
-            QDir::Files | QDir::NoDotAndDotDot));
-        const QString fileName(name + ".json");
-        const int index = compilers.indexOf(fileName);
-        if (index != -1) {
-            qDebug() << "Found compiler:" << homeDir.path() + "/" + fileName;
-            return homeDir.path() + "/" + fileName;
-        }
-    }
-
-    return result;
+    return Gibs::findJsonToolDefinition(name, Gibs::Compiler);
 }
 
