@@ -12,7 +12,7 @@ DEFINES *= QT_USE_QSTRINGBUILDER
 QMAKE_CXXFLAGS += -Werror
 
 TEMPLATE = app
-CONFIG += c++14
+CONFIG += c++1z
 TARGET = gibs
 
 HEADERS += src/globals.h \

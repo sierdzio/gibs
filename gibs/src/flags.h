@@ -173,14 +173,14 @@ public:
         mReleaseBuild = releaseBuild;
     }
 
-    QString deployTool() const
+    QString deployerName() const
     {
-        return mDeployTool;
+        return mDeployerName;
     }
 
-    void setDeployTool(const QString &deployTool)
+    void setDeployerName(const QString &deployerName)
     {
-        mDeployTool = deployTool;
+        mDeployerName = deployerName;
     }
 
     QString compilerName() const
@@ -190,6 +190,15 @@ public:
     void setCompilerName(const QString &compilerName)
     {
         mCompilerName = compilerName;
+    }
+
+    QString deployerPath() const
+    {
+        return mDeployerPath;
+    }
+    void setDeployerPath(const QString &deployerPath)
+    {
+        mDeployerPath = deployerPath;
     }
 
 private:
@@ -215,7 +224,8 @@ private:
     QString mPrefix = "."; //QDir::currentPath(); // where target will be put (== prefix)
 
     // Deployment
-    QString mDeployTool;
+    QString mDeployerName;
+    QString mDeployerPath;
 
     // Compilation
     QString mCompilerName;

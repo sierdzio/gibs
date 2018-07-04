@@ -21,6 +21,7 @@ QJsonObject Compiler::toJson() const
                   QJsonArray::fromStringList(releaseFlags));
     object.insert(Tags::linker, linker);
     object.insert(Tags::staticArchiver, staticArchiver);
+    object.insert(Tags::libraryPrefix, libraryPrefix);
     object.insert(Tags::librarySuffix, librarySuffix);
     object.insert(Tags::staticLibrarySuffix, staticLibrarySuffix);
     object.insert(Tags::linkerFlags, QJsonArray::fromStringList(linkerFlags));
@@ -45,6 +46,7 @@ Compiler Compiler::fromJson(const QJsonObject &json)
                 json.value(Tags::compilerReleaseFlags).toArray());
     compiler.linker = json.value(Tags::linker).toString();
     compiler.staticArchiver = json.value(Tags::staticArchiver).toString();
+    compiler.libraryPrefix = json.value(Tags::libraryPrefix).toString();
     compiler.librarySuffix = json.value(Tags::librarySuffix).toString();
     compiler.staticLibrarySuffix = json.value(
                 Tags::staticLibrarySuffix).toString();
@@ -67,7 +69,7 @@ Compiler Compiler::fromFile(const QString &jsonFile)
  * Looks for compiler \a name in $HOME/.gibs and internal database and returns
  * file path if found - or an empty string.
  */
-QString Compiler::findCompiler(const QString &name)
+QString Compiler::find(const QString &name)
 {
     return Gibs::findJsonToolDefinition(name, Gibs::Compiler);
 }

@@ -19,7 +19,7 @@ struct Compiler
     QJsonObject toJson() const;
     static Compiler fromJson(const QJsonObject &json);
     static Compiler fromFile(const QString &jsonFile);
-    static QString findCompiler(const QString &name);
+    static QString find(const QString &name);
 
     QString name = "gcc";
     QString compiler = "g++";
@@ -30,6 +30,7 @@ struct Compiler
 
     QString linker = "g++";
     QString staticArchiver = "ar";
+    QString libraryPrefix = "lib";
     QString librarySuffix = ".so";
     QString staticLibrarySuffix = ".a";
 

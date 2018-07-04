@@ -115,9 +115,12 @@ int main(int argc, char *argv[]) {
         ""},
         {{"w", Tags::parse_whole_files},
         QCoreApplication::translate(scope, "Parse whole files instead of just their beginning. By default, only code up to first class declaration or function definition is parsed.")},
-        {Tags::deploy_tool,
-        QCoreApplication::translate(scope, "path to deployment tool to use, for example linuxdeployqt.AppImage"),
-        QCoreApplication::translate(scope, "path")},
+        {Tags::deployer_tool,
+        QCoreApplication::translate(scope, "name of deployment tool to use, for example linuxdeployqt. If specified, Gibs will search for deployer definitions in $HOME/gibs/deployers. Built-in compiler definitions are: linuxdeployqt, androiddeployqt. Deployment tool needs to be either in $PATH, or inside qtdir/bin, or specified manyally using --deployer-path"),
+        QCoreApplication::translate(scope, "deployment tool name")},
+        {Tags::deployer_path,
+        QCoreApplication::translate(scope, "path to deployment tool, including the executable file name"),
+        QCoreApplication::translate(scope, "deoliyer binary path")},
         {Tags::compiler_tool,
         QCoreApplication::translate(scope, "compiler name. If specified, Gibs will search for compiler definitions in $HOME/gibs/compilers. Built-in compiler definitions are: gcc, clang. Once Gibs learns to parse mkspecs, it will be a source of compiler configs as well"),
         QCoreApplication::translate(scope, "compiler name")},
@@ -146,7 +149,7 @@ int main(int argc, char *argv[]) {
         flags.setInputFile(args.at(0));
     flags.setCommands(parser.value(Tags::commands));
     flags.setRelativePath(flags.inputFile());
-    flags.setDeployTool(parser.value(Tags::deploy_tool));
+    flags.setDeployerName(parser.value(Tags::deployer_tool));
     flags.setCompilerName(parser.value(Tags::compiler_tool));
 
     if (!jobsOk) {

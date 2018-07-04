@@ -359,17 +359,20 @@ void Scope::link()
 
     if (targetType() == Tags::targetLib) {
         if (targetLibType() == Tags::targetLibDynamic) {
-            arguments.append({ "-shared", "-Wl,-soname,lib"
-                               + targetName() + ".so."
+            arguments.append({ "-shared", "-Wl,-soname,"
+                               + mCompiler.libraryPrefix
+                               + targetName() + mCompiler.librarySuffix + "."
                                + QString::number(mVersion.majorVersion()),
-                               "-o", mFlags.prefix() + "/" + "lib"
-                               + targetName() + ".so."
+                               "-o", mFlags.prefix() + "/"
+                               + mCompiler.libraryPrefix
+                               + targetName() + mCompiler.librarySuffix + "."
                                + mVersion.toString()
                              });
         } else if (targetLibType() == Tags::targetLibStatic) {
             // Run ar to create the static library file
             MetaProcessPtr mp = MetaProcessPtr::create();
-            mp->file = "lib" + targetName() + mCompiler.staticLibrarySuffix;
+            mp->file = mCompiler.libraryPrefix + targetName()
+                    + mCompiler.staticLibrarySuffix;
             mp->fileDependencies = findAllDependencies();
             mp->scopeDepenencies = mScopeDependencyIds;
             mProcessQueue.append(mp);
@@ -409,18 +412,18 @@ void Scope::link()
         if (targetLibType() == Tags::targetLibDynamic) {
             // Create unversioned symlink to library
             MetaProcessPtr mp = MetaProcessPtr::create();
-            mp->file = targetName() + ".so."
+            mp->file = targetName() + mCompiler.librarySuffix + "."
                     + QString::number(mVersion.majorVersion());
             mp->fileDependencies = findAllDependencies();
             mp->scopeDepenencies = mScopeDependencyIds;
             mProcessQueue.append(mp);
             emit runProcess("ln", QStringList {
                                 "-s",
-                                mFlags.prefix() + "/" + "lib"
-                                + targetName() + ".so."
+                                mFlags.prefix() + "/" + mCompiler.libraryPrefix
+                                + targetName() + mCompiler.librarySuffix + "."
                                 + mVersion.toString(),
-                                mFlags.prefix() + "/" + "lib"
-                                + targetName() + ".so"
+                                mFlags.prefix() + "/" + mCompiler.libraryPrefix
+                                + targetName() + mCompiler.librarySuffix
                                 //mPrefix + "/" + "lib" + targetName() + ".so."
                                 //+ QString::number(mVersion.majorVersion())
                             }, mp);
@@ -430,7 +433,6 @@ void Scope::link()
 
 void Scope::deploy()
 {
-    const QString deployTool = mFlags.deployTool();
     QString suffix;
     QStringList arguments;
 
@@ -438,22 +440,23 @@ void Scope::deploy()
     mp->fileDependencies = findAllDependencies();
     mp->scopeDepenencies = mScopeDependencyIds;
 
-    if (deployTool.endsWith("AppImage")) {
-        suffix = "AppImage";
+    if (mDeployer.name == "linuxdeployqt") {
+        if (!mDeployer.findExecutable(mFlags.deployerPath(), mFlags.qtDir(),
+                                      qEnvironmentVariable("PATH"))) {
+            qFatal("Could not find deployer executable!");
+        }
+
         // TODO: parametrize, of course! Add .desktop file support!
         arguments.append({
                              mFlags.prefix() + "/" + targetName(),
-                             "-verbose=1",
-                             "-qmake=\"" + qtDir() + "/bin/qmake\"",
-                             "-no-translations",
-                             "-no-copy-copyright-files",
-                             "-appimage"
+                             "-qmake=\"" + qtDir() + "/bin/qmake\""
                          });
+        arguments.append(mDeployer.flags);
     }
 
     mp->file = targetName() + "." + suffix;
     mProcessQueue.append(mp);
-    emit runProcess(mFlags.deployTool(), arguments, mp);
+    emit runProcess(mFlags.deployerName(), arguments, mp);
 }
 
 void Scope::parseFile(const QString &file)
@@ -688,6 +691,11 @@ void Scope::onFeature(const QString &name, const bool isOn)
 void Scope::setCompiler(const Compiler &compiler)
 {
     mCompiler = compiler;
+}
+
+void Scope::setDeployer(const Deployer &deployer)
+{
+    mDeployer = deployer;
 }
 
 QString Scope::findFile(const QString &file) const
@@ -960,7 +968,7 @@ void Scope::start(bool fromCache, bool isQuickMode)
     link();
 
     // Linking is scheduled, deploy it!
-    if (!mFlags.deployTool().isEmpty() and targetType() == Tags::targetApp) {
+    if (!mFlags.deployerName().isEmpty() and targetType() == Tags::targetApp) {
         // Use the deployment tool!
         deploy();
     }

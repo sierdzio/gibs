@@ -8,6 +8,44 @@
 #include <QFile>
 #include <QDir>
 
+/*!
+ * Looks for deployer executable and returns true if it is found.
+ *
+ * It will look for exe in the following order: first, the \a userProvided
+ * path (should include executable), then inside \a qtDir. Lastly, system
+ *  \a path will be searched.
+ */
+bool Deployer::findExecutable(const QString &path,
+                              const QString &qtDir,
+                              const QString &userProvided)
+{
+    if (!userProvided.isEmpty()) {
+        if (QFileInfo info(userProvided); info.exists() and info.isExecutable()) {
+            executable = userProvided;
+            return true;
+        } else {
+            qWarning() << "Deployer executable does not exist or is not executable"
+                       << userProvided;
+        }
+    }
+
+    if (!qtDir.isEmpty()) {
+        const QString exec(qtDir + "/bin/" + name);
+        if (QFileInfo info(exec); info.exists() and info.isExecutable()) {
+            executable = exec;
+            return true;
+        }
+    }
+
+    if (!path.isEmpty()) {
+        // TODO: implement path searching!
+        qWarning() << "Cannot look for" << name << "in $PATH because this logic"
+                   << "is not yet implemented!";
+    }
+
+    return false;
+}
+
 QJsonObject Deployer::toJson() const
 {
     QJsonObject object;
@@ -33,7 +71,7 @@ Deployer Deployer::fromFile(const QString &jsonFile)
     return fromJson(Gibs::readJsonFile(jsonFile).object());
 }
 
-QString Deployer::findDeployer(const QString &name)
+QString Deployer::find(const QString &name)
 {
     return Gibs::findJsonToolDefinition(name, Gibs::Deployer);
 }

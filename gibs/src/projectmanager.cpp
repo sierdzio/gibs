@@ -72,12 +72,22 @@ void ProjectManager::start()
         connectScope(scope);
 
         if (mFlags.compilerName() != "gcc") {
-            const QString compiler(Compiler::findCompiler(mFlags.compilerName()));
+            const QString compiler(Compiler::find(mFlags.compilerName()));
             if (compiler.isEmpty()) {
                 qFatal("Could not find compiler named: %s in $HOME/.gibs, nor in "
                        "internal database", qPrintable(compiler));
             } else {
                 scope->setCompiler(Compiler::fromFile(compiler));
+            }
+        }
+
+        if (!mFlags.deployerName().isEmpty()) {
+            const QString deployer(Deployer::find(mFlags.deployerName()));
+            if (deployer.isEmpty()) {
+                qFatal("Could not find deployer named: %s in $HOME/.gibs, nor in "
+                       "internal database", qPrintable(deployer));
+            } else {
+                scope->setDeployer(Deployer::fromFile(deployer));
             }
         }
 

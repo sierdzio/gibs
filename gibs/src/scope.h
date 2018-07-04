@@ -16,6 +16,7 @@
 #include "gibs.h"
 #include "flags.h"
 #include "compiler.h"
+#include "deployer.h"
 
 class Scope;
 
@@ -89,6 +90,7 @@ public slots:
     void onFeature(const QString &name, const bool isOn);
 
     void setCompiler(const Compiler &compiler);
+    void setDeployer(const Deployer &deployer);
 
 signals:
     void error(const QString &error) const;
@@ -129,6 +131,7 @@ protected:
 
     Flags mFlags;
     Compiler mCompiler;
+    Deployer mDeployer;
 
     const QString mRelativePath;
     const QString mName;
