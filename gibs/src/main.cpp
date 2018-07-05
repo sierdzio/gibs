@@ -21,6 +21,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *******************************************************************************/
 
+/*******************************************************************************
+Copyright (C) 2018 Tomasz Siekierda
+
+Parts of this file, as well as whole of gibs project, was written by Tomasz
+Siekierda. These parts are available under license mentioned LICENSE file.
+*******************************************************************************/
+
 
 /*
   TEMPLATE main.cpp by Milo Solutions. Copyright 2016
@@ -36,8 +43,10 @@ SOFTWARE.
 
 #include <QString>
 #include <QCommandLineParser>
-#include <QTimer>
 #include <QElapsedTimer>
+#include <QTimer>
+#include <QDir>
+#include <QFileInfo>
 #include <QDebug>
 
 #include "mlog.h"
@@ -145,8 +154,16 @@ int main(int argc, char *argv[]) {
     flags.setParseWholeFiles(parser.isSet(Tags::parse_whole_files));
     flags.setJobs(parser.value(Tags::jobs).toFloat(&jobsOk));
     flags.setQtDir(parser.value(Tags::qt_dir_flag));
-    if (!args.isEmpty())
+    if (args.isEmpty()) {
+        const QString defaultInput("main.cpp");
+        if (QFileInfo::exists(defaultInput)) {
+            flags.setInputFile(defaultInput);
+        } else {
+            qFatal("No input file specified, can't continue!");
+        }
+    } else {
         flags.setInputFile(args.at(0));
+    }
     flags.setCommands(parser.value(Tags::commands));
     flags.setRelativePath(flags.inputFile());
     flags.setDeployerName(parser.value(Tags::deployer_tool));

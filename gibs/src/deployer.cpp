@@ -40,7 +40,7 @@ bool Deployer::findExecutable(const QString &path,
     if (!path.isEmpty()) {
         // TODO: implement path searching!
         qWarning() << "Cannot look for" << name << "in $PATH because this logic"
-                   << "is not yet implemented!";
+                   << "is not yet implemented! Sorry.";
     }
 
     return false;
