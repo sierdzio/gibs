@@ -124,3 +124,13 @@ QString Gibs::findJsonToolDefinition(const QString &tool,
     result = Gibs::findFile(":/" + toolDir, fileName);
     return result;
 }
+
+/*!
+ * Returns \a defaultValue if \a value is empty.
+ */
+QString Gibs::ifEmpty(const QString &value, const QString &defaultValue)
+{
+    if (value.isEmpty())
+        return defaultValue;
+    return value;
+}

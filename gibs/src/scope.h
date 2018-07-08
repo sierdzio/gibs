@@ -138,10 +138,7 @@ protected:
     QVersionNumber mVersion = QVersionNumber(1, 0, 0);
     const QByteArray mId;
 
-    bool mIsError = false;
-
     QStringList mQtModules;
-    bool mQtIsMocInitialized = false;
     QStringList mQtIncludes;
     QStringList mQtLibs;
     QStringList mQtDefines;
@@ -164,4 +161,8 @@ protected:
     // TODO: change into QStringList and use only file names here.
     // MetaProcessPtr can remain in ProjectManager, but not really here.
     QVector<MetaProcessPtr> mProcessQueue; // Local process queue
+
+    bool mIsError = false;
+    bool mDeploy = false;
+    bool mQtIsMocInitialized = false;
 };

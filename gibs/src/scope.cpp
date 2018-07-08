@@ -760,6 +760,7 @@ void Scope::setCompiler(const Compiler &compiler)
 void Scope::setDeployer(const Deployer &deployer)
 {
     mDeployer = deployer;
+    mDeploy = true;
 }
 
 QString Scope::findFile(const QString &file) const
@@ -1032,7 +1033,7 @@ void Scope::start(bool fromCache, bool isQuickMode)
     link();
 
     // Linking is scheduled, deploy it!
-    if (!mFlags.deployerName.isEmpty() and targetType() == Tags::targetApp) {
+    if (mDeploy and targetType() == Tags::targetApp) {
         // Use the deployment tool!
         deploy();
     }

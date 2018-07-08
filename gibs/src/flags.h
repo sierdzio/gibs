@@ -53,7 +53,7 @@ public:
 
         const QString standard(QStandardPaths::standardLocations(
             QStandardPaths::ConfigLocation).at(0));
-        const QString configFile(standard + "/gibs" + Tags::gibsConfigFileName);
+        const QString configFile(standard + "/gibs/" + Tags::gibsConfigFileName);
         qDebug() << "Looking for gibs paths config in:" << configFile;
         if (QFileInfo::exists(configFile)) {
             load(configFile);
@@ -67,7 +67,7 @@ public:
         const QString standard(QStandardPaths::standardLocations(
             QStandardPaths::ConfigLocation).at(0));
         const QString configDir(standard + "/gibs");
-        const QString configFile(configDir + Tags::gibsConfigFileName);
+        const QString configFile(configDir + "/" + Tags::gibsConfigFileName);
 
         const QDir root(QDir::root());
         if (root.exists(configDir) == false)
@@ -152,7 +152,7 @@ public:
     QString deployerPath;
 
     // Compilation
-    QString compilerName;
+    QString compilerName = "gcc";
 
     // Cross compilation
     bool crossCompile = false;

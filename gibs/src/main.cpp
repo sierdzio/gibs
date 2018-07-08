@@ -54,6 +54,7 @@ Siekierda. These parts are available under license mentioned LICENSE file.
 #include "globals.h"
 #include "tags.h"
 #include "flags.h"
+#include "gibs.h"
 #include "projectmanager.h"
 
 // Prepare logging categories. Modify these to your needs
@@ -178,8 +179,30 @@ int main(int argc, char *argv[]) {
     flags.qtAutoModules = parser.isSet(Tags::auto_qt_modules_flag);
     flags.autoIncludes = parser.isSet(Tags::auto_include_flag);
     flags.parseWholeFiles = parser.isSet(Tags::parse_whole_files);
+    flags.crossCompile = parser.isSet(Tags::cross_compile_flag);
+
     flags.setJobs(parser.value(Tags::jobs).toFloat(&jobsOk));
-    flags.qtDir = parser.value(Tags::qt_dir_flag);
+    flags.qtDir = Gibs::ifEmpty(parser.value(Tags::qt_dir_flag), flags.qtDir);
+    flags.commands = Gibs::ifEmpty(parser.value(Tags::commands), flags.commands);
+    flags.deployerName = Gibs::ifEmpty(parser.value(Tags::deployer_tool),
+                                       flags.deployerName);
+    flags.compilerName = Gibs::ifEmpty(parser.value(Tags::compiler_tool),
+                                       flags.compilerName);
+    flags.sysroot = Gibs::ifEmpty(parser.value(Tags::sysroot), flags.sysroot);
+    flags.toolchain = Gibs::ifEmpty(parser.value(Tags::toolchain),
+                                    flags.toolchain);
+    flags.androidNdkPath = Gibs::ifEmpty(parser.value(Tags::androidNdkPath),
+                                         flags.androidNdkPath);
+    flags.androidNdkApi = Gibs::ifEmpty(parser.value(Tags::androidNdkApi),
+                                        flags.androidNdkApi);
+    flags.androidNdkAbi = Gibs::ifEmpty(parser.value(Tags::androidNdkAbi),
+                                        flags.androidNdkAbi);
+    flags.androidSdkPath = Gibs::ifEmpty(parser.value(Tags::androidSdkPath),
+                                         flags.androidSdkPath);
+    flags.androidSdkApi = Gibs::ifEmpty(parser.value(Tags::androidSdkApi),
+                                        flags.androidSdkApi);
+    flags.jdkPath = Gibs::ifEmpty(parser.value(Tags::jdkPath), flags.jdkPath);
+
     if (args.isEmpty()) {
         const QString defaultInput("main.cpp");
         if (QFileInfo::exists(defaultInput)) {
@@ -190,19 +213,7 @@ int main(int argc, char *argv[]) {
     } else {
         flags.inputFile = args.at(0);
     }
-    flags.commands = parser.value(Tags::commands);
     flags.setRelativePath(flags.inputFile);
-    flags.deployerName = parser.value(Tags::deployer_tool);
-    flags.compilerName = parser.value(Tags::compiler_tool);
-    flags.crossCompile = parser.isSet(Tags::cross_compile_flag);
-    flags.sysroot = parser.value(Tags::sysroot);
-    flags.toolchain = parser.value(Tags::toolchain);
-    flags.androidNdkPath = parser.value(Tags::androidNdkPath);
-    flags.androidNdkApi = parser.value(Tags::androidNdkApi);
-    flags.androidNdkAbi = parser.value(Tags::androidNdkAbi);
-    flags.androidSdkPath = parser.value(Tags::androidSdkPath);
-    flags.androidSdkApi = parser.value(Tags::androidSdkApi);
-    flags.jdkPath = parser.value(Tags::jdkPath);
 
     if (!jobsOk) {
         qFatal("Invalid number of jobs specified. Use '-j NUM'. Got: %s",

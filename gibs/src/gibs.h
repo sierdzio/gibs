@@ -31,4 +31,6 @@ Feature commandLineToFeature(const QString &command);
 QString capitalizeFirstLetter(const QString &string);
 
 QStringList jsonArrayToStringList(const QJsonArray &array);
+
+QString ifEmpty(const QString &value, const QString &defaultValue);
 }
