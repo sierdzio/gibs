@@ -20,6 +20,15 @@ const QLatin1String debug("debug");
 const QLatin1String deployer_tool("deployer");
 const QLatin1String deployer_path("deployer-path");
 const QLatin1String compiler_tool("compiler");
+const QLatin1String cross_compile_flag("cross-compile");
+const QLatin1String sysroot("sysroot");
+const QLatin1String toolchain("toolchain");
+const QLatin1String androidNdkPath("androidNdkPath");
+const QLatin1String androidNdkApi("androidNdkApi");
+const QLatin1String androidNdkAbi("androidNdkAbi");
+const QLatin1String androidSdkPath("androidSdkPath");
+const QLatin1String androidSdkApi("androidSdkApi");
+const QLatin1String jdkPath("jdkPath");
 // General
 const QLatin1String gibsCacheFileName(".gibs.cache");
 const QLatin1String gibsConfigFileName(".gibsPathConfig.ini");

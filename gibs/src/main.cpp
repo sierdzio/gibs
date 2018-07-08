@@ -133,6 +133,32 @@ int main(int argc, char *argv[]) {
         {Tags::compiler_tool,
         QCoreApplication::translate(scope, "compiler name. If specified, Gibs will search for compiler definitions in $HOME/gibs/compilers. Built-in compiler definitions are: gcc, clang. Once Gibs learns to parse mkspecs, it will be a source of compiler configs as well"),
         QCoreApplication::translate(scope, "compiler name")},
+        {Tags::cross_compile_flag,
+        QCoreApplication::translate(scope, "Cross compile. You need to specify correct compiler, sysroot, toolchain etc.")},
+        {Tags::sysroot,
+        QCoreApplication::translate(scope, "Cross compilation sysroot"),
+        QCoreApplication::translate(scope, "path")},
+        {Tags::toolchain,
+        QCoreApplication::translate(scope, "Cross compilation toolchain"),
+        QCoreApplication::translate(scope, "path")},
+        {Tags::androidNdkPath,
+        QCoreApplication::translate(scope, "Android NDK path"),
+        QCoreApplication::translate(scope, "path")},
+        {Tags::androidNdkApi,
+        QCoreApplication::translate(scope, "Android NDK API level"),
+        QCoreApplication::translate(scope, "level")},
+        {Tags::androidNdkAbi,
+        QCoreApplication::translate(scope, "Android NDK ABI level"),
+        QCoreApplication::translate(scope, "level")},
+        {Tags::androidSdkPath,
+        QCoreApplication::translate(scope, "Android SDK path"),
+        QCoreApplication::translate(scope, "path")},
+        {Tags::androidSdkApi,
+        QCoreApplication::translate(scope, "Android SDK API level"),
+        QCoreApplication::translate(scope, "level")},
+        {Tags::jdkPath,
+        QCoreApplication::translate(scope, "Java JDK path"),
+        QCoreApplication::translate(scope, "path")},
     });
 
     // Process the actual command line arguments given by the user
@@ -168,6 +194,15 @@ int main(int argc, char *argv[]) {
     flags.setRelativePath(flags.inputFile);
     flags.deployerName = parser.value(Tags::deployer_tool);
     flags.compilerName = parser.value(Tags::compiler_tool);
+    flags.crossCompile = parser.isSet(Tags::cross_compile_flag);
+    flags.sysroot = parser.value(Tags::sysroot);
+    flags.toolchain = parser.value(Tags::toolchain);
+    flags.androidNdkPath = parser.value(Tags::androidNdkPath);
+    flags.androidNdkApi = parser.value(Tags::androidNdkApi);
+    flags.androidNdkAbi = parser.value(Tags::androidNdkAbi);
+    flags.androidSdkPath = parser.value(Tags::androidSdkPath);
+    flags.androidSdkApi = parser.value(Tags::androidSdkApi);
+    flags.jdkPath = parser.value(Tags::jdkPath);
 
     if (!jobsOk) {
         qFatal("Invalid number of jobs specified. Use '-j NUM'. Got: %s",

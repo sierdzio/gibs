@@ -93,6 +93,28 @@ Arguments:
 Gibs builds in *release* mode by default. If you want to compile a debug build,
 use `--debug` or `-d`.
 
+## Path config / cache
+
+To save you typing, gibs will remember paths between runs, so you need to
+specify them only once.
+
+Remembered paths are:
+* Qt dir
+* deployer path
+* sysroot path
+* toolchain path
+* Android NDK path
+* Android NDK API level
+* Android NDK ABI level
+* Android SDK path
+* Android SDK API level
+* jdk (Java) path
+
+Paths precedence is:
+1. Paths passed on command line.
+2. Paths saved in current directory.
+3. Paths saved in $HOME/.config/gibs
+
 # Commands
 
 ## Syntax
