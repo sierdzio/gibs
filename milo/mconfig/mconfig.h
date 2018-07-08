@@ -21,6 +21,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 *******************************************************************************/
 
+/*
+ * This file has been modified by Tomasz Siekierda for gibs project.
+ */
 
 #ifndef MCONFIG_H
 #define MCONFIG_H
@@ -40,8 +43,8 @@ public:
     MConfig(const QByteArray& groupName);
     void load();
     void load(const QString &fileName, const QSettings::Format &format = QSettings::IniFormat);
-    void save();
-    void save(const QString &fileName, const QSettings::Format &format = QSettings::IniFormat);
+    void save() const;
+    void save(const QString &fileName, const QSettings::Format &format = QSettings::IniFormat) const;
 
 #ifdef MCRYPTO_LIB
     void loadEncrypted();

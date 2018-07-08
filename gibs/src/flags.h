@@ -31,7 +31,7 @@ public:
      *
      * 3. Paths saved in $HOME/.config/gibs
      */
-    Flags() : MConfig("PathConfig") {
+    Flags(const bool usePathConfig = true) : MConfig("PathConfig") {
         CONFIG_VALUE(qtDir, QMetaType::QString);
         CONFIG_VALUE(deployerPath, QMetaType::QString);
         CONFIG_VALUE(sysroot, QMetaType::QString);
@@ -42,6 +42,9 @@ public:
         CONFIG_VALUE(androidSdkPath, QMetaType::QString);
         CONFIG_VALUE(androidSdkApi, QMetaType::QString);
         CONFIG_VALUE(jdkPath, QMetaType::QString);
+
+        if (usePathConfig == false)
+            return;
 
         // TODO: use QDir::setSearchPaths()!
 
@@ -63,9 +66,9 @@ public:
         qDebug() << "None found, will use default values";
     }
 
-    ~Flags() {
+    void save() const {
         const QString standard(QStandardPaths::standardLocations(
-            QStandardPaths::ConfigLocation).at(0));
+                               QStandardPaths::ConfigLocation).at(0));
         const QString configDir(standard + "/gibs");
         const QString configFile(configDir + "/" + Tags::gibsConfigFileName);
 
@@ -74,7 +77,7 @@ public:
             root.mkpath(configDir);
 
         qDebug() << "Writing path config file:" << configFile;
-        save(configFile);
+        MConfig::save(configFile);
     }
 
     int jobs() const

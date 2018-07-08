@@ -98,13 +98,14 @@ void MConfig::load(const QString &fileName, const QSettings::Format &format)
 /*!
  * \brief save all values using QSettings
  */
-void MConfig::save()
+void MConfig::save() const
 {
     QSettings settings;
     settings.beginGroup(mGroupName);
-    foreach (const QByteArray& key, mValues.keys()) {
-        QVariant value(mValues.value(key).type,
-                       mValues.value(key).ptr);
+    const QList<QByteArray> keys(mValues.keys());
+    for (const auto &key : keys) {
+        const auto &valuePtr = mValues.value(key);
+        const QVariant value(valuePtr.type, valuePtr.ptr);
         settings.setValue(key, value);
     }
 }
@@ -113,13 +114,14 @@ void MConfig::save()
  * \param fileName
  * \param format
  */
-void MConfig::save(const QString &fileName, const QSettings::Format &format)
+void MConfig::save(const QString &fileName, const QSettings::Format &format) const
 {
     QSettings settings(fileName, format);
     settings.beginGroup(mGroupName);
-    foreach (const QByteArray& key, mValues.keys()) {
-        QVariant value(mValues.value(key).type,
-                       mValues.value(key).ptr);
+    const QList<QByteArray> keys(mValues.keys());
+    for (const auto &key : keys) {
+        const auto &valuePtr = mValues.value(key);
+        const QVariant value(valuePtr.type, valuePtr.ptr);
         settings.setValue(key, value);
     }
 }
@@ -260,17 +262,17 @@ void MConfig::copyValue(void *dst, int type, const QVariant& value)
 
     switch (type) {
     case QMetaType::Int:        COPY_TYPE(int)
-            case QMetaType::QByteArray: COPY_TYPE(QByteArray)
-      case QMetaType::QString:    COPY_TYPE(QString)
-      case QMetaType::Bool:       COPY_TYPE(bool)
-      case QMetaType::Float:      COPY_TYPE(float)
-      case QMetaType::QPoint:     COPY_TYPE(QPoint)
-      case QMetaType::QPointF:    COPY_TYPE(QPointF)
-      case QMetaType::QRect:      COPY_TYPE(QRect)
-      case QMetaType::QRectF:     COPY_TYPE(QRectF)
-      case QMetaType::QDateTime:  COPY_TYPE(QDateTime)
-      default:
-          qFatal("Config: type unsupported!");
+    case QMetaType::QByteArray: COPY_TYPE(QByteArray)
+    case QMetaType::QString:    COPY_TYPE(QString)
+    case QMetaType::Bool:       COPY_TYPE(bool)
+    case QMetaType::Float:      COPY_TYPE(float)
+    case QMetaType::QPoint:     COPY_TYPE(QPoint)
+    case QMetaType::QPointF:    COPY_TYPE(QPointF)
+    case QMetaType::QRect:      COPY_TYPE(QRect)
+    case QMetaType::QRectF:     COPY_TYPE(QRectF)
+    case QMetaType::QDateTime:  COPY_TYPE(QDateTime)
+    default:
+        qFatal("Config: type unsupported!");
     }
 }
 

@@ -54,6 +54,9 @@ cleanUp() {
 echo "" > $LOG
 echo "" > $DETAILS
 
+# Remove gibs path config
+rm "$HOME/.config/gibs/.gibsPathConfig.ini"
+
 # Remove build dir
 rm -rf build/
 

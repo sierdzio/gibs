@@ -168,7 +168,9 @@ int main(int argc, char *argv[]) {
     const QStringList args = parser.positionalArguments();
     bool jobsOk = false;
 
-    Flags flags;
+    // TODO: add command line option to disable path config (pass false to flags
+    // constructor
+    Flags flags(true);
     flags.debugBuild = parser.isSet(Tags::debug);
     // TODO: support debug-and-release maybe.
     if (flags.debugBuild)
@@ -239,7 +241,10 @@ int main(int argc, char *argv[]) {
     manager.loadCache();
     manager.loadCommands();
     manager.loadFeatures(features);
-    QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::exit);
+    QObject::connect(&manager, &ProjectManager::finished,
+                     &app, [=]() { flags.save(); });
+    QObject::connect(&manager, &ProjectManager::finished,
+                     &app, &QCoreApplication::exit);
 
     int result = 1;
     if (flags.clean) {
