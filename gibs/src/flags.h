@@ -43,6 +43,7 @@ public:
         CONFIG_VALUE(androidSdkApi, QMetaType::QString);
         CONFIG_VALUE(jdkPath, QMetaType::QString);
 
+        // TODO: use QDir::setSearchPaths()!
 
         qDebug() << "Looking for gibs paths config in current dir";
         if (QFileInfo::exists(Tags::gibsConfigFileName)) {
@@ -52,16 +53,28 @@ public:
 
         const QString standard(QStandardPaths::standardLocations(
             QStandardPaths::ConfigLocation).at(0));
-        const QString configFile(standard + "/" + Tags::gibsConfigFileName);
-        qDebug() << "Looking for gibs paths config in:" << standard;
+        const QString configFile(standard + "/gibs" + Tags::gibsConfigFileName);
+        qDebug() << "Looking for gibs paths config in:" << configFile;
         if (QFileInfo::exists(configFile)) {
             load(configFile);
             return;
         }
+
+        qDebug() << "None found, will use default values";
     }
 
     ~Flags() {
-        save(Tags::gibsConfigFileName);
+        const QString standard(QStandardPaths::standardLocations(
+            QStandardPaths::ConfigLocation).at(0));
+        const QString configDir(standard + "/gibs");
+        const QString configFile(configDir + Tags::gibsConfigFileName);
+
+        const QDir root(QDir::root());
+        if (root.exists(configDir) == false)
+            root.mkpath(configDir);
+
+        qDebug() << "Writing path config file:" << configFile;
+        save(configFile);
     }
 
     int jobs() const

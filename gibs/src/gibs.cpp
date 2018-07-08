@@ -98,6 +98,7 @@ QStringList Gibs::jsonArrayToStringList(const QJsonArray &array)
     return result;
 }
 
+// TODO: use QDir::setSearchPaths()?
 QString Gibs::findJsonToolDefinition(const QString &tool,
                                      const Gibs::ToolType type)
 {
