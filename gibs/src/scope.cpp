@@ -142,7 +142,7 @@ Scope *Scope::fromJson(const QJsonObject &json, const Flags &flags)
 void Scope::mergeWith(const ScopePtr &other)
 {
     //qDebug() << "Merging with other scope:" << other->name();
-    mFlags.setQtDir(other->qtDir());
+    mFlags.qtDir = other->qtDir();
     mQtModules = other->qtModules();
     mQtIsMocInitialized = other->qtIsMocInitialized();
     mQtIncludes = other->qtIncludes();
@@ -299,27 +299,50 @@ QString Scope::compile(const QString &file)
 
     const QFileInfo info(file);
     const QString objectFile(info.baseName() + ".o");
+
+    // TODO: add support for non-android cross compilation...
+    const QString compilerPath(mFlags.crossCompile?
+        QString(mFlags.androidNdkPath + "toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/")
+        : "");
+
     // TODO: improve compiler detection!
-    const QString compiler(info.suffix() == "c"? mCompiler.ccompiler
-                                               : mCompiler.compiler);
+    const QString compiler(info.suffix() == "c"?
+        compilerPath + mCompiler.ccompiler
+        : compilerPath + mCompiler.compiler);
 
     if (!qtModules().isEmpty()) {
-        if (mFlags.qtDir().isEmpty()) {
+        if (mFlags.qtDir.isEmpty()) {
             qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
                    "with --qt-dir argument");
         }
     }
 
-
     //qInfo() << "Compiling:" << file << "into:" << objectFile;
     QStringList arguments(mCompiler.flags);
 
-    if (mFlags.debugBuild()) {
+    if (mFlags.debugBuild) {
         arguments.append(mCompiler.debugFlags);
     }
 
-    if (mFlags.releaseBuild()) {
+    if (mFlags.releaseBuild) {
         arguments.append(mCompiler.releaseFlags);
+    }
+
+    if (mFlags.crossCompile) {
+        if (mCompiler.name.contains("android")) {
+            arguments.append(
+            {
+                "-D__ANDROID_API__=" + mFlags.androidSdkApi,
+                "--sysroot=" + mFlags.androidNdkPath + "/sysroot",
+                "-isystem",
+                mFlags.androidNdkPath + "/sysroot/usr/include/arm-linux-androideabi",
+                "-isystem",
+                mFlags.androidNdkPath + "/sources/cxx-stl/gnu-libstdc++/4.9/include",
+                "-isystem",
+                mFlags.androidNdkPath + "/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a/include",
+
+            });
+        }
     }
 
     arguments.append(customDefineFlags());
@@ -354,44 +377,67 @@ void Scope::link()
     // TODO: add dependent scopes (from other subprojects)
 
     qInfo() << "Linking:" << objectFiles;
-    const QString compiler(mCompiler.linker);
+    const QString linkerPath(mFlags.crossCompile?
+        QString(mFlags.androidNdkPath + "toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/")
+        : "");
+    const QString compiler(linkerPath + mCompiler.linker);
     QStringList arguments;
 
-    if (targetType() == Tags::targetLib) {
-        if (targetLibType() == Tags::targetLibDynamic) {
-            arguments.append({ "-shared", "-Wl,-soname,"
-                               + mCompiler.libraryPrefix
-                               + targetName() + mCompiler.librarySuffix + "."
-                               + QString::number(mVersion.majorVersion()),
-                               "-o", mFlags.prefix() + "/"
-                               + mCompiler.libraryPrefix
-                               + targetName() + mCompiler.librarySuffix + "."
-                               + mVersion.toString()
-                             });
-        } else if (targetLibType() == Tags::targetLibStatic) {
-            // Run ar to create the static library file
-            MetaProcessPtr mp = MetaProcessPtr::create();
-            mp->file = mCompiler.libraryPrefix + targetName()
-                    + mCompiler.staticLibrarySuffix;
-            mp->fileDependencies = findAllDependencies();
-            mp->scopeDepenencies = mScopeDependencyIds;
-            mProcessQueue.append(mp);
-            emit runProcess(mCompiler.staticArchiver,
-                            QStringList {
-                                "cqs",
-                                mp->file,
-                                targetName() + ".o"
-                            }, mp);
-            return;
+    if (mFlags.crossCompile) {
+        if (mCompiler.name.contains("android")) {
+            arguments.append(
+            {
+                "--sysroot=" + mFlags.androidNdkPath + QString("/platforms/android-%1/arch-arm/").arg(mFlags.androidNdkApi),
+                "-Wl,-soname,"+ mCompiler.libraryPrefix
+                + targetName() + mCompiler.librarySuffix,
+                "-Wl,-rpath=" + mFlags.qtDir + "/lib",
+                "-L" + mFlags.androidNdkPath + "/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a",
+                "-L" + mFlags.androidNdkPath + "/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9.x",
+                "-L" + mFlags.androidNdkPath + "sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a",
+                "-L" + mFlags.androidNdkPath + "toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9"
+            });
+            arguments.append(mCompiler.linkerFlags);
         }
+
+        // TODO: apps, static and dynamic libs for cross compilation
+        // (normal Linux and other platforms)
     } else {
-        arguments.append({ "-o", mFlags.prefix() + "/" + targetName() });
+        if (targetType() == Tags::targetLib) {
+            if (targetLibType() == Tags::targetLibDynamic) {
+                arguments.append({ "-shared", "-Wl,-soname,"
+                                   + mCompiler.libraryPrefix
+                                   + targetName() + mCompiler.librarySuffix + "."
+                                   + QString::number(mVersion.majorVersion()),
+                                   "-o", mFlags.prefix() + "/"
+                                   + mCompiler.libraryPrefix
+                                   + targetName() + mCompiler.librarySuffix + "."
+                                   + mVersion.toString()
+                                 });
+            } else if (targetLibType() == Tags::targetLibStatic) {
+                // Run ar to create the static library file
+                MetaProcessPtr mp = MetaProcessPtr::create();
+                mp->file = mCompiler.libraryPrefix + targetName()
+                        + mCompiler.staticLibrarySuffix;
+                mp->fileDependencies = findAllDependencies();
+                mp->scopeDepenencies = mScopeDependencyIds;
+                mProcessQueue.append(mp);
+                emit runProcess(linkerPath + mCompiler.staticArchiver,
+                                QStringList {
+                                    "cqs",
+                                    mp->file,
+                                    targetName() + ".o"
+                                }, mp);
+                return;
+            }
+        } else {
+            arguments.append({ "-o", mFlags.prefix() + "/" + targetName() });
+        }
     }
 
     arguments.append(objectFiles);
 
     if (!qtModules().isEmpty()) {
-        if (mFlags.qtDir().isEmpty()) {
+        if (mFlags.qtDir.isEmpty()) {
             qFatal("Qt dir not set, but this is a Qt project! Specify Qt dir "
                    "with --qt-dir argument");
         }
@@ -440,28 +486,46 @@ void Scope::deploy()
     mp->fileDependencies = findAllDependencies();
     mp->scopeDepenencies = mScopeDependencyIds;
 
-    if (mDeployer.name == "linuxdeployqt") {
-        if (!mDeployer.findExecutable(mFlags.deployerPath(), mFlags.qtDir(),
-                                      qEnvironmentVariable("PATH"))) {
-            qFatal("Could not find deployer executable!");
-        }
+    if (!mDeployer.findAndSetExecutable(mFlags.deployerPath,
+                                        mFlags.qtDir,
+                                        qEnvironmentVariable("PATH")))
+    {
+        qFatal("Could not find deployer executable!");
+    }
 
+    if (mDeployer.name == "linuxdeployqt") {
         // TODO: parametrize, of course! Add .desktop file support!
-        arguments.append({
-                             mFlags.prefix() + "/" + targetName(),
-                             "-qmake=\"" + qtDir() + "/bin/qmake\""
-                         });
+        arguments.append(
+        {
+            mFlags.prefix() + "/" + targetName(),
+            "-qmake=\"" + qtDir() + "/bin/qmake\""
+        });
+        arguments.append(mDeployer.flags);
+    } else if (mDeployer.name == "androiddeployqt") {        
+        arguments.append(
+        {
+            "--input",
+            mFlags.prefix() + "/android-" + mCompiler.libraryPrefix
+                + targetName() + mCompiler.librarySuffix
+                + "-deployment-settings.json",
+            "--output",
+            mFlags.prefix() + "/android-build",
+            "--android-platform",
+            "android-" + mFlags.androidSdkApi,
+            "--jdk",
+            mFlags.jdkPath
+        });
         arguments.append(mDeployer.flags);
     }
 
     mp->file = targetName() + "." + suffix;
     mProcessQueue.append(mp);
-    emit runProcess(mFlags.deployerName(), arguments, mp);
+    emit runProcess(mDeployer.executable, arguments, mp);
 }
 
 void Scope::parseFile(const QString &file)
 {
-    FileParser parser(file, mFlags.parseWholeFiles(), this);
+    FileParser parser(file, mFlags.parseWholeFiles, this);
     connect(&parser, &FileParser::error, this, &Scope::error);
     connect(&parser, &FileParser::parsed, this, &Scope::onParsed);
     connect(&parser, &FileParser::parseRequest, this, &Scope::onParseRequest);
@@ -583,7 +647,7 @@ bool Scope::onRunMoc(const QString &file)
     if (mIsError)
         return false;
 
-    if (mFlags.qtDir().isEmpty()) {
+    if (mFlags.qtDir.isEmpty()) {
         emit error("Can't run MOC because Qt dir is not set. See 'ibs --help' "
                    "for more info.");
     }
@@ -595,7 +659,7 @@ bool Scope::onRunMoc(const QString &file)
 
     const QFileInfo header(file);
     const QString mocFile("moc_" + header.baseName() + ".cpp");
-    const QString compiler(mFlags.qtDir() + "/bin/moc");
+    const QString compiler(mFlags.qtDir + "/bin/moc");
     const QString predefs("moc_predefs.h");
 
     QStringList arguments;
@@ -645,7 +709,7 @@ void Scope::onRunTool(const QString &tool, const QStringList &args)
             MetaProcessPtr mp = MetaProcessPtr::create();
             mp->file = cppFile;
             mProcessQueue.append(mp);
-            emit runProcess(mFlags.qtDir() + "/bin/" + tool, arguments, mp);
+            emit runProcess(mFlags.qtDir + "/bin/" + tool, arguments, mp);
 
             FileInfo info = parsedFile(qrcFile);
             info.type = FileInfo::QRC;
@@ -766,21 +830,21 @@ void Scope::updateQtModules(const QStringList &modules)
         mQtDefines.append("-DQT_" + module.toUpper() + "_LIB");
     }
 
-    if(mFlags.debugBuild()) {
+    if(mFlags.debugBuild) {
         mQtDefines.append("-DQT_QML_DEBUG");
     }
 
-    if (mFlags.releaseBuild()) {
+    if (mFlags.releaseBuild) {
         mQtDefines.append("-DQT_NO_DEBUG");
         mQtLibs.append("-Wl,-O1 ");
     }
 
-    mQtIncludes.append("-I" + mFlags.qtDir() + "/include");
-    mQtIncludes.append("-I" + mFlags.qtDir() + "/mkspecs/linux-g++");
+    mQtIncludes.append("-I" + mFlags.qtDir + "/include");
+    mQtIncludes.append("-I" + mFlags.qtDir + "/mkspecs/linux-g++");
 
     // TODO: pre-capitalize module letters to do both loops faster
     for(const QString &module : qAsConst(mQtModules)) {
-        const QString dir("-I" + mFlags.qtDir() + "/include/Qt");
+        const QString dir("-I" + mFlags.qtDir + "/include/Qt");
         if (module == Tags::quickcontrols2) {
             mQtIncludes.append(dir + "QuickControls2");
         } else if (module == Tags::quickwidgets) {
@@ -790,8 +854,8 @@ void Scope::updateQtModules(const QStringList &modules)
         }
     }
 
-    mQtLibs.append("-Wl,-rpath," + mFlags.qtDir() + "/lib");
-    mQtLibs.append("-L" + mFlags.qtDir() + "/lib");
+    mQtLibs.append("-Wl,-rpath," + mFlags.qtDir + "/lib");
+    mQtLibs.append("-L" + mFlags.qtDir + "/lib");
 
     for(const QString &module : qAsConst(mQtModules)) {
         // TODO: use correct mkspecs
@@ -855,7 +919,7 @@ bool Scope::initializeMoc()
     const QString predefs("moc_predefs.h");
     const QStringList arguments({ "-pipe", "-g", "-Wall", "-W", "-dM", "-E",
         "-o", predefs,
-        mFlags.qtDir() + "/mkspecs/features/data/dummy.cpp" });
+        mFlags.qtDir + "/mkspecs/features/data/dummy.cpp" });
 
     FileInfo info;
     info.path = predefs;
@@ -900,7 +964,7 @@ void Scope::setTargetLibType(const QString &targetLibType)
 
 QString Scope::qtDir() const
 {
-    return mFlags.qtDir();
+    return mFlags.qtDir;
 }
 
 bool Scope::qtIsMocInitialized() const
@@ -968,7 +1032,7 @@ void Scope::start(bool fromCache, bool isQuickMode)
     link();
 
     // Linking is scheduled, deploy it!
-    if (!mFlags.deployerName().isEmpty() and targetType() == Tags::targetApp) {
+    if (!mFlags.deployerName.isEmpty() and targetType() == Tags::targetApp) {
         // Use the deployment tool!
         deploy();
     }

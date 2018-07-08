@@ -15,10 +15,13 @@
  * path (should include executable), then inside \a qtDir. Lastly, system
  *  \a path will be searched.
  */
-bool Deployer::findExecutable(const QString &path,
+bool Deployer::findAndSetExecutable(const QString &path,
                               const QString &qtDir,
                               const QString &userProvided)
 {
+    if (executable.isEmpty() == false)
+        return true;
+
     if (!userProvided.isEmpty()) {
         if (QFileInfo info(userProvided); info.exists() and info.isExecutable()) {
             executable = userProvided;

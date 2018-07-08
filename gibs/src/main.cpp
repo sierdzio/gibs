@@ -142,32 +142,32 @@ int main(int argc, char *argv[]) {
     bool jobsOk = false;
 
     Flags flags;
-    flags.setDebugBuild(parser.isSet(Tags::debug));
+    flags.debugBuild = parser.isSet(Tags::debug);
     // TODO: support debug-and-release maybe.
-    if (flags.debugBuild())
-        flags.setReleaseBuild(false);
-    flags.setRun(parser.isSet(Tags::run));
-    flags.setClean(parser.isSet(Tags::clean));
-    flags.setQuickMode(parser.isSet(Tags::quick_flag));
-    flags.setQtAutoModules(parser.isSet(Tags::auto_qt_modules_flag));
-    flags.setAutoIncludes(parser.isSet(Tags::auto_include_flag));
-    flags.setParseWholeFiles(parser.isSet(Tags::parse_whole_files));
+    if (flags.debugBuild)
+        flags.releaseBuild = false;
+    flags.run = parser.isSet(Tags::run);
+    flags.clean = parser.isSet(Tags::clean);
+    flags.quickMode = parser.isSet(Tags::quick_flag);
+    flags.qtAutoModules = parser.isSet(Tags::auto_qt_modules_flag);
+    flags.autoIncludes = parser.isSet(Tags::auto_include_flag);
+    flags.parseWholeFiles = parser.isSet(Tags::parse_whole_files);
     flags.setJobs(parser.value(Tags::jobs).toFloat(&jobsOk));
-    flags.setQtDir(parser.value(Tags::qt_dir_flag));
+    flags.qtDir = parser.value(Tags::qt_dir_flag);
     if (args.isEmpty()) {
         const QString defaultInput("main.cpp");
         if (QFileInfo::exists(defaultInput)) {
-            flags.setInputFile(defaultInput);
+            flags.inputFile = defaultInput;
         } else {
             qFatal("No input file specified, can't continue!");
         }
     } else {
-        flags.setInputFile(args.at(0));
+        flags.inputFile = args.at(0);
     }
-    flags.setCommands(parser.value(Tags::commands));
-    flags.setRelativePath(flags.inputFile());
-    flags.setDeployerName(parser.value(Tags::deployer_tool));
-    flags.setCompilerName(parser.value(Tags::compiler_tool));
+    flags.commands = parser.value(Tags::commands);
+    flags.setRelativePath(flags.inputFile);
+    flags.deployerName = parser.value(Tags::deployer_tool);
+    flags.compilerName = parser.value(Tags::compiler_tool);
 
     if (!jobsOk) {
         qFatal("Invalid number of jobs specified. Use '-j NUM'. Got: %s",
@@ -196,16 +196,16 @@ int main(int argc, char *argv[]) {
     QObject::connect(&manager, &ProjectManager::finished, &app, &QCoreApplication::exit);
 
     int result = 1;
-    if (flags.clean()) {
+    if (flags.clean) {
         QTimer::singleShot(1, &manager, &ProjectManager::clean);
         result = app.exec();
         qInfo() << "Cleaning took:" << timer.elapsed() << "ms";
     } else {
-        if (!flags.qtDir().isEmpty() && (flags.qtDir() != manager.qtDir()))
-            manager.setQtDir(flags.qtDir());
+        if (!flags.qtDir.isEmpty() && (flags.qtDir != manager.qtDir()))
+            manager.setQtDir(flags.qtDir);
         QTimer::singleShot(1, &manager, &ProjectManager::start);
 
-        if (flags.run()) {
+        if (flags.run) {
             qInfo() << "Running compiled binary";
         }
 

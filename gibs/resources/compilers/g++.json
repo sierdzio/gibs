@@ -12,6 +12,7 @@
         "-Wall",
         "-W"
     ],
+    "libraryPrefix": "lib",
     "librarySuffix": ".so",
     "linker": "g++",
     "linkerDynamicFlags": [

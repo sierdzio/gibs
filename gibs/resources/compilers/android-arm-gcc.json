@@ -1,0 +1,54 @@
+{
+    "ccompiler": "arm-linux-androideabi-gcc",
+    "compiler": "arm-linux-androideabi-g++",
+    "debugFlags": [
+        "-g"
+    ],
+    "flags": [
+        "-c",
+        "-fstack-protector-strong",
+        "-DANDROID",
+        "-march=armv7-a",
+        "-mfloat-abi=softfp",
+        "-mfpu=vfp",
+        "-fno-builtin-memmove",
+        "-g",
+        "-g",
+        "-marm",
+        "-O0",
+        "-fPIC",
+        "-std=gnu++11",
+        "-Wall",
+        "-W",
+        "-D_REENTRANT",
+        "-DLIBRARY_LIBRARY",
+        "-DQT_DEPRECATED_WARNINGS",
+        "-DQT_QML_DEBUG"
+    ],
+    "libraryPrefix": "lib",
+    "librarySuffix": ".so",
+    "linker": "arm-linux-androideabi-g++",
+    "linkerDynamicFlags": [
+    ],
+    "linkerFlags": [
+        "-Wl,--no-undefined",
+        "-Wl,-z,noexecstack",
+        "-shared",
+        "-lgnustl_shared",
+        "-lgcc",
+        "-llog",
+        "-lz",
+        "-lm",
+        "-ldl",
+        "-lc"
+    ],
+    "linkerStaticFlags": [
+    ],
+    "name": "android-gcc",
+    "releaseFlags": [
+        "-O2"
+    ],
+    "staticArchiver": "arm-linux-androideabi-ar",
+    "staticLibrarySuffix": ".a",
+    "crossCompile": "true"
+}

@@ -11,38 +11,6 @@
 class Flags
 {
 public:
-    Flags()
-    {
-    }
-
-    bool run() const
-    {
-        return mRun;
-    }
-
-    void setRun(const bool run)
-    {
-        mRun = run;
-    }
-
-    bool clean() const
-    {
-        return mClean;
-    }
-    void setClean(const bool clean)
-    {
-        mClean = clean;
-    }
-
-    bool quickMode() const
-    {
-        return mQuickMode;
-    }
-    void setQuickMode(const bool quickMode)
-    {
-        mQuickMode = quickMode;
-    }
-
     int jobs() const
     {
         return mJobs;
@@ -56,38 +24,10 @@ public:
         } else if (std::isless(jobs, 1.00)) {
             // Cap will be interpreted as percentage
             const int maxCount = QThread::idealThreadCount();
-            mJobs = std::floor(qreal(maxCount) * jobs);
+            mJobs = int(std::floor(qreal(maxCount) * qreal(jobs)));
         } else {
-            mJobs = std::ceil(jobs);
+            mJobs = int(std::ceil(jobs));
         }
-    }
-
-    QString qtDir() const
-    {
-        return mQtDir;
-    }
-    void setQtDir(const QString &qtDir)
-    {
-        mQtDir = qtDir;
-    }
-
-    QString inputFile() const
-    {
-        return mInputFile;
-    }
-    void setInputFile(const QString &inputFile)
-    {
-        mInputFile = inputFile;
-    }
-
-    QString commands() const
-    {
-        return mCommands;
-    }
-
-    void setCommands(const QString &commands)
-    {
-        mCommands = commands;
     }
 
     QString relativePath() const
@@ -125,108 +65,44 @@ public:
         return result;
     }
 
-    bool qtAutoModules() const
-    {
-        return mQtAutoModules;
-    }
+public:
+    bool run = false;
+    bool clean = false;
+    bool quickMode = false;
+    bool qtAutoModules = false;
+    bool autoIncludes = false;
+    bool parseWholeFiles = false;
+    bool debugBuild = false;
+    bool releaseBuild = true;
 
-    void setQtAutoModules(const bool qtAutoModules)
-    {
-        mQtAutoModules = qtAutoModules;
-    }
-
-    bool autoIncludes() const
-    {
-        return mAutoIncludes;
-    }
-
-    void setAutoIncludes(const bool autoIncludes)
-    {
-        mAutoIncludes = autoIncludes;
-    }
-
-    bool parseWholeFiles() const
-    {
-        return mParseWholeFiles;
-    }
-
-    void setParseWholeFiles(bool parseWholeFiles)
-    {
-        mParseWholeFiles = parseWholeFiles;
-    }
-
-    bool debugBuild() const
-    {
-        return mDebugBuild;
-    }
-    void setDebugBuild(bool debugBuild)
-    {
-        mDebugBuild = debugBuild;
-    }
-
-    bool releaseBuild() const
-    {
-        return mReleaseBuild;
-    }
-    void setReleaseBuild(bool releaseBuild)
-    {
-        mReleaseBuild = releaseBuild;
-    }
-
-    QString deployerName() const
-    {
-        return mDeployerName;
-    }
-
-    void setDeployerName(const QString &deployerName)
-    {
-        mDeployerName = deployerName;
-    }
-
-    QString compilerName() const
-    {
-        return mCompilerName;
-    }
-    void setCompilerName(const QString &compilerName)
-    {
-        mCompilerName = compilerName;
-    }
-
-    QString deployerPath() const
-    {
-        return mDeployerPath;
-    }
-    void setDeployerPath(const QString &deployerPath)
-    {
-        mDeployerPath = deployerPath;
-    }
-
-private:
-    bool mRun = false;
-    bool mClean = false;
-    bool mQuickMode = false;
-    bool mQtAutoModules = false;
-    bool mAutoIncludes = false;
-    bool mParseWholeFiles = false;
-    bool mDebugBuild = false;
-    bool mReleaseBuild = true;
-
-    int mJobs = 0;
-
-    QString mQtDir;
-    QString mInputFile;
+    QString qtDir;
+    QString inputFile;
 
     // Gibs commands passed on the command line
-    QString mCommands;
+    QString commands;
+
+    // Deployment
+    QString deployerName;
+    QString deployerPath;
+
+    // Compilation
+    QString compilerName;
+
+    // Cross compilation
+    bool crossCompile = false;
+    QString sysroot; ///media/sierdzio/data/android/ndk-r15/sysroot
+    QString toolchain;
+    QString androidNdkPath;
+    QString androidNdkApi;
+    QString androidNdkAbi;
+    QString androidSdkPath;
+    QString androidSdkApi;
+    QString jdkPath = "/usr/lib/jvm/java-8-openjdk-amd64";
+
+private:
+    int mJobs = 0;
 
     // Paths
     QString mRelativePath; // pointing to dir where the input file is located
     QString mPrefix = "."; //QDir::currentPath(); // where target will be put (== prefix)
-
-    // Deployment
-    QString mDeployerName;
-    QString mDeployerPath;
-
-    // Compilation
-    QString mCompilerName;
 };

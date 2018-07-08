@@ -12,7 +12,8 @@
  */
 struct Deployer
 {
-    bool findExecutable(const QString &path, const QString &qtDir, const QString &userProvided);
+    bool findAndSetExecutable(const QString &path, const QString &qtDir,
+                        const QString &userProvided);
     QJsonObject toJson() const;
     static Deployer fromJson(const QJsonObject &json);
     static Deployer fromFile(const QString &jsonFile);

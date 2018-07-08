@@ -1,0 +1,7 @@
+{
+    "name": "androiddeployqt",
+    "flags": [
+        "--gradle"
+    ]
+}
+

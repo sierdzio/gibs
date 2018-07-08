@@ -39,19 +39,19 @@ ProjectManager::~ProjectManager()
 
 void ProjectManager::setQtDir(const QString &qtDir)
 {
-    if (qtDir == mFlags.qtDir()) {
+    if (qtDir == mFlags.qtDir) {
         return;
     }
 
     qInfo() << "Setting Qt directory to:" << qtDir;
-    mFlags.setQtDir(qtDir);
+    mFlags.qtDir = qtDir;
 
     // TODO: upgrade mQtLibs and mQtIncludes
 }
 
 QString ProjectManager::qtDir() const
 {
-    return mFlags.qtDir();
+    return mFlags.qtDir;
 }
 
 void ProjectManager::start()
@@ -62,17 +62,17 @@ void ProjectManager::start()
     if (mCacheEnabled) {
         const auto scopes = mScopes.values();
         for (const auto &scope : scopes) {
-            scope->start(true, mFlags.quickMode());
+            scope->start(true, mFlags.quickMode);
         }
     } else {
-        ScopePtr scope = ScopePtr::create(mFlags.inputFile(),
+        ScopePtr scope = ScopePtr::create(mFlags.inputFile,
                                           mFlags.relativePath(),
                                           mFlags,
                                           mFeatures);
         connectScope(scope);
 
-        if (mFlags.compilerName() != "gcc") {
-            const QString compiler(Compiler::find(mFlags.compilerName()));
+        if (mFlags.compilerName != "gcc") {
+            const QString compiler(Compiler::find(mFlags.compilerName));
             if (compiler.isEmpty()) {
                 qFatal("Could not find compiler named: %s in $HOME/.gibs, nor in "
                        "internal database", qPrintable(compiler));
@@ -81,8 +81,8 @@ void ProjectManager::start()
             }
         }
 
-        if (!mFlags.deployerName().isEmpty()) {
-            const QString deployer(Deployer::find(mFlags.deployerName()));
+        if (!mFlags.deployerName.isEmpty()) {
+            const QString deployer(Deployer::find(mFlags.deployerName));
             if (deployer.isEmpty()) {
                 qFatal("Could not find deployer named: %s in $HOME/.gibs, nor in "
                        "internal database", qPrintable(deployer));
@@ -97,10 +97,10 @@ void ProjectManager::start()
 
         mScopes.insert(scope->id(), scope);
 
-        if (mFlags.autoIncludes())
+        if (mFlags.autoIncludes)
             scope->autoScanForIncludes();
 
-        scope->start(false, mFlags.quickMode());
+        scope->start(false, mFlags.quickMode);
         tempScopeId = scope->id();
     }
 
@@ -139,8 +139,8 @@ void ProjectManager::saveCache() const
 
     QJsonObject mainObject;
 
-    mainObject.insert(Tags::qtDir, mFlags.qtDir());
-    mainObject.insert(Tags::inputFile, mFlags.inputFile());
+    mainObject.insert(Tags::qtDir, mFlags.qtDir);
+    mainObject.insert(Tags::inputFile, mFlags.inputFile);
 
     QJsonArray scopesArray;
     const auto scopes = mScopes.values();
@@ -185,7 +185,7 @@ void ProjectManager::loadCache()
     const auto document = QJsonDocument::fromJson(file.readAll());
     const QJsonObject mainObject(document.object());
 
-    mFlags.setQtDir(mainObject.value(Tags::qtDir).toString());
+    mFlags.qtDir = mainObject.value(Tags::qtDir).toString();
 
     const QJsonArray scopesArray = mainObject.value(Tags::scopes).toArray();
     for (const auto &scopeJson : scopesArray) {
@@ -208,8 +208,8 @@ void ProjectManager::loadCache()
         }
     }
 
-    if (mFlags.inputFile().isEmpty()) {
-        mFlags.setInputFile(mainObject.value(Tags::inputFile).toString());
+    if (mFlags.inputFile.isEmpty()) {
+        mFlags.inputFile = mainObject.value(Tags::inputFile).toString();
     } else {
         // TODO: if input file was specified and is diferent than the one in cache
         // we need to invalidate the cache!
@@ -221,7 +221,7 @@ void ProjectManager::loadCache()
 
 void ProjectManager::loadCommands()
 {
-    if (mFlags.commands().isEmpty())
+    if (mFlags.commands.isEmpty())
         return;
 
     qInfo() << "Loading commands from command line";
@@ -234,7 +234,7 @@ void ProjectManager::loadCommands()
         mScopes.insert(mGlobalScope->id(), mGlobalScope);
     }
 
-    CommandParser parser(mFlags.commands(), mGlobalScope.data());
+    CommandParser parser(mFlags.commands, mGlobalScope.data());
     connect(&parser, &CommandParser::error, this, &ProjectManager::error);
     connect(&parser, &CommandParser::subproject, this, &ProjectManager::onSubproject);
     parser.parse();
@@ -271,7 +271,7 @@ void ProjectManager::onSubproject(const QByteArray &scopeId, const QString &path
         scope->mergeWith(mGlobalScope);
     }
     mScopes.insert(scope->id(), scope);
-    scope->start(false, mFlags.quickMode());
+    scope->start(false, mFlags.quickMode);
     //qDebug() << "Subproject:" << scope->name() << "FINISHED!";
     // TODO: this has to be made conditional: only when subproject is actually
     // a library (and not an app, or type zero, or plugin).

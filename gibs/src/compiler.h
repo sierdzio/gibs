@@ -37,4 +37,6 @@ struct Compiler
     QStringList linkerFlags = { "-shared", "-Wl,-soname,lib" };
     QStringList linkerStaticFlags;
     QStringList linkerDynamicFlags;
+
+    bool crossCompile = false;
 };

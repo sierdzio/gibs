@@ -90,4 +90,5 @@ include(../milo/mlog/mlog.pri)
 include(../milo/mscripts/mscripts.pri)
 
 DISTFILES += \
-    ../LICENSE.txt
+    ../LICENSE.txt \
+    resources/compilers/android-gcc.json
