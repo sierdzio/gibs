@@ -22,6 +22,7 @@ const QLatin1String deployer_path("deployer-path");
 const QLatin1String compiler_tool("compiler");
 // General
 const QLatin1String gibsCacheFileName(".gibs.cache");
+const QLatin1String gibsConfigFileName(".gibsPathConfig.ini");
 const QLatin1String inputFile("inputFile");
 const QLatin1String globalScope("Global");
 // GIBS comment scope

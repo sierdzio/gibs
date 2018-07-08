@@ -86,7 +86,7 @@ include(platforms/windows/windows.pri)
 
 ## Modules
 include(../milo/mlog/mlog.pri)
-#include(../milo/mconfig/mconfig.pri)
+include(../milo/mconfig/mconfig.pri)
 include(../milo/mscripts/mscripts.pri)
 
 DISTFILES += \

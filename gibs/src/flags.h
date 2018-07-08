@@ -1,16 +1,69 @@
 #pragma once
 
+#include "mconfig.h"
+#include "tags.h"
+
 #include <QString>
 #include <QThread>
 #include <QDir>
 #include <QFileInfo>
+#include <QStandardPaths>
 #include <QDebug>
 
 #include <cmath>
 
-class Flags
+class Flags : public MConfig
 {
 public:
+    /*!
+     * Flags acts like runtime memory for flags and switches passed on command
+     * line. However, it will also store / read some data in config file.
+     *
+     * This is done mostly to save typing: you don't need to specify Qt dir,
+     * sysroot, Android NDK path etc. each time you call gibs, because it will
+     * be remembered between runs.
+     *
+     * Paths precedence is:
+     *
+     * 1. Paths passed on command line.
+     *
+     * 2. Paths saved in current directory.
+     *
+     * 3. Paths saved in $HOME/.config/gibs
+     */
+    Flags() : MConfig("PathConfig") {
+        CONFIG_VALUE(qtDir, QMetaType::QString);
+        CONFIG_VALUE(deployerPath, QMetaType::QString);
+        CONFIG_VALUE(sysroot, QMetaType::QString);
+        CONFIG_VALUE(toolchain, QMetaType::QString);
+        CONFIG_VALUE(androidNdkPath, QMetaType::QString);
+        CONFIG_VALUE(androidNdkApi, QMetaType::QString);
+        CONFIG_VALUE(androidNdkAbi, QMetaType::QString);
+        CONFIG_VALUE(androidSdkPath, QMetaType::QString);
+        CONFIG_VALUE(androidSdkApi, QMetaType::QString);
+        CONFIG_VALUE(jdkPath, QMetaType::QString);
+
+
+        qDebug() << "Looking for gibs paths config in current dir";
+        if (QFileInfo::exists(Tags::gibsConfigFileName)) {
+            load(Tags::gibsConfigFileName);
+            return;
+        }
+
+        const QString standard(QStandardPaths::standardLocations(
+            QStandardPaths::ConfigLocation).at(0));
+        const QString configFile(standard + "/" + Tags::gibsConfigFileName);
+        qDebug() << "Looking for gibs paths config in:" << standard;
+        if (QFileInfo::exists(configFile)) {
+            load(configFile);
+            return;
+        }
+    }
+
+    ~Flags() {
+        save(Tags::gibsConfigFileName);
+    }
+
     int jobs() const
     {
         return mJobs;
