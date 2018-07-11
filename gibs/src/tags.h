@@ -23,12 +23,12 @@ const QLatin1String compiler_tool("compiler");
 const QLatin1String cross_compile_flag("cross-compile");
 const QLatin1String sysroot("sysroot");
 const QLatin1String toolchain("toolchain");
-const QLatin1String androidNdkPath("androidNdkPath");
-const QLatin1String androidNdkApi("androidNdkApi");
-const QLatin1String androidNdkAbi("androidNdkAbi");
-const QLatin1String androidSdkPath("androidSdkPath");
-const QLatin1String androidSdkApi("androidSdkApi");
-const QLatin1String jdkPath("jdkPath");
+const QLatin1String androidNdkPath("android-ndk-path");
+const QLatin1String androidNdkApi("android-ndk-api");
+const QLatin1String androidNdkAbi("android-ndk-abi");
+const QLatin1String androidSdkPath("android-sdk-path");
+const QLatin1String androidSdkApi("android-sdk-api");
+const QLatin1String jdkPath("jdk-path");
 // General
 const QLatin1String gibsCacheFileName(".gibs.cache");
 const QLatin1String gibsConfigFileName(".gibsPathConfig.ini");

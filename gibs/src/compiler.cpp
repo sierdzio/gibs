@@ -57,7 +57,7 @@ Compiler Compiler::fromJson(const QJsonObject &json)
                 json.value(Tags::linkerStaticFlags).toArray());
     compiler.linkerDynamicFlags = Gibs::jsonArrayToStringList(
                 json.value(Tags::linkerDynamicFlags).toArray());
-    compiler.name = json.value(Tags::crossCompile).toBool();
+    compiler.crossCompile = json.value(Tags::crossCompile).toBool();
     return compiler;
 }
 

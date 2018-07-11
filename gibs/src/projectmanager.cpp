@@ -119,8 +119,8 @@ void ProjectManager::clean()
 
 void ProjectManager::onError(const QString &error)
 {
-    qCritical() << "Error!" << error;
-    mIsError = true;
+    /*qCritical()*/ qFatal("Error! %s", qPrintable(error));
+    //mIsError = true;
 }
 
 /*!

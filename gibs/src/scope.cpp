@@ -302,7 +302,7 @@ QString Scope::compile(const QString &file)
 
     // TODO: add support for non-android cross compilation...
     const QString compilerPath(mFlags.crossCompile?
-        QString(mFlags.androidNdkPath + "toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/")
+        QString(mFlags.androidNdkPath + "/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/")
         : "");
 
     // TODO: improve compiler detection!
@@ -378,7 +378,7 @@ void Scope::link()
 
     qInfo() << "Linking:" << objectFiles;
     const QString linkerPath(mFlags.crossCompile?
-        QString(mFlags.androidNdkPath + "toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/")
+        QString(mFlags.androidNdkPath + "/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/")
         : "");
     const QString compiler(linkerPath + mCompiler.linker);
     QStringList arguments;
@@ -393,8 +393,8 @@ void Scope::link()
                 "-Wl,-rpath=" + mFlags.qtDir + "/lib",
                 "-L" + mFlags.androidNdkPath + "/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a",
                 "-L" + mFlags.androidNdkPath + "/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9.x",
-                "-L" + mFlags.androidNdkPath + "sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a",
-                "-L" + mFlags.androidNdkPath + "toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9"
+                "-L" + mFlags.androidNdkPath + "/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a",
+                "-L" + mFlags.androidNdkPath + "/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9"
             });
             arguments.append(mCompiler.linkerFlags);
         }
