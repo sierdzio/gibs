@@ -122,6 +122,7 @@ protected:
     QString findFile(const QString &file, const QStringList &includeDirs) const;
     bool isFromSubproject(const QString &file) const;
     void updateQtModules(const QStringList &modules);
+    bool createAndroidDeploymentJson(const QString &filePath, const QString &binary) const;
 
     MetaProcessPtr findDependency(const QString &file) const;
     QVector<MetaProcessPtr> findDependencies(const QString &file) const;

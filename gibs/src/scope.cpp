@@ -385,17 +385,26 @@ void Scope::link()
 
     if (mFlags.crossCompile) {
         if (mCompiler.name.contains("android")) {
+            const QString outDir(mFlags.prefix()
+                + "/android-build/libs/armeabi-v7a/");
+            QDir dir(mFlags.prefix());
+            dir.mkpath(outDir);
             arguments.append(
             {
                 "--sysroot=" + mFlags.androidNdkPath + QString("/platforms/android-%1/arch-arm/").arg(mFlags.androidNdkApi),
                 "-Wl,-soname,"+ mCompiler.libraryPrefix
                 + targetName() + mCompiler.librarySuffix,
-                "-Wl,-rpath=" + mFlags.qtDir + "/lib",
                 "-L" + mFlags.androidNdkPath + "/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a",
                 "-L" + mFlags.androidNdkPath + "/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9.x",
                 "-L" + mFlags.androidNdkPath + "/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a",
-                "-L" + mFlags.androidNdkPath + "/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9"
+                "-L" + mFlags.androidNdkPath + "/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/lib/gcc/arm-linux-androideabi/4.9",
+                "-o",
+                outDir + mCompiler.libraryPrefix + targetName()
+                    + mCompiler.librarySuffix
             });
+            if (!qtDir().isEmpty()) {
+                arguments.append("-Wl,-rpath=" + mFlags.qtDir + "/lib");
+            }
             arguments.append(mCompiler.linkerFlags);
         }
 
@@ -404,15 +413,16 @@ void Scope::link()
     } else {
         if (targetType() == Tags::targetLib) {
             if (targetLibType() == Tags::targetLibDynamic) {
-                arguments.append({ "-shared", "-Wl,-soname,"
-                                   + mCompiler.libraryPrefix
-                                   + targetName() + mCompiler.librarySuffix + "."
-                                   + QString::number(mVersion.majorVersion()),
-                                   "-o", mFlags.prefix() + "/"
-                                   + mCompiler.libraryPrefix
-                                   + targetName() + mCompiler.librarySuffix + "."
-                                   + mVersion.toString()
-                                 });
+                arguments.append({
+                    "-shared", "-Wl,-soname,"
+                    + mCompiler.libraryPrefix
+                    + targetName() + mCompiler.librarySuffix + "."
+                    + QString::number(mVersion.majorVersion()),
+                    "-o", mFlags.prefix() + "/"
+                    + mCompiler.libraryPrefix
+                    + targetName() + mCompiler.librarySuffix + "."
+                    + mVersion.toString()
+                });
             } else if (targetLibType() == Tags::targetLibStatic) {
                 // Run ar to create the static library file
                 MetaProcessPtr mp = MetaProcessPtr::create();
@@ -464,15 +474,15 @@ void Scope::link()
             mp->scopeDepenencies = mScopeDependencyIds;
             mProcessQueue.append(mp);
             emit runProcess("ln", QStringList {
-                                "-s",
-                                mFlags.prefix() + "/" + mCompiler.libraryPrefix
-                                + targetName() + mCompiler.librarySuffix + "."
-                                + mVersion.toString(),
-                                mFlags.prefix() + "/" + mCompiler.libraryPrefix
-                                + targetName() + mCompiler.librarySuffix
-                                //mPrefix + "/" + "lib" + targetName() + ".so."
-                                //+ QString::number(mVersion.majorVersion())
-                            }, mp);
+                "-s",
+                mFlags.prefix() + "/" + mCompiler.libraryPrefix
+                + targetName() + mCompiler.librarySuffix + "."
+                + mVersion.toString(),
+                mFlags.prefix() + "/" + mCompiler.libraryPrefix
+                + targetName() + mCompiler.librarySuffix
+                //mPrefix + "/" + "lib" + targetName() + ".so."
+                //+ QString::number(mVersion.majorVersion())
+            }, mp);
         }
     }
 }
@@ -501,21 +511,34 @@ void Scope::deploy()
             "-qmake=\"" + qtDir() + "/bin/qmake\""
         });
         arguments.append(mDeployer.flags);
-    } else if (mDeployer.name == "androiddeployqt") {        
+    } else if (mDeployer.name == "androiddeployqt") {
+        // TODO: reuse names from compilation and linking steps
+        const QString jsonName(mFlags.prefix() + "/android-"
+                               + mCompiler.libraryPrefix
+                               + targetName() + mCompiler.librarySuffix
+                               + "-deployment-settings.json");
+        createAndroidDeploymentJson(jsonName, mFlags.prefix()
+                                    + "/android-build/libs/armeabi-v7a/"
+                                    + mCompiler.libraryPrefix
+                                    + targetName() + mCompiler.librarySuffix);
         arguments.append(
         {
             "--input",
-            mFlags.prefix() + "/android-" + mCompiler.libraryPrefix
-                + targetName() + mCompiler.librarySuffix
-                + "-deployment-settings.json",
+            jsonName,
             "--output",
             mFlags.prefix() + "/android-build",
             "--android-platform",
             "android-" + mFlags.androidSdkApi,
             "--jdk",
-            mFlags.jdkPath
+            mFlags.jdkPath,
+            "--info",
+            "--debug",
+            "--stacktrace",
+            "--verbose"
         });
         arguments.append(mDeployer.flags);
+
+        qputenv("JAVA_HOME", qPrintable(mFlags.jdkPath));
     }
 
     mp->file = targetName() + "." + suffix;
@@ -872,6 +895,55 @@ void Scope::updateQtModules(const QStringList &modules)
     }
 
     mQtLibs.append("-lpthread");
+}
+
+/*!
+ * Saves JSON deployment file (needed by androiddeployqt tool) to \a filePath.
+ * Returns true if successful.
+ */
+bool Scope::createAndroidDeploymentJson(const QString &filePath, const QString &binary) const
+{
+    /*
+"description": "This file is generated by qmake to be read by androiddeployqt and should not be modified by hand.",
+   "qt": "/media/sierdzio/data/qt/5.11.1/android_armv7",
+   "sdk": "/media/sierdzio/data/android/sdk",
+   "sdkBuildToolsRevision": "26.0.1",
+   "ndk": "/media/sierdzio/data/android/ndk-r15",
+   "toolchain-prefix": "arm-linux-androideabi",
+   "tool-prefix": "arm-linux-androideabi",
+   "toolchain-version": "4.9",
+   "ndk-host": "linux-x86_64",
+   "target-architecture": "armeabi-v7a",
+   "qml-root-path": "/media/sierdzio/data/code/my/gibs/samples/simpletest",
+   "stdcpp-path": "/media/sierdzio/data/android/ndk-r15/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a/libgnustl_shared.so",
+   "application-binary": "/media/sierdzio/data/code/builds/build-simpletest-Android_for_armeabi_v7a_GCC_4_9_Qt_5_11_1_for_Android_armv7-Debug/libsimpletest.so"
+     */
+
+
+    QJsonObject object;
+    object.insert("description", "This file is generated by gibs to be read by androiddeployqt and should not be modified by hand");
+    object.insert("qt", mFlags.qtDir);
+    object.insert("sdk", mFlags.androidSdkPath);
+    object.insert("sdkBuildToolsRevision", "26.0.1"); // TODO: take proper rev.
+    object.insert("ndk", mFlags.androidNdkPath);
+    object.insert("toolchain-prefix", "arm-linux-androideabi");
+    object.insert("tool-prefix", "arm-linux-androideabi");
+    object.insert("toolchain-version", "4.9");
+    object.insert("ndk-host", "linux-x86_64");
+    object.insert("target-architecture", "armeabi-v7a");
+    object.insert("qml-root-path", mFlags.relativePath());
+    object.insert("stdcpp-path", QString(mFlags.androidNdkPath + "/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a/libgnustl_shared.so"));
+    object.insert("application-binary", binary);
+
+    QFile file(filePath);
+    if (!file.open(QFile::WriteOnly | QFile::Text)) {
+        qFatal("Cannot create Android deployment JSON file! %s",
+               qPrintable(filePath));
+    }
+
+    file.write((QJsonDocument(object).toJson()));
+
+    return true;
 }
 
 MetaProcessPtr Scope::findDependency(const QString &file) const
