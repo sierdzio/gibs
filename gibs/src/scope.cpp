@@ -860,7 +860,8 @@ void Scope::updateQtModules(const QStringList &modules)
 
     if (mFlags.releaseBuild) {
         mQtDefines.append("-DQT_NO_DEBUG");
-        mQtLibs.append("-Wl,-O1 ");
+        if (mFlags.crossCompile == false) // TODO: why?
+            mQtLibs.append("-Wl,-O1 ");
     }
 
     mQtIncludes.append("-I" + mFlags.qtDir + "/include");
@@ -894,7 +895,8 @@ void Scope::updateQtModules(const QStringList &modules)
         }
     }
 
-    mQtLibs.append("-lpthread");
+    if (mFlags.crossCompile == false) // TODO: why?
+        mQtLibs.append("-lpthread");
 }
 
 /*!
