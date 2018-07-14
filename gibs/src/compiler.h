@@ -8,8 +8,6 @@
  * \brief The Compiler struct - contains all necessary info to run compilation
  * using given compiler.
  *
- * \todo Use similar construct for DeploymentTool
- *
  * \todo Add more arguments here, use %1 notation from QString to fill them in
  * dynamically at runtime (with target name for example). Something like:
  * QString linkerOutputFile = "lib%1.so";
@@ -38,5 +36,6 @@ struct Compiler
     QStringList linkerStaticFlags;
     QStringList linkerDynamicFlags;
 
+    QString toolPrefix;
     bool crossCompile = false;
 };

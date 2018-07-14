@@ -27,5 +27,6 @@
         "-O2"
     ],
     "staticArchiver": "ar",
-    "staticLibrarySuffix": ".a"
+    "staticLibrarySuffix": ".a",
+    "toolPrefix": "arm-linux-androideabi"
 }

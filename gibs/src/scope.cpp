@@ -307,8 +307,8 @@ QString Scope::compile(const QString &file)
 
     // TODO: improve compiler detection!
     const QString compiler(info.suffix() == "c"?
-        compilerPath + mCompiler.ccompiler
-        : compilerPath + mCompiler.compiler);
+        compilerPath + mCompiler.toolPrefix + mCompiler.ccompiler
+        : compilerPath + mCompiler.toolPrefix + mCompiler.compiler);
 
     if (!qtModules().isEmpty()) {
         if (mFlags.qtDir.isEmpty()) {
@@ -380,7 +380,7 @@ void Scope::link()
     const QString linkerPath(mFlags.crossCompile?
         QString(mFlags.androidNdkPath + "/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/")
         : "");
-    const QString compiler(linkerPath + mCompiler.linker);
+    const QString compiler(linkerPath + mCompiler.toolPrefix + mCompiler.linker);
     QStringList arguments;
 
     if (mFlags.crossCompile) {
@@ -431,7 +431,8 @@ void Scope::link()
                 mp->fileDependencies = findAllDependencies();
                 mp->scopeDepenencies = mScopeDependencyIds;
                 mProcessQueue.append(mp);
-                emit runProcess(linkerPath + mCompiler.staticArchiver,
+                emit runProcess(linkerPath + mCompiler.toolPrefix
+                                + mCompiler.staticArchiver,
                                 QStringList {
                                     "cqs",
                                     mp->file,
@@ -928,8 +929,8 @@ bool Scope::createAndroidDeploymentJson(const QString &filePath, const QString &
     object.insert("sdk", mFlags.androidSdkPath);
     object.insert("sdkBuildToolsRevision", "26.0.1"); // TODO: take proper rev.
     object.insert("ndk", mFlags.androidNdkPath);
-    object.insert("toolchain-prefix", "arm-linux-androideabi");
-    object.insert("tool-prefix", "arm-linux-androideabi");
+    object.insert("toolchain-prefix", mCompiler.toolPrefix);
+    object.insert("tool-prefix", mCompiler.toolPrefix);
     object.insert("toolchain-version", "4.9");
     object.insert("ndk-host", "linux-x86_64");
     object.insert("target-architecture", "armeabi-v7a");

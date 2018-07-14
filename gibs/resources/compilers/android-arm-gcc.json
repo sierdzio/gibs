@@ -1,6 +1,6 @@
 {
-    "ccompiler": "arm-linux-androideabi-gcc",
-    "compiler": "arm-linux-androideabi-g++",
+    "ccompiler": "gcc",
+    "compiler": "g++",
     "debugFlags": [
         "-g"
     ],
@@ -27,7 +27,7 @@
     ],
     "libraryPrefix": "lib",
     "librarySuffix": ".so",
-    "linker": "arm-linux-androideabi-g++",
+    "linker": "g++",
     "linkerDynamicFlags": [
     ],
     "linkerFlags": [
@@ -48,7 +48,8 @@
     "releaseFlags": [
         "-O2"
     ],
-    "staticArchiver": "arm-linux-androideabi-ar",
+    "staticArchiver": "ar",
     "staticLibrarySuffix": ".a",
+    "toolPrefix": "arm-linux-androideabi",
     "crossCompile": "true"
 }

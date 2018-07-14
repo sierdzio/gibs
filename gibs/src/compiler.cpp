@@ -29,6 +29,7 @@ QJsonObject Compiler::toJson() const
                   QJsonArray::fromStringList(linkerStaticFlags));
     object.insert(Tags::linkerDynamicFlags,
                   QJsonArray::fromStringList(linkerDynamicFlags));
+    object.insert(Tags::toolPrefix, toolPrefix);
     object.insert(Tags::crossCompile, crossCompile);
     return object;
 }
@@ -57,6 +58,7 @@ Compiler Compiler::fromJson(const QJsonObject &json)
                 json.value(Tags::linkerStaticFlags).toArray());
     compiler.linkerDynamicFlags = Gibs::jsonArrayToStringList(
                 json.value(Tags::linkerDynamicFlags).toArray());
+    compiler.toolPrefix = json.value(Tags::toolPrefix).toString();
     // TODO: kick it out of here?
     compiler.crossCompile = json.value(Tags::crossCompile).toBool();
     return compiler;
