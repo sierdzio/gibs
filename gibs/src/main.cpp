@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
     flags.autoIncludes = parser.isSet(Tags::auto_include_flag);
     flags.parseWholeFiles = parser.isSet(Tags::parse_whole_files);
     flags.crossCompile = parser.isSet(Tags::cross_compile_flag);
-    flags.pipe = parser.isSet(Tags::pipe_flag);
+    flags.setPipe(parser.isSet(Tags::pipe_flag));
 
     flags.setJobs(parser.value(Tags::jobs).toFloat(&jobsOk));
     flags.qtDir = Gibs::ifEmpty(parser.value(Tags::qt_dir_flag), flags.qtDir);

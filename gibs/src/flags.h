@@ -128,15 +128,15 @@ public:
         mPrefix = prefix;
     }    
 
-    bool getPipe() const
+    bool pipe() const
     {
-        return pipe;
+        return pipeFlag;
     }
 
     void setPipe(bool value)
     {
-        pipe = value;
-        if (pipe == true)
+        pipeFlag = value;
+        if (pipeFlag == true)
             parseWholeFiles = true;
     }
 
@@ -155,7 +155,6 @@ public:
     bool parseWholeFiles = false;
     bool debugBuild = false;
     bool releaseBuild = true;
-    bool pipe = false;
 
     QString qtDir;
     QString inputFile;
@@ -182,6 +181,7 @@ public:
     QString jdkPath = "/usr/lib/jvm/java-8-openjdk-amd64";
 
 private:
+    bool pipeFlag = false;
     int mJobs = 0;
 
     // Paths

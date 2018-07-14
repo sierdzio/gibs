@@ -349,14 +349,19 @@ QString Scope::compile(const QString &file)
     arguments.append(qtDefines());
     arguments.append(qtIncludes());
     arguments.append(customIncludeFlags());
-    arguments.append({ "-o", objectFile, file });
+    arguments.append({ "-o", objectFile });
+    if (mFlags.pipe()) {
+        arguments.append({ "-xc++", "-" });
+    } else {
+        arguments.append(file);
+    }
 
     MetaProcessPtr mp = MetaProcessPtr::create();
     mp->file = objectFile;
     mp->fileDependencies = findDependencies(file);
     mProcessQueue.append(mp);
 
-    if (mFlags.pipe) {
+    if (mFlags.pipe()) {
         qDebug() << "File contents are empty:"
                  << mParsedFiles.value(file).contents.isEmpty();
         emit runProcess(compiler, arguments, mp,
