@@ -25,10 +25,10 @@ if [ -z "$DEPLOY" ]; then
   exit 1
 fi
 
-if [ ! -f "$DEPLOY" ]; then
-  echo "ERROR: linuxdeployqt binary is not a file: $DEPLOY"
-  exit 2
-fi
+#if [ ! -e "$DEPLOY" ]; then
+#  echo "ERROR: linuxdeployqt binary is not a file: $DEPLOY"
+#  exit 2
+#fi
 
 if [ -z "$QMAKE_PATH" ]; then
   echo "ERROR: qmake path not specified!"

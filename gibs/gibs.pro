@@ -75,7 +75,7 @@ deploy {
 
     # CONFIG+=deploy CONFIG+=auto-deploy
     auto-deploy {
-        QMAKE_POST_LINK += $$quote($$DESTDIR/deploy-linux.sh) $$quote($$OUT_PWD/../../linuxdeployqt-continuous-x86_64.AppImage) $$quote($$QMAKE_QMAKE) $$quote($$DESTDIR/gibs.desktop) $$escape_expand(\\n\\t)
+        QMAKE_POST_LINK += $$quote($$DESTDIR/deploy-linux.sh) $$quote(linuxdeployqt-continuous-x86_64.AppImage) $$quote($$QMAKE_QMAKE) $$quote($$DESTDIR/gibs.desktop) $$escape_expand(\\n\\t)
         QMAKE_POST_LINK += $$QMAKE_COPY $$quote($$OUT_PWD/gibs-x86_64.AppImage) $$quote($$OUT_PWD/../) $$escape_expand(\\n\\t)
     }
 }
