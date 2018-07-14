@@ -40,7 +40,8 @@ signals:
 public slots:
     void start();
     void clean();
-    void runProcess(const QString &app, const QStringList &arguments, const MetaProcessPtr &mp);
+    void runProcess(const QString &app, const QStringList &arguments,
+                    const MetaProcessPtr &mp, const QByteArray &data);
 
 protected slots:
     void onError(const QString &error);
@@ -49,6 +50,7 @@ protected slots:
     void onFeatureUpdated(const Gibs::Feature &feature);
 
     // Process handling
+    void onStarted();
     void onProcessErrorOccurred(QProcess::ProcessError _error);
     void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
@@ -71,4 +73,5 @@ private:
 
     QVector<MetaProcessPtr> mProcessQueue;
     QVector<ProcessPtr> mRunningJobs;
+    QHash<QProcess*,QByteArray> mFileData;
 };

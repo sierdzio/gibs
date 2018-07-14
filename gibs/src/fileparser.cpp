@@ -35,6 +35,7 @@ bool FileParser::parse()
     ParseBlock block;
     block.active = block.defined;
     QString source;
+    QByteArray rawContents;
     QCryptographicHash checksum(QCryptographicHash::Sha1);
     // Cache:
     int scopeFeatureCount = mScope->features().count();
@@ -50,6 +51,8 @@ bool FileParser::parse()
             // TODO: what to do with checksum if we are not parsing whole files?
             // Most probably this needs to be removed.
             checksum.addData(rawLine);
+            // TODO: use separate flag for saving whole file data
+            rawContents.append(rawLine);
         } else {
             // TODO: make "real code" detector more robust
             if (line.contains("::") or line.contains(" class "))
@@ -194,10 +197,12 @@ bool FileParser::parse()
     // Important: this emit needs to be sent before parseRequest()
     if (QFileInfo::exists(source)) {
         emit parsed(mFile, source, checksum.result(),
-                    header.lastModified(), header.created());
+                    header.lastModified(), header.created(),
+                    rawContents);
     } else {
         emit parsed(mFile, QString(), checksum.result(),
-                    header.lastModified(), header.created());
+                    header.lastModified(), header.created(),
+                    rawContents);
     }
 
     // Parse source file, only when we are not parsing it already

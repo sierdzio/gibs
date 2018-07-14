@@ -356,7 +356,14 @@ QString Scope::compile(const QString &file)
     mp->fileDependencies = findDependencies(file);
     mProcessQueue.append(mp);
 
-    emit runProcess(compiler, arguments, mp);
+    if (mFlags.pipe) {
+        qDebug() << "File contents are empty:"
+                 << mParsedFiles.value(file).contents.isEmpty();
+        emit runProcess(compiler, arguments, mp,
+                        mParsedFiles.value(file).contents);
+    } else {
+        emit runProcess(compiler, arguments, mp, QByteArray());
+    }
     return objectFile;
 }
 
@@ -437,7 +444,7 @@ void Scope::link()
                                     "cqs",
                                     mp->file,
                                     targetName() + ".o"
-                                }, mp);
+                                }, mp, QByteArray());
                 return;
             }
         } else {
@@ -463,7 +470,7 @@ void Scope::link()
     mp->fileDependencies = findAllDependencies();
     mp->scopeDepenencies = mScopeDependencyIds;
     mProcessQueue.append(mp);
-    emit runProcess(compiler, arguments, mp);
+    emit runProcess(compiler, arguments, mp, QByteArray());
 
     if (targetType() == Tags::targetLib) {
         if (targetLibType() == Tags::targetLibDynamic) {
@@ -483,7 +490,7 @@ void Scope::link()
                 + targetName() + mCompiler.librarySuffix
                 //mPrefix + "/" + "lib" + targetName() + ".so."
                 //+ QString::number(mVersion.majorVersion())
-            }, mp);
+            }, mp, QByteArray());
         }
     }
 }
@@ -544,7 +551,7 @@ void Scope::deploy()
 
     mp->file = targetName() + "." + suffix;
     mProcessQueue.append(mp);
-    emit runProcess(mDeployer.executable, arguments, mp);
+    emit runProcess(mDeployer.executable, arguments, mp, QByteArray());
 }
 
 void Scope::parseFile(const QString &file)
@@ -602,13 +609,17 @@ bool Scope::isFileDirty(const QString &file, const bool isQuickMode) const
     return false;
 }
 
-void Scope::onParsed(const QString &file, const QString &source, const QByteArray &checksum, const QDateTime &modified, const QDateTime &created)
+void Scope::onParsed(const QString &file, const QString &source,
+                     const QByteArray &checksum, const QDateTime &modified,
+                     const QDateTime &created,
+                     const QByteArray &contents)
 {
     // Update parsed file info
     FileInfo info = parsedFile(file);
     info.type = FileInfo::Cpp;
     info.path = file;
     info.checksum = checksum;
+    info.contents = contents;
     info.dateModified = modified;
     info.dateCreated = created;
 
@@ -698,7 +709,7 @@ bool Scope::onRunMoc(const QString &file)
     mp->fileDependencies.append(findDependency(predefs));
     mProcessQueue.append(mp);
     // Generate MOC file
-    emit runProcess(compiler, arguments, mp);
+    emit runProcess(compiler, arguments, mp, QByteArray());
 
 
     FileInfo info = parsedFile(file);
@@ -733,7 +744,8 @@ void Scope::onRunTool(const QString &tool, const QStringList &args)
             MetaProcessPtr mp = MetaProcessPtr::create();
             mp->file = cppFile;
             mProcessQueue.append(mp);
-            emit runProcess(mFlags.qtDir + "/bin/" + tool, arguments, mp);
+            emit runProcess(mFlags.qtDir + "/bin/" + tool, arguments, mp,
+                            QByteArray());
 
             FileInfo info = parsedFile(qrcFile);
             info.type = FileInfo::QRC;
@@ -991,6 +1003,7 @@ QVector<MetaProcessPtr> Scope::findAllDependencies() const
 bool Scope::initializeMoc()
 {
     qInfo() << "Initializig MOC";
+    // TODO: use mCompiler here! Take cross compillation into account!
     const QString compiler("g++");
     const QString predefs("moc_predefs.h");
     const QStringList arguments({ "-pipe", "-g", "-Wall", "-W", "-dM", "-E",
@@ -1008,7 +1021,7 @@ bool Scope::initializeMoc()
     MetaProcessPtr mp = MetaProcessPtr::create();
     mp->file = predefs;
     mProcessQueue.append(mp);
-    emit runProcess(compiler, arguments, mp);
+    emit runProcess(compiler, arguments, mp, QByteArray());
     setQtIsMocInitialized(true);
     return qtIsMocInitialized();
 }

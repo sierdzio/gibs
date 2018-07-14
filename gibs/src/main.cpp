@@ -115,6 +115,8 @@ int main(int argc, char *argv[]) {
         QCoreApplication::translate(scope, "'Convention over configuration' mode - parse files only up to first line of 'concrete code'. Do not check file checksums when doing incremental builds.")},
         {{"a", Tags::auto_include_flag},
         QCoreApplication::translate(scope, "Automatically scan source directory for include paths. This can be used instead of gibs command 'include some/path' if the path is below input file.")},
+        {Tags::pipe_flag,
+        QCoreApplication::translate(scope, "Pipe C/C++ code read by gibs into compiler. This prevents files from being read twice.")},
         {{"j", Tags::jobs},
         QCoreApplication::translate(scope, "Max number of threads used to compile and process the sources. If not specified, gibs will use max possible number of threads. If a fraction is specified, it will use given percentage of available cores (-j 0.5 means half of all CPU cores)"),
         QCoreApplication::translate(scope, "threads"),
@@ -182,6 +184,7 @@ int main(int argc, char *argv[]) {
     flags.autoIncludes = parser.isSet(Tags::auto_include_flag);
     flags.parseWholeFiles = parser.isSet(Tags::parse_whole_files);
     flags.crossCompile = parser.isSet(Tags::cross_compile_flag);
+    flags.pipe = parser.isSet(Tags::pipe_flag);
 
     flags.setJobs(parser.value(Tags::jobs).toFloat(&jobsOk));
     flags.qtDir = Gibs::ifEmpty(parser.value(Tags::qt_dir_flag), flags.qtDir);

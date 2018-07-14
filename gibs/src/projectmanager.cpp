@@ -196,8 +196,10 @@ void ProjectManager::loadCache()
         }
 
         connect(scope.data(), &Scope::error, this, &ProjectManager::error);
-        connect(scope.data(), &Scope::subproject, this, &ProjectManager::onSubproject);
-        connect(scope.data(), &Scope::runProcess, this, &ProjectManager::runProcess,
+        connect(scope.data(), &Scope::subproject,
+                this, &ProjectManager::onSubproject);
+        connect(scope.data(), &Scope::runProcess,
+                this, &ProjectManager::runProcess,
                 Qt::QueuedConnection);
     }
 
@@ -291,6 +293,15 @@ void ProjectManager::onFeatureUpdated(const Gibs::Feature &feature)
     mFeatures.insert(feature.name, feature);
 }
 
+void ProjectManager::onStarted()
+{
+    QSharedPointer<QProcess> process = mRunningJobs.last();
+    if (process->state() == QProcess::Running) {
+        process->write(mFileData.take(process.data()));
+        process->closeWriteChannel();
+    }
+}
+
 void ProjectManager::onProcessErrorOccurred(QProcess::ProcessError _error)
 {
     auto process = qobject_cast<QProcess *>(sender());
@@ -359,15 +370,22 @@ void ProjectManager::onProcessFinished(int exitCode, QProcess::ExitStatus exitSt
 }
 
 void ProjectManager::runProcess(const QString &app, const QStringList &arguments,
-                                const MetaProcessPtr &mp)
+                                const MetaProcessPtr &mp, const QByteArray &data)
 {
     auto process = new QProcess();
+
+    if (data.isEmpty() == false) {
+        mFileData.insert(process, data);
+    }
 
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, &ProjectManager::onProcessFinished);
 
     connect(process, &QProcess::errorOccurred,
             this, &ProjectManager::onProcessErrorOccurred);
+
+    connect(process, &QProcess::started,
+            this, &ProjectManager::onStarted);
 
     process->setProcessChannelMode(QProcess::ForwardedChannels);
     process->setProgram(app);

@@ -126,6 +126,18 @@ public:
         }
 
         mPrefix = prefix;
+    }    
+
+    bool getPipe() const
+    {
+        return pipe;
+    }
+
+    void setPipe(bool value)
+    {
+        pipe = value;
+        if (pipe == true)
+            parseWholeFiles = true;
     }
 
     QString toString() const
@@ -143,6 +155,7 @@ public:
     bool parseWholeFiles = false;
     bool debugBuild = false;
     bool releaseBuild = true;
+    bool pipe = false;
 
     QString qtDir;
     QString inputFile;

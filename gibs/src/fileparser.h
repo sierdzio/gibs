@@ -55,7 +55,8 @@ signals:
                 const QString &sourceFile,
                 const QByteArray &checksum,
                 const QDateTime &modified,
-                const QDateTime &created) const;
+                const QDateTime &created,
+                const QByteArray &contents) const;
     void parseRequest(const QString &file,
                       const bool force) const;
     void runMoc(const QString &file) const;

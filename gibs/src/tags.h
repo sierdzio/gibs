@@ -29,6 +29,7 @@ const QLatin1String androidNdkAbi("android-ndk-abi");
 const QLatin1String androidSdkPath("android-sdk-path");
 const QLatin1String androidSdkApi("android-sdk-api");
 const QLatin1String jdkPath("jdk-path");
+const QLatin1String pipe_flag("pipe");
 // General
 const QLatin1String gibsCacheFileName(".gibs.cache");
 const QLatin1String gibsConfigFileName(".gibsPathConfig.ini");

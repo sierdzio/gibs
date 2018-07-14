@@ -94,7 +94,8 @@ public slots:
 
 signals:
     void error(const QString &error) const;
-    void runProcess(const QString &app, const QStringList &arguments, const MetaProcessPtr &mp) const;
+    void runProcess(const QString &app, const QStringList &arguments,
+                    const MetaProcessPtr &mp, const QByteArray &data) const;
     void subproject(const QByteArray &scopeId, const QString &path) const;    
     void feature(const Gibs::Feature &feature) const;
 
@@ -109,7 +110,7 @@ protected slots:
     void onParsed(const QString &file, const QString &source,
                   const QByteArray &checksum,
                   const QDateTime &modified,
-                  const QDateTime &created);
+                  const QDateTime &created, const QByteArray &contents);
     void onParseRequest(const QString &file,
                         const bool force = false);
     bool onRunMoc(const QString &file);

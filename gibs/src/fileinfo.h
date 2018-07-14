@@ -19,6 +19,8 @@ public:
     QDateTime dateModified;
     QDateTime dateCreated;
     QByteArray checksum;
+    // if --pipe flag is used, this will contain full file contents
+    QByteArray contents;
     QString objectFile;
     QString generatedFile;
     QString generatedObjectFile;
