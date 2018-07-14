@@ -292,7 +292,7 @@ void Scope::addLibs(const QStringList &libs)
     mCustomLibs.removeDuplicates();
 }
 
-QString Scope::compile(const QString &file)
+QString Scope::compile(const QString &file, const FileInfo &fileInfo)
 {
     if (mIsError)
         return QString();
@@ -351,7 +351,7 @@ QString Scope::compile(const QString &file)
     arguments.append(customIncludeFlags());
     arguments.append({ "-o", objectFile });
     if (mFlags.pipe()) {
-        arguments.append({ "-xc++", "-" });
+        arguments.append({ "-x", "c++", "-" });
     } else {
         arguments.append(file);
     }
@@ -362,10 +362,7 @@ QString Scope::compile(const QString &file)
     mProcessQueue.append(mp);
 
     if (mFlags.pipe()) {
-        qDebug() << "File contents are empty:"
-                 << mParsedFiles.value(file).contents.isEmpty();
-        emit runProcess(compiler, arguments, mp,
-                        mParsedFiles.value(file).contents);
+        emit runProcess(compiler, arguments, mp, fileInfo.contents);
     } else {
         emit runProcess(compiler, arguments, mp, QByteArray());
     }
@@ -456,7 +453,7 @@ void Scope::link()
             arguments.append({ "-o", mFlags.prefix() + "/" + targetName() });
         }
     }
-
+    std::reverse(objectFiles.end(), objectFiles.begin());
     arguments.append(objectFiles);
 
     if (!qtModules().isEmpty()) {
@@ -630,7 +627,7 @@ void Scope::onParsed(const QString &file, const QString &source,
 
     // Compile source file, if present
     if (!source.isEmpty() and source == file) {
-        info.objectFile = compile(source);
+        info.objectFile = compile(source, info);
     }
 
     // TODO: switch to pointers and modify in-place?

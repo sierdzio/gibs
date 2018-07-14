@@ -297,6 +297,7 @@ void ProjectManager::onStarted()
 {
     QSharedPointer<QProcess> process = mRunningJobs.last();
     if (process->state() == QProcess::Running) {
+        qDebug() << "Process started:" << process->arguments();
         process->write(mFileData.take(process.data()));
         process->closeWriteChannel();
     }
@@ -378,7 +379,8 @@ void ProjectManager::runProcess(const QString &app, const QStringList &arguments
         mFileData.insert(process, data);
     }
 
-    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+    connect(process,
+            QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, &ProjectManager::onProcessFinished);
 
     connect(process, &QProcess::errorOccurred,

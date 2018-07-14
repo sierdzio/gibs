@@ -100,7 +100,7 @@ signals:
     void feature(const Gibs::Feature &feature) const;
 
 protected:
-    QString compile(const QString &file);
+    QString compile(const QString &file, const FileInfo &fileInfo = FileInfo());
     void link();
     void deploy();
     void parseFile(const QString &file);
