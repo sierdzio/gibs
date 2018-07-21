@@ -8,6 +8,9 @@
 
 #include <QDebug>
 
+/*!
+ * A collection of some globally useful methods, structs and enums.
+ */
 namespace Gibs {
 struct Feature {
     QString name;

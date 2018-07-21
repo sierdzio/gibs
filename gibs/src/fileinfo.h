@@ -5,6 +5,16 @@
 #include <QDateTime>
 #include <QJsonArray>
 
+/*!
+ * \brief The FileInfo class contains information about a single compilation
+ * unit.
+ *
+ * That is, when the compiler compiles some .cpp file, it will generate an
+ * object file. With Qt support on, some files will also have corresponding MOC
+ * files etc. FileInfo keeps information about such corelated files in one place.
+ *
+ * \todo good candidate for refactoring, this class is.
+ */
 class FileInfo {
 
     Q_GADGET

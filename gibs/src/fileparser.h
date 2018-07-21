@@ -8,6 +8,16 @@
 #include <QVector>
 #include <QObject>
 
+/*!
+ * \brief The ParseBlock struct maintains information about currently parsed
+ * block (ifdef) of code.
+ *
+ * The only information which gibs cares about is whether the command / include
+ * call currently being read is active or not.
+ *
+ * For example, if current build is for Linux, but currently parsed block (ifdef)
+ * is for Android, it should be skipped.
+ */
 struct ParseBlock {
     //! Set to true when current line is inside a gibs comment block
     bool isComment = false;
@@ -41,6 +51,10 @@ struct ParseBlock {
     ;
 };
 
+/*!
+ * \brief The FileParser class reads C++ source code, extracting from it the
+ * information necessary to build it.
+ */
 class FileParser : public BaseParser
 {
     Q_OBJECT

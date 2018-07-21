@@ -2,6 +2,17 @@
 
 #include <QLatin1String>
 
+/*!
+ * Tags contains all the repeating strings, put in a single place for convenience.
+ * Whenever you use some raw string somewhere in gibs, consider adding it to Tags,
+ * especially if you need to repeat it elsewhere.
+ *
+ * The most important benefit of using such named strings is that it is much
+ * harder to make a typo - your compiler will make sure the Tag is correct.
+ *
+ * It also makes it easier to change some strings or gibs commands - you change
+ * it in one place only.
+ */
 namespace Tags {
 // Command line flags
 const QLatin1String run("run");
