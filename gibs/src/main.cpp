@@ -70,6 +70,7 @@ int main(int argc, char *argv[]) {
     // Set up basic application data. Modify this to your needs
     QCoreApplication app(argc, argv);
 
+    // Timer used to measure how long gibs build takes
     QElapsedTimer timer;
     timer.start();
 
@@ -85,7 +86,7 @@ int main(int argc, char *argv[]) {
                      << "\n\tSHA:" << GIT_COMMIT_ID
                      << "\n\tArgs:" << app.arguments();
 
-
+    // TODO: move cli parsing into it's own class
     QCommandLineParser parser;
     parser.setApplicationDescription("C++ in-source project builder. Compile your "
                                      "projects without all the hassle connected "
