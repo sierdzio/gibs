@@ -62,7 +62,7 @@ public:
     explicit FileParser(const QString &file,
                         const bool parseWholeFiles,
                         Scope *scope,
-                        BaseParser *parent = nullptr);
+                        QObject *parent = nullptr);
 
 signals:
     void parsed(const QString &file,
@@ -84,6 +84,6 @@ protected:
     bool scopeEnds(const QString &line, const ParseBlock &block) const;
     bool canReadIncludes(const ParseBlock &block) const;
 
-    const bool mParseWholeFiles;
     const QString mFile;
+    const bool mParseWholeFiles;
 };

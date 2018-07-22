@@ -9,14 +9,29 @@
 // TODO: add categorized logging!
 #include <QDebug>
 
+/*!
+ * Sets up the FileParser to parse \a file within the compilation \a scope.
+ * If \a parseWholeFiles is set, gibs will not stop parsing after encountering
+ * real code.
+ *
+ * \a parent is used solely for Qt's parent-child hierarchy.
+ */
 FileParser::FileParser(const QString &file, const bool parseWholeFiles,
-                       Scope *scope, BaseParser *parent)
+                       Scope *scope, QObject *parent)
     : BaseParser (scope, parent),
-      mParseWholeFiles(parseWholeFiles),
-      mFile(file)
+      mFile(file),
+      mParseWholeFiles(parseWholeFiles)
 {    
 }
 
+/*!
+ * Parses the C++ file, looking for more include files to parse, gibs control
+ * commands.
+ *
+ * If gibs is run with `--pipe` flag or parseWholeFiles is set, this method will
+ * also store the whole file contents. It can then be used to feed directly into
+ * the compiler, without it needing to open the file again.
+ */
 bool FileParser::parse()
  {
     QFile file(mFile);
@@ -213,6 +228,13 @@ bool FileParser::parse()
     return true;
 }
 
+/*!
+ * Tries to find a suitable source file for header given in \a filePath and
+ * returns its path.
+ *
+ * \todo rename this method to reflect the fact that it is finding a different
+ * file than the one provided.
+ */
 QString FileParser::findFileExtension(const QString &filePath) const
 {
     if (QFileInfo::exists(filePath + ".cpp")) return ".cpp";
@@ -221,11 +243,19 @@ QString FileParser::findFileExtension(const QString &filePath) const
     return QString();
 }
 
+/*!
+ * Returns true if \a line opens a gibs comment block.
+ */
 bool FileParser::scopeBegins(const QString &line) const
 {
     return (line == Tags::scopeBegin or line.startsWith(Tags::scopeBegin + " "));
 }
 
+/*!
+ * Returns true if gibs comment block ends in the current \a line. The \a block
+ * is used to determine whether current \a line is active or disabled (behind
+ * an ifdef).
+ */
 bool FileParser::scopeEnds(const QString &line, const ParseBlock &block) const
 {
     return (block.isComment and line.contains(Tags::scopeEnd));
