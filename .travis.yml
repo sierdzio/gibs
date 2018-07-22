@@ -17,9 +17,12 @@ script:
   - cp gibs deployment/gibs
   - cd deployment
   - wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+  - chmod +x linuxdeployqt-continuous-x86_64.AppImage
   - ../scripts/deploy-linux.sh ./linuxdeployqt-continuous-x86_64.AppImage $(which qmake) gibs.desktop
 
+# Disable builds - need to figure out how to get newest Qt.
 branches:
   only:
-    - master
-    - dev
+  - no_such_branch
+#    - master
+#    - dev
