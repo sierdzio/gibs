@@ -1,3 +1,5 @@
+[TOC]
+
 # GIBS
 
 *Generally In-source Build System*
@@ -44,7 +46,7 @@ To see all available commands, type:
     gibs --help
 
 Most notable options are:
-C++ in-source project builder. Compile your projects without all the hassle connected with preparing a project file. Just run 'gibs main.cpp' and enjoy your compiled binary! More info: https://github.com/sierdzio/ibs
+C++ in-source project builder. Compile your projects without all the hassle connected with preparing a project file. Just run 'gibs main.cpp' and enjoy your compiled binary! More info: https://github.com/sierdzio/gibs
 
 Options:
 ```
