@@ -4,12 +4,20 @@ os: linux
 sudo: required
 
 before_script:
-  - sudo apt-get install qt5-qmake
+#  - sudo apt-get install qt5-qmake
+  - sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
+  - sudo apt-get update -qq
+  - sudo apt-get install qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev libsqlite3-dev
+  - sudo apt-get install qt5-default qttools5-dev-tools
 
 script:
   - qmake -version
   - qmake CONFIG+=release gibs.pro
   - make -j
+  - cp gibs deployment/gibs
+  - cd deployment
+  - wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+  - ../scripts/deploy-linux.sh ./linuxdeployqt-continuous-x86_64.AppImage $(which qmake) gibs.desktop
 
 branches:
   only:
