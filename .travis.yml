@@ -1,10 +1,14 @@
 language: cpp
 dist: trusty
 os: linux
+sudo: required
+
+before_script:
+  - sudo apt-get install qt5-qmake
 
 script:
-  - source /opt/qt*/bin/qt*-env.sh
-  - /opt/qt*/bin/qmake CONFIG+=release gibs.pro
+  - qmake -version
+  - qmake CONFIG+=release gibs.pro
   - make -j
 
 branches:
