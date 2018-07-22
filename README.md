@@ -25,6 +25,11 @@ Precompiled gibs releases can be found on https://github.com/sierdzio/gibs/relea
 Alternatively, get the source code and compile gibs using Qt Creator. Any recent
 Qt version would do. C++11 is required.
 
+# Online docs
+
+Apart from this README here, full doxygen documentation can be found at
+https://www.sierdzio.com/docs/gibs.
+
 # Usage
 
 A typical usage of gibs would be to call it on your main source file (of your
