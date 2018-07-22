@@ -3,6 +3,11 @@
 
 #include <QDebug>
 
+/*!
+ * Sets the parser up, and connects it to the \a scope it is used in.
+ *
+ * \sa Scope
+ */
 BaseParser::BaseParser(Scope *scope, QObject *parent) : QObject(parent),
     mScope(scope)
 {    
@@ -15,6 +20,17 @@ BaseParser::BaseParser(Scope *scope, QObject *parent) : QObject(parent),
     connect(this, &BaseParser::feature, scope, &Scope::onFeature);
 }
 
+/*!
+ * Parses a single command line (\a commandString) and returns true if no error
+ * was encountered.
+ *
+ * The detected command is emitted through BaseParser's signals. These are usually
+ * received by Scope (connection happens in BasePArser constructor) and acted
+ * upon.
+ *
+ * \sa error, targetName, targetType, targetLibType, qtModules, defines, includes,
+ * libs, runTool, subproject, version, feature
+ */
 bool BaseParser::parseCommand(const QString &commandString)
 {
     // TODO: add error handling
@@ -54,8 +70,10 @@ bool BaseParser::parseCommand(const QString &commandString)
                 qDebug() << "Target type:" << args;
                 mScope->setTargetType(args.at(0));
                 emit targetType(args.at(0));
-                if (args.length() > 1 and (args.at(1) == Tags::targetLibDynamic
-                                           or args.at(1) == Tags::targetLibStatic))
+                if (args.length() > 1 and (
+                            args.at(1) == Tags::targetLibDynamic
+                            or args.at(1) == Tags::targetLibStatic)
+                        )
                 {
                     mScope->setTargetLibType(args.at(1));
                     emit targetLibType(args.at(1));
@@ -88,7 +106,6 @@ bool BaseParser::parseCommand(const QString &commandString)
         const QStringList args(arguments.mid(1));
         qDebug() << "Running tool:" << args;
         if (args.size() > 0) {
-            // TODO: that will modify the scope, but our local mScope will be "old"
             emit runTool(args.at(0), args.mid(1));
         }
     } else if (command == Tags::subproject or command == Tags::subprojects) {
@@ -117,6 +134,9 @@ bool BaseParser::parseCommand(const QString &commandString)
     return true;
 }
 
+/*!
+ * Removes the gibs command \a tag from code \a line.
+ */
 QString BaseParser::extractArguments(const QString &line,
                                      const QLatin1String &tag) const
 {
