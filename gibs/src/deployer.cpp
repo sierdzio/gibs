@@ -23,7 +23,8 @@ bool Deployer::findAndSetExecutable(const QString &userProvided,
         return true;
 
     if (!userProvided.isEmpty()) {
-        if (QFileInfo info(userProvided); info.exists() and info.isExecutable()) {
+        const QFileInfo info(userProvided);
+        if (info.exists() and info.isExecutable()) {
             executable = userProvided;
             return true;
         } else {
@@ -34,7 +35,8 @@ bool Deployer::findAndSetExecutable(const QString &userProvided,
 
     if (!qtDir.isEmpty()) {
         const QString exec(qtDir + "/bin/" + name);
-        if (QFileInfo info(exec); info.exists() and info.isExecutable()) {
+        const QFileInfo info(exec);
+        if (info.exists() and info.isExecutable()) {
             executable = exec;
             return true;
         }
