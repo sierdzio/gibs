@@ -2,6 +2,8 @@
 
 # GIBS
 
+[![Build Status](https://travis-ci.org/sierdzio/gibs.svg?branch=master)](https://travis-ci.org/sierdzio/gibs)
+
 *Generally In-source Build System*
 
 # Intro
