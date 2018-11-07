@@ -1,6 +1,4 @@
-GIBS code is licensed under MIT license. Some files, coming from Milo Code
-Database, are separately licensed - also under MIT but with different copyright
-holder.
+GIBS code is licensed under MIT license.
 
 Copyright 2018 Tomasz Siekierda
 

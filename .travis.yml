@@ -16,26 +16,20 @@ before_install:
 
 before_script:
   - sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
-  - sudo add-apt-repository --yes ppa:beineri/opt-qt-5.10.1-trusty
   - sudo apt-get update -qq
-  - sudo apt-get install -y qt510-meta-minimal
 
 script:
   - source /opt/qt510/bin/qt510-env.sh
   - g++ --version
-  - qmake -version
-  - qmake CONFIG+=release gibs.pro
+  - cmake --version
   - make -j `nproc`
-  - cp gibs/build/out/gibs deployment/gibs
-  - cd deployment
-  - wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
-  - chmod +x linuxdeployqt-continuous-x86_64.AppImage
-  - ../scripts/deploy-linux.sh ./linuxdeployqt-continuous-x86_64.AppImage $(which qmake) gibs.desktop
-  - cd ..
+  #- cp gibs/build/out/gibs deployment/gibs
+  #- cd deployment
+  #- wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+  #- chmod +x linuxdeployqt-continuous-x86_64.AppImage
+  #- ../scripts/deploy-linux.sh ./linuxdeployqt-continuous-x86_64.AppImage $(which qmake) gibs.desktop
+  #- cd ..
 
-# Disable builds - need to figure out how to get newest Qt.
 branches:
   only:
-    - master
     - dev
-#  - no_such_branch

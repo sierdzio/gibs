@@ -1,8 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>compilers/android-arm-gcc.json</file>
-        <file>compilers/clang.json</file>
-        <file>compilers/g++.json</file>
-        <file>deployers/androiddeployqt.json</file>
-    </qresource>
-</RCC>

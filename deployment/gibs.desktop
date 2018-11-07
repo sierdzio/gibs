@@ -6,4 +6,4 @@ Icon=gibs
 GenericName=Gibs
 Comment=Generally In-source Build System - build C++ projects without a project file
 Terminal=true
-Categories=Development;Building;Qt;
+Categories=Development;Building;

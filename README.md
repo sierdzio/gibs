@@ -6,10 +6,9 @@
 
 *Generally In-source Build System*
 
-_This branch contains gibs written in Qt._
+_This branch contains gibs written in pure C++ and is a WORK IN PROGRESS_
 
-An ongoing effort aims to rewrite it in pure C++ with minimal (no) dependencies.
-See dev branch.
+If you look for something that can be used, check out _master_qt_ branch.
 
 # Intro
 
@@ -29,8 +28,8 @@ Instead of "the old way":
 
 Precompiled gibs releases can be found on https://github.com/sierdzio/gibs/releases
 
-Alternatively, get the source code and compile gibs using Qt Creator. Any recent
-Qt version would do. C++11 is required.
+Alternatively, get the source code and compile gibs using cmake. C++14 is
+required.
 
 # Online docs
 
@@ -202,7 +201,7 @@ and lgibs commands.
 
 ### Qt support
 
-Ibs is written in Qt, and it makes it easier to build other Qt projects, too.
+Gibs makes it easier to build other Qt projects.
 In order to compile a Qt application or library, you need to specify Qt
 directory by runnig gibs with `--qt-dir` flag:
 
