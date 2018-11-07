@@ -6,6 +6,11 @@
 
 *Generally In-source Build System*
 
+_This branch contains gibs written in Qt._
+
+An ongoing effort aims to rewrite it in pure C++ with minimal (no) dependencies.
+See dev branch.
+
 # Intro
 
 GIBS (in-source build system) is a build tool that makes it easier to build C++
