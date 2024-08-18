@@ -48,7 +48,8 @@ To clean the project, run:
     gibs --clean main.cpp
 
 Specifying the source file is not necessary - it will be extracted from gibs
-cache file generated during compilation.
+cache file generated during compilation, or default to main.cpp when the cache
+is empty.
 
 ## Command line flags
 
@@ -194,7 +195,7 @@ Include paths are specified using `include` command:
 ### Libraries
 
 To include and link to an external library, you need to specify both the include
-and lgibs commands.
+and gibs commands.
 
     //i include some/path
     //i lib -Lsome/path -llibrary1 -llibrary2
