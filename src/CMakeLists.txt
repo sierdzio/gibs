@@ -12,6 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -fPIC")
 set(gibs_srcs
     main.cpp
     log.cpp log.h    
+    commandline.cpp commandline.h
     )
 
 # This should probably be moved to a subdir. Should it?
