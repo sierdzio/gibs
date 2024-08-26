@@ -15,8 +15,12 @@ set(gibs_srcs
     commandline.cpp commandline.h
     )
 
+configure_file(versioninfo.h.in versioninfo.h
+    NEWLINE_STYLE UNIX
+)
+
 # This should probably be moved to a subdir. Should it?
-add_executable(gibs ${gibs_srcs})
+add_executable(gibs ${gibs_srcs} "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.h")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE ON

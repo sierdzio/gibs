@@ -1,9 +1,12 @@
 #include "commandline.h"
+#include "versioninfo.h"
 
 #include <iostream>
+#include <string>
 #include <vector>
-
-namespace {
+#include <cassert>
+namespace
+{
     constexpr auto H = "-h";
     constexpr auto Help = "--help";
     constexpr auto HelpExplanation = "Displays this help information and exits.";
@@ -15,26 +18,43 @@ namespace {
     constexpr auto RunExplanation = "Run the executable immediately after building.";
     constexpr auto D = "-d";
     constexpr auto Debug = "--debug";
-    constexpr auto RunExplanation = "Compile in debug mode. By default, gibs compiles release binaries.";
+    constexpr auto DebugExplanation = "Compile in debug mode. By default, gibs compiles release binaries.";
 };
 
 CommandLine::CommandLine(int argc, char *argv[])
 {
     std::cout << "Arg. count: " << argc << " args: " << std::string(*argv) << std::endl;
 
-    std::string exe_name;
-    std::string word;
+    //std::string exe_name;
 
-    for (int i = 0; i < argc; ++i) {
-        const auto &current = argv[i];
-        if (current && (*current == ' ')) {
-            _args.push_back(word);
-            std::cout << "Found a word:" << word;
-            word.clear();            
-        }
-    }   
+    for (int i = 0; i < argc; ++i)
+    {
+        const auto current = std::string(argv[i]);
+        _args.push_back(current);
+        std::cout << "Found a word:" << current << std::endl;
+    }
 
-    _isValid = parse(); 
+    _isValid = parse();
+}
+
+std::string CommandLine::helpText() const
+{
+    std::string result;
+
+    result.append("C++ in-source project builder. Compile your projects without all the hassle "
+                  "connected with preparing a project file. Just run 'gibs main.cpp' and enjoy your "
+                  "compiled binary! More info: https://github.com/sierdzio/gibs\n\nOptions:\n");
+    result = helpAppend(std::move(result), {H, Help}, HelpExplanation);
+    result = helpAppend(std::move(result), {V, Version}, VersionExplanation);
+    result = helpAppend(std::move(result), {R, Run}, RunExplanation);
+    result = helpAppend(std::move(result), {D, Debug}, DebugExplanation);
+
+    return result;
+}
+
+std::string CommandLine::versionText() const
+{
+    return VersionInfo::versionNumber;
 }
 
 bool CommandLine::isValid() const
@@ -65,29 +85,64 @@ bool CommandLine::isDebug() const
 bool CommandLine::parse()
 {
     // Check if version or health flag is present
-    for (std::size_t i = 0; i < _args.size(); ++i) {
+    for (std::size_t i = 0; i < _args.size(); ++i)
+    {
         const auto &current = _args.at(i);
 
-        if (current == H || current == Help) {
+        if (current == H || current == Help)
+        {
             _hasHelp = true;
             continue;
         }
 
-        if (current == V || current == Version) {
+        if (current == V || current == Version)
+        {
             _hasVersion = true;
             continue;
         }
 
-        if (current == R || current == Run) {
+        if (current == R || current == Run)
+        {
             _runImmediately = true;
             continue;
         }
 
-        if (current == D || current == Debug) {
+        if (current == D || current == Debug)
+        {
             _isDebug = true;
             continue;
         }
     }
-    
+
     return true;
+}
+
+std::string CommandLine::helpAppend(std::string &&string,
+                                    const std::vector<std::string> &flags,
+                                    const std::string &explanation) const
+{
+    assert(flags.size() > 0);
+
+    string.push_back(' ');
+
+    bool isFirst = true;
+    for (const auto &flag : flags)
+    {
+        if (isFirst)
+        {
+            isFirst = false;
+        }
+        else
+        {
+            string.append(std::string(", "));
+        }
+
+        string.append(flag);
+    }
+
+    string.push_back('\t');
+    string.append(explanation);
+    string.push_back('\n');
+
+    return std::move(string);
 }
