@@ -13,6 +13,7 @@ set(gibs_srcs
     main.cpp
     log.cpp log.h    
     commandline.cpp commandline.h
+    parser.cpp parser.h
     )
 
 configure_file(versioninfo.h.in versioninfo.h

@@ -10,6 +10,8 @@ public:
     std::string helpText() const;
     std::string versionText() const;
 
+    std::string input() const;
+
     bool isValid() const;
     bool hasHelp() const;
     bool hasVersion() const;
@@ -23,6 +25,7 @@ private:
                                          const std::string &explanation) const;
 
     std::vector<std::string> _args;
+    std::string _input;
     bool _isValid = false;
     bool _hasHelp = false;
     bool _hasVersion = false;

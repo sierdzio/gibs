@@ -25,8 +25,6 @@ CommandLine::CommandLine(int argc, char *argv[])
 {
     std::cout << "Arg. count: " << argc << " args: " << std::string(*argv) << std::endl;
 
-    //std::string exe_name;
-
     for (int i = 0; i < argc; ++i)
     {
         const auto current = std::string(argv[i]);
@@ -55,6 +53,11 @@ std::string CommandLine::helpText() const
 std::string CommandLine::versionText() const
 {
     return VersionInfo::versionNumber;
+}
+
+std::string CommandLine::input() const
+{
+    return _input;
 }
 
 bool CommandLine::isValid() const
@@ -89,6 +92,8 @@ bool CommandLine::parse()
     {
         const auto &current = _args.at(i);
 
+        // Handle simple options (flags):
+
         if (current == H || current == Help)
         {
             _hasHelp = true;
@@ -112,6 +117,11 @@ bool CommandLine::parse()
             _isDebug = true;
             continue;
         }
+
+        // TODO: handle options with values
+
+        // Handle positional arguments:
+        _input = current;
     }
 
     return true;

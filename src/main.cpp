@@ -3,6 +3,7 @@
 
 #include "log.h"
 #include "commandline.h"
+#include "parser.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,6 +20,8 @@ int main(int argc, char *argv[])
         std::cout << cmd.versionText() << std::endl;
         return 0;
     }
+
+    Parser parser(cmd.input());
 
     return 0;
 }
