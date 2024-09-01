@@ -11,6 +11,8 @@ public:
 
     AppError status() const;
 
+    void parse();
+
 private:
     std::filesystem::path _input;
     std::filesystem::directory_entry _projectDirectory;
