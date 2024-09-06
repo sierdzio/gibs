@@ -7,11 +7,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic-errors -fPIC")
 
 set(gibs_srcs
     main.cpp
-    log.cpp log.h    
+    log.cpp log.h
     commandline.cpp commandline.h
     parser.cpp parser.h
     )

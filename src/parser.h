@@ -14,9 +14,14 @@ public:
     void parse();
 
 private:
+    bool scanProjectDirectoryForEntryPoints();
+
+    void parseProjectFile(const std::filesystem::path &path);
+    void parseCppFile(const std::filesystem::path &path);
+
     std::filesystem::path _input;
-    std::filesystem::directory_entry _projectDirectory;
-    std::filesystem::directory_entry _projectFile;
-    std::filesystem::directory_entry _projectEntryPoint;
+    std::filesystem::path _projectDirectory;
+    std::filesystem::path _projectFile;
+    std::filesystem::path _projectEntryPoint;
     AppError _status = AppError::NoError;
 };

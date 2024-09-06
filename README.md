@@ -186,11 +186,15 @@ To pass custom defines to the compiler, use the following command:
 
     //i define MY_DEFINE
 
-### Include paths
+### Include
 
 Include paths are specified using `include` command:
 
     //i include some/path
+
+If a path to a directory is provided, it will be added to C++ include paths (`-I`).
+
+If a path to gibs project file is provided, the file will be loaded and parsed.
 
 ### Libraries
 
