@@ -1,31 +1,8 @@
 #include "parser.h"
+#include "syntax.h"
+#include "log.h"
 
 #include <iostream>
-
-namespace Extension {
-    constexpr auto ProjectFile = ".gibs";
-    constexpr auto CppFile1 = ".cpp";
-    constexpr auto CppFile2 = ".cxx";
-    constexpr auto Main = "main";
-};
-
-namespace Comment {
-    constexpr auto OneLine = "//i ";
-    constexpr auto MultilineBegin = "/*i ";
-    constexpr auto MultilineEnd = "*/";
-};
-
-namespace Command {
-    constexpr auto Source = "source";
-    constexpr auto Target = "target";
-    constexpr auto Type = "type";
-    constexpr auto App = "app";
-    constexpr auto Lib = "lib";
-    constexpr auto Static = "static";
-    constexpr auto Dynamic = "dynamic";
-    constexpr auto Define = "define";
-    constexpr auto Include = "include";
-};
 
 Parser::Parser(std::string &&input) : _input(std::move(input))
 {
@@ -34,7 +11,7 @@ Parser::Parser(std::string &&input) : _input(std::move(input))
     }
 
     if (std::filesystem::exists(_input) == false) {
-        std::cout << "Input path does not exist, cannot continue: " << _input << std::endl;
+        Log::error("Input path does not exist, cannot continue:", _input);
         _status = AppError::WrongInputPath;
         return;
     }
@@ -42,7 +19,7 @@ Parser::Parser(std::string &&input) : _input(std::move(input))
     const auto dir = std::filesystem::directory_entry(_input);
 
     if (dir.is_regular_file()) {
-        std::cout << "Got a regular file " << _input << std::endl;
+        Log::information("Got a regular file ", _input);
         _projectEntryPoint = dir;
         const auto base = std::filesystem::path(_input).remove_filename();
         _projectDirectory = std::filesystem::directory_entry(base);
@@ -52,14 +29,13 @@ Parser::Parser(std::string &&input) : _input(std::move(input))
         if (extension == Extension::ProjectFile) {
             _projectFile = dir;
         } else if (extension != Extension::CppFile1 && extension != Extension::CppFile2) {
-            std::cout << "Input file type is incorrect: neither .gibs, nor a C++ source file: "
-                      << _input << " Extension is: " << extension << std::endl;
+            Log::error("Input file type is incorrect: neither .gibs, nor a C++ source file:",
+                      _input, "Extension is:", extension);
             _status = AppError::IncorrectInputFileType;
             return;
         }
     } else if (dir.is_directory()) {
-        std::cout << "Got a directory, will scan it for project files or main.cpp: "
-                  << _input << std::endl;
+        Log::information("Got a directory, will scan it for project files or main.cpp:", _input);
         _projectDirectory = dir;
 
         scanProjectDirectoryForEntryPoints();
@@ -105,16 +81,54 @@ bool Parser::scanProjectDirectoryForEntryPoints()
         return true;
     }
 
-    std::cout << "Neither .gibs, nor a C++ source file has been found in directory: "
-              << _projectDirectory << std::endl;
+    Log::error("Neither .gibs, nor a C++ source file has been found in directory:", _projectDirectory);
+
     _status = AppError::EntryPointNotFound;
     return false;
 }
 
-void Parser::parseProjectFile([[maybe_unused]] const std::filesystem::path &path)
+void Parser::parseProjectFile(const std::filesystem::path &path)
 {
+    std::ifstream file(path, std::iostream::in);
+
+    if (file.is_open() == false) {
+        Log::error("Could not open file for reading:", path);
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        Log::debug("Read:", line);
+        parseProjectLine(std::move(line));
+    }
+
+    file.close();
 }
 
-void Parser::parseCppFile([[maybe_unused]] const std::filesystem::path &path)
+void Parser::parseCppFile(const std::filesystem::path &path)
 {
+    std::ifstream file(path, std::iostream::in);
+
+    if (file.is_open() == false) {
+        Log::error("Could not open file for reading:", path);
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file,line)) {
+        Log::debug("Read:", line);
+        // Recognize comments and comment blocks:
+
+        // Recognize interesting parts of C++ code:
+    }
+
+    file.close();
+}
+
+void Parser::parseProjectLine(std::string &&line)
+{
+    if (line.size() > 0 && line.at(0) == Comment::Gibs) {
+        Log::debug("Found a comment, ignoring...");
+        return;
+    }
 }

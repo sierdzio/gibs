@@ -1,5 +1,6 @@
 #include "commandline.h"
 #include "versioninfo.h"
+#include "log.h"
 
 #include <iostream>
 #include <string>
@@ -23,13 +24,13 @@ namespace
 
 CommandLine::CommandLine(int argc, char *argv[])
 {
-    std::cout << "Arg. count: " << argc << " args: " << std::string(*argv) << std::endl;
+    Log::information("Arg. count:", argc, "args:", std::string(*argv));
 
     for (int i = 0; i < argc; ++i)
     {
         const auto current = std::string(argv[i]);
         _args.push_back(current);
-        std::cout << "Found a word:" << current << std::endl;
+        Log::debug("Found a word:", current);
     }
 
     _isValid = parse();

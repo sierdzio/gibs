@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-    Log::log("Hello gibs!");
+    Log::information("Hello, gibs!");
 
     const CommandLine cmd(argc, argv);
 
