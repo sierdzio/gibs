@@ -6,6 +6,7 @@
 #include <fstream>
 #include <optional>
 #include <filesystem>
+
 class Parser {
 public:
     Parser(std::string &&input);

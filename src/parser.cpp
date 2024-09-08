@@ -3,6 +3,7 @@
 #include "log.h"
 
 #include <iostream>
+#include <vector>
 
 Parser::Parser(std::string &&input) : _input(std::move(input))
 {
@@ -97,6 +98,7 @@ void Parser::parseProjectFile(const std::filesystem::path &path)
     }
 
     std::string line;
+    // TODO: implement a custom file reading routine to read it character by character and parse on the fly
     while (std::getline(file, line)) {
         Log::debug("Read:", line);
         parseProjectLine(std::move(line));
@@ -114,10 +116,14 @@ void Parser::parseCppFile(const std::filesystem::path &path)
         return;
     }
 
+    bool isCommentBlock = false;
     std::string line;
+
+    // TODO: implement a custom file reading routine to read it character by character and parse on the fly
     while (std::getline(file,line)) {
         Log::debug("Read:", line);
         // Recognize comments and comment blocks:
+
 
         // Recognize interesting parts of C++ code:
     }
@@ -130,5 +136,21 @@ void Parser::parseProjectLine(std::string &&line)
     if (line.size() > 0 && line.at(0) == Comment::Gibs) {
         Log::debug("Found a comment, ignoring...");
         return;
+    }
+
+    std::string word;
+    std::vector<std::string> words;
+    for (std::size_t i = 0; i < line.size(); ++i) {
+        if (line.at(i) == ' ') {
+            // Word is complete
+            words.push_back(word);
+
+            if (words.size() == 1) {
+                // We have a command, we should check it
+                if (word == Command::Source) {
+                    // TODO: implement source command handling
+                }
+            }
+        }
     }
 }
