@@ -44,11 +44,13 @@ namespace Log
     template<typename... Types>
     void log(const Type type, Types&&... args)
     {
-        std::cout << Log::type(type);
+        constexpr auto Space = ' ';
+
+        std::cout << Log::type(type) << Space;
 
         // This is a "loop" lambda
         ([&]{
-            std::cout << args;
+            std::cout << args << Space;
         } (), ...);
 
         std::cout << std::endl;

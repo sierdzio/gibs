@@ -33,7 +33,9 @@ Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
 
         if (extension == Syntax::Extension::ProjectFile) {
             _projectFile = dir;
-        } else if (extension != Syntax::Extension::CppFile1 && extension != Syntax::Extension::CppFile2) {
+        } else if (extension == Syntax::Extension::CppFile1 || extension == Syntax::Extension::CppFile2) {
+            _projectEntryPoint = dir;
+        } else {
             Log::error("Input file type is incorrect: neither .gibs, nor a C++ source file:",
                       _input, "Extension is:", extension);
             _status = AppError::IncorrectInputFileType;
@@ -101,6 +103,8 @@ void Parser::parseProjectFile(const std::filesystem::path &path)
         return;
     }
 
+    Log::debug("Reading project file:", path);
+
     std::string line;
     // TODO: implement a custom file reading routine to read it character by character and parse on the fly
     while (std::getline(file, line)) {
@@ -119,6 +123,8 @@ void Parser::parseCppFile(const std::filesystem::path &path)
         Log::error("Could not open file for reading:", path);
         return;
     }
+
+    Log::debug("Reading C++ file:", path);
 
     CppState state;
     std::string line;
