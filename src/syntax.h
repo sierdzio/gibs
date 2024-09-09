@@ -21,13 +21,16 @@ namespace Syntax {
     namespace Command {
         constexpr auto Source = "source";
         constexpr auto Target = "target";
-        constexpr auto Type = "type";
-        constexpr auto App = "app";
         constexpr auto Lib = "lib";
-        constexpr auto Static = "static";
-        constexpr auto Dynamic = "dynamic";
         constexpr auto Define = "define";
         constexpr auto Include = "include";
+    };
+
+    namespace Modifier {
+        constexpr auto Type = "type";
+        constexpr auto App = "app";
+        constexpr auto Static = "static";
+        constexpr auto Dynamic = "dynamic";
     };
 
     namespace CppKeywords {

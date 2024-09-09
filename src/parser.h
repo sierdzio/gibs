@@ -1,19 +1,13 @@
 #pragma once
 
 #include "apperror.h"
+#include "command.h"
 
 #include <string>
 #include <vector>
 #include <fstream>
 #include <optional>
 #include <filesystem>
-
-// TODO: move to a separate .h, .cpp pair
-struct Command
-{
-    bool isValid() const;
-    std::vector<std::string> whole;
-};
 
 class CommandLine;
 class Parser {

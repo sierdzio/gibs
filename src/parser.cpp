@@ -148,7 +148,8 @@ void Parser::parseProjectLine(std::string &&line)
     }
 
     std::string word;
-    std::vector<std::string> words;
+    Command command;
+
     for (const auto &character : std::as_const(line)) {
         if (character == ' ' || character == '\t') {
             if (word.empty() == true) {
@@ -160,7 +161,20 @@ void Parser::parseProjectLine(std::string &&line)
             const auto guard = Tools::ScopeGuard([&word]{
                 word.clear();
             });
+
+            if (word.size() == 1 && word.at(0) == Syntax::Comment::Project) {
+                // Skip comment line
+                continue;
+            }
+
+            command.whole.push_back(word);
         }
+    }
+
+    if (command.isValid()) {
+        Log::information("Found command:", command.whole);
+        _commands.push_back(command);
+        // TODO: start running commands immediately
     }
 }
 
@@ -173,9 +187,9 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     }
 
     std::string word;
+    Command command;
     bool isOneLineCommand = false;
     bool isIncludeCommand = false;
-    Command command;
 
     for (const auto &character : std::as_const(line)) {
         if (character == ' ' || character == '\t') {
@@ -221,7 +235,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             // Processing of comment meta data is done. Now we can proceed with parsing other parts of text:
 
             // Handle commands in comments:
-            if (isOneLineCommand || state->isProjectCommentBlock) {
+            if (isOneLineCommand || state->isProjectCommentBlock || isIncludeCommand) {
                 command.whole.push_back(word);
             }
 
@@ -247,26 +261,6 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     if (command.isValid()) {
         Log::information("Found command:", command.whole);
         _commands.push_back(command);
+        // TODO: start running commands immediately
     }
-
-    // TODO: start running commands
-}
-
-bool Command::isValid() const
-{
-    if (whole.empty()) {
-        return false;
-    }
-
-    const auto &first = whole.at(0);
-
-    return first == Syntax::Command::Source
-        || first == Syntax::Command::Target
-        || first == Syntax::Command::Type
-        || first == Syntax::Command::App
-        || first == Syntax::Command::Lib
-        || first == Syntax::Command::Static
-        || first == Syntax::Command::Dynamic
-        || first == Syntax::Command::Define
-        || first == Syntax::Command::Include;
 }

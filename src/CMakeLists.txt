@@ -15,6 +15,7 @@ set(gibs_srcs
     commandline.cpp commandline.h
     tools.cpp tools.h
     syntax.h
+    command.cpp command.h
     parser.cpp parser.h
     )
 
