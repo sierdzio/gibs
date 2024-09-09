@@ -17,10 +17,11 @@ public:
     bool hasVersion() const;
     bool runImmediately() const;
     bool isDebug() const;
+    bool isQuickMode() const;
 
 private:
     bool parse();
-    [[nodiscard]] std::string helpAppend(std::string &&string, 
+    [[nodiscard]] std::string helpAppend(std::string &&string,
                                          const std::vector<std::string> &flags,
                                          const std::string &explanation) const;
 
@@ -31,4 +32,5 @@ private:
     bool _hasVersion = false;
     bool _runImmediately = false;
     bool _isDebug = false;
+    bool _isQuick = false;
 };

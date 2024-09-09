@@ -1,11 +1,15 @@
 #include "parser.h"
+#include "commandline.h"
 #include "syntax.h"
+#include "tools.h"
 #include "log.h"
 
 #include <iostream>
 #include <vector>
+#include <utility>
+#include <cassert>
 
-Parser::Parser(std::string &&input) : _input(std::move(input))
+Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
 {
     if (_input.empty()) {
         _input = std::filesystem::current_path();
@@ -27,9 +31,9 @@ Parser::Parser(std::string &&input) : _input(std::move(input))
 
         const auto extension = _input.extension();
 
-        if (extension == Extension::ProjectFile) {
+        if (extension == Syntax::Extension::ProjectFile) {
             _projectFile = dir;
-        } else if (extension != Extension::CppFile1 && extension != Extension::CppFile2) {
+        } else if (extension != Syntax::Extension::CppFile1 && extension != Syntax::Extension::CppFile2) {
             Log::error("Input file type is incorrect: neither .gibs, nor a C++ source file:",
                       _input, "Extension is:", extension);
             _status = AppError::IncorrectInputFileType;
@@ -68,10 +72,10 @@ bool Parser::scanProjectDirectoryForEntryPoints()
     for (auto const& it : std::filesystem::directory_iterator(dir)) {
         const auto extension = it.path().extension();
 
-        if (extension == Extension::ProjectFile) {
+        if (extension == Syntax::Extension::ProjectFile) {
             _projectFile = it.path();
-        } else if (extension == Extension::CppFile1 || extension == Extension::CppFile2) {
-            if (it.path().filename() == Extension::Main) {
+        } else if (extension == Syntax::Extension::CppFile1 || extension == Syntax::Extension::CppFile2) {
+            if (it.path().filename() == Syntax::Extension::Main) {
                 _projectEntryPoint = it.path();
             }
         }
@@ -116,16 +120,17 @@ void Parser::parseCppFile(const std::filesystem::path &path)
         return;
     }
 
-    bool isCommentBlock = false;
+    CppState state;
     std::string line;
 
     // TODO: implement a custom file reading routine to read it character by character and parse on the fly
     while (std::getline(file,line)) {
         Log::debug("Read:", line);
-        // Recognize comments and comment blocks:
+        parseCppLine(std::move(line), &state);
 
-
-        // Recognize interesting parts of C++ code:
+        if (state.shouldFinish) {
+            break;
+        }
     }
 
     file.close();
@@ -133,24 +138,135 @@ void Parser::parseCppFile(const std::filesystem::path &path)
 
 void Parser::parseProjectLine(std::string &&line)
 {
-    if (line.size() > 0 && line.at(0) == Comment::Gibs) {
+    if (line.size() == 0) {
+        return;
+    }
+
+    if (line.size() > 0 && line.at(0) == Syntax::Comment::Project) {
         Log::debug("Found a comment, ignoring...");
         return;
     }
 
     std::string word;
     std::vector<std::string> words;
-    for (std::size_t i = 0; i < line.size(); ++i) {
-        if (line.at(i) == ' ') {
-            // Word is complete
-            words.push_back(word);
-
-            if (words.size() == 1) {
-                // We have a command, we should check it
-                if (word == Command::Source) {
-                    // TODO: implement source command handling
-                }
+    for (const auto &character : std::as_const(line)) {
+        if (character == ' ' || character == '\t') {
+            if (word.empty() == true) {
+                // Skip indentation and long whitespace
+                continue;
             }
+
+            // Make sure word gets cleaned up even if we exit early
+            const auto guard = Tools::ScopeGuard([&word]{
+                word.clear();
+            });
         }
     }
+}
+
+void Parser::parseCppLine(std::string &&line, CppState *state)
+{
+    assert(state);
+
+    if (line.size() == 0) {
+        return;
+    }
+
+    std::string word;
+    bool isOneLineCommand = false;
+    bool isIncludeCommand = false;
+    Command command;
+
+    for (const auto &character : std::as_const(line)) {
+        if (character == ' ' || character == '\t') {
+            if (word.empty() == true) {
+                // Skip indentation and long whitespace
+                continue;
+            }
+
+            // Make sure word gets cleaned up even if we exit early
+            const auto guard = Tools::ScopeGuard([&word]{
+                word.clear();
+            });
+
+            if (word == Syntax::Comment::MultilineEnd) {
+                state->isCommentBlock = false;
+                state->isProjectCommentBlock = false;
+                continue;
+            }
+
+            // TODO: when a comment begins mid-line, finish existing Command
+
+            // Recognize project comments and comment blocks:
+            if (word == Syntax::Comment::MultilineBeginProject) {
+                state->isProjectCommentBlock = true;
+                continue;
+            } else if (word == Syntax::Comment::OneLine) {
+                continue;
+            } else if (word == Syntax::Comment::MultilineBegin) {
+                // Recognize C++ comments and comment blocks:
+                state->isCommentBlock = true;
+                continue;
+            }
+
+            if (state->isCommentBlock) {
+                // Skip C++ comments
+                continue;
+            }
+
+            if (word == Syntax::Comment::OneLineProject) {
+                isOneLineCommand = true;
+            }
+
+            // Processing of comment meta data is done. Now we can proceed with parsing other parts of text:
+
+            // Handle commands in comments:
+            if (isOneLineCommand || state->isProjectCommentBlock) {
+                command.whole.push_back(word);
+            }
+
+            // Recognize interesting parts of C++ code:
+            if (_cmd->isQuickMode() && (word == Syntax::CppKeywords::Class
+                || word == Syntax::CppKeywords::Struct)) {
+                state->shouldFinish = true;
+                isOneLineCommand = false;
+                return;
+            }
+
+            if (word == Syntax::CppKeywords::Include) {
+                isIncludeCommand = true;
+                command.whole.push_back(Syntax::Command::Include);
+            }
+
+            continue;
+        }
+
+        word.push_back(character);
+    }
+
+    if (command.isValid()) {
+        Log::information("Found command:", command.whole);
+        _commands.push_back(command);
+    }
+
+    // TODO: start running commands
+}
+
+bool Command::isValid() const
+{
+    if (whole.empty()) {
+        return false;
+    }
+
+    const auto &first = whole.at(0);
+
+    return first == Syntax::Command::Source
+        || first == Syntax::Command::Target
+        || first == Syntax::Command::Type
+        || first == Syntax::Command::App
+        || first == Syntax::Command::Lib
+        || first == Syntax::Command::Static
+        || first == Syntax::Command::Dynamic
+        || first == Syntax::Command::Define
+        || first == Syntax::Command::Include;
 }

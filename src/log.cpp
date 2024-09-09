@@ -1,5 +1,18 @@
 #include "log.h"
 
+std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &stringList)
+{
+    for (std::size_t i = 0; i < stringList.size(); ++i) {
+        if (i != 0) {
+            stream << ' ';
+        }
+
+        stream << stringList.at(i);
+    }
+
+    return stream;
+}
+
 namespace {
     constexpr auto Debug = "D:";
     constexpr auto Information = "I:";

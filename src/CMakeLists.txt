@@ -13,6 +13,7 @@ set(gibs_srcs
     main.cpp
     log.cpp log.h
     commandline.cpp commandline.h
+    tools.cpp tools.h
     syntax.h
     parser.cpp parser.h
     )

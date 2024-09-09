@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Parser parser(cmd.input());
+    Parser parser(&cmd);
 
     if (parser.status() != AppError::NoError) {
         return static_cast<int>(parser.status());

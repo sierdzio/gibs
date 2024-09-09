@@ -1,7 +1,11 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <iostream>
+
+std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &stringList);
+
 namespace Log
 {
     enum class Type {

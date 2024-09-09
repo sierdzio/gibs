@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cassert>
+
 namespace
 {
     constexpr auto H = "-h";
@@ -19,14 +20,18 @@ namespace
     constexpr auto D = "-d";
     constexpr auto Debug = "--debug";
     constexpr auto DebugExplanation = "Compile in debug mode. By default, gibs compiles release binaries.";
+    constexpr auto Q = "-d";
+    constexpr auto Quick = "--quick";
+    constexpr auto QuickExplanation = "'Convention over configuration' mode - parse files only up to first "
+                        "line of 'concrete code'. Do not check file checksums when doing incremental "
+                        "builds.";
 };
 
 CommandLine::CommandLine(int argc, char *argv[])
 {
     Log::information("Arg. count:", argc, "args:", std::string(*argv));
 
-    for (int i = 0; i < argc; ++i)
-    {
+    for (int i = 0; i < argc; ++i) {
         const auto current = std::string(argv[i]);
         _args.push_back(current);
         Log::debug("Found a word:", current);
@@ -46,6 +51,7 @@ std::string CommandLine::helpText() const
     result = helpAppend(std::move(result), {V, Version}, VersionExplanation);
     result = helpAppend(std::move(result), {R, Run}, RunExplanation);
     result = helpAppend(std::move(result), {D, Debug}, DebugExplanation);
+    result = helpAppend(std::move(result), {Q, Quick}, QuickExplanation);
 
     return result;
 }
@@ -85,6 +91,11 @@ bool CommandLine::isDebug() const
     return _isDebug;
 }
 
+bool CommandLine::isQuickMode() const
+{
+    return _isQuick;
+}
+
 bool CommandLine::parse()
 {
     // Check if version or health flag is present
@@ -94,27 +105,28 @@ bool CommandLine::parse()
 
         // Handle simple options (flags):
 
-        if (current == H || current == Help)
-        {
+        if (current == H || current == Help) {
             _hasHelp = true;
             continue;
         }
 
-        if (current == V || current == Version)
-        {
+        if (current == V || current == Version) {
             _hasVersion = true;
             continue;
         }
 
-        if (current == R || current == Run)
-        {
+        if (current == R || current == Run) {
             _runImmediately = true;
             continue;
         }
 
-        if (current == D || current == Debug)
-        {
+        if (current == D || current == Debug) {
             _isDebug = true;
+            continue;
+        }
+
+        if (current == Q || current == Quick) {
+            _isQuick = true;
             continue;
         }
 
@@ -136,14 +148,10 @@ std::string CommandLine::helpAppend(std::string &&string,
     string.push_back(' ');
 
     bool isFirst = true;
-    for (const auto &flag : flags)
-    {
-        if (isFirst)
-        {
+    for (const auto &flag : flags) {
+        if (isFirst) {
             isFirst = false;
-        }
-        else
-        {
+        } else {
             string.append(std::string(", "));
         }
 
