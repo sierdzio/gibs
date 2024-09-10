@@ -11,12 +11,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wconversion -Wsig
 
 set(gibs_srcs
     main.cpp
-    log.cpp log.h
-    commandline.cpp commandline.h
-    tools.cpp tools.h
-    syntax.h
-    command.cpp command.h
-    parser.cpp parser.h
+    tools/log.cpp tools/log.h
+    tools/commandline.cpp tools/commandline.h
+    tools/tools.cpp tools/tools.h
+    parsing/syntax.cpp parsing/syntax.h
+    parsing/command.cpp parsing/command.h
+    parsing/parser.cpp parsing/parser.h
     )
 
 configure_file(versioninfo.h.in versioninfo.h

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 
-#include "log.h"
-#include "commandline.h"
-#include "parser.h"
+#include "tools/log.h"
+#include "tools/commandline.h"
+#include "parsing/parser.h"
 
 int main(int argc, char *argv[])
 {

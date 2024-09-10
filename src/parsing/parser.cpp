@@ -1,8 +1,8 @@
 #include "parser.h"
-#include "commandline.h"
 #include "syntax.h"
-#include "tools.h"
-#include "log.h"
+#include "tools/commandline.h"
+#include "tools/tools.h"
+#include "tools/log.h"
 
 #include <iostream>
 #include <vector>
@@ -173,12 +173,12 @@ void Parser::parseProjectLine(std::string &&line)
                 continue;
             }
 
-            command.whole.push_back(word);
+            command.append(word);
         }
     }
 
     if (command.isValid()) {
-        Log::information("Found command:", command.whole);
+        Log::information("Found command:", command.whole());
         _commands.push_back(command);
         // TODO: start running commands immediately
     }
@@ -242,7 +242,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
             // Handle commands in comments:
             if (isOneLineCommand || state->isProjectCommentBlock || isIncludeCommand) {
-                command.whole.push_back(word);
+                command.append(word);
             }
 
             // Recognize interesting parts of C++ code:
@@ -255,7 +255,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
             if (word == Syntax::CppKeywords::Include) {
                 isIncludeCommand = true;
-                command.whole.push_back(Syntax::Command::Include);
+                command.append(Syntax::commandString[Syntax::Command::Include]);
             }
 
             continue;
@@ -265,7 +265,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     }
 
     if (command.isValid()) {
-        Log::information("Found command:", command.whole);
+        Log::information("Found command:", command.whole());
         _commands.push_back(command);
         // TODO: start running commands immediately
     }

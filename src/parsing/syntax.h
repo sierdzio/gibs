@@ -1,5 +1,17 @@
 #pragma once
 
+#include <array>
+#include <string>
+#include <algorithm>
+
+#define COMMANDS \
+X(Invalid, "") \
+X(Source, "source") \
+X(Target, "target") \
+X(Lib, "lib") \
+X(Define, "define") \
+X(Include, "include")
+
 namespace Syntax {
     namespace Extension {
         constexpr auto ProjectFile = ".gibs";
@@ -18,13 +30,19 @@ namespace Syntax {
         constexpr auto MultilineEnd = "*/";
     };
 
-    namespace Command {
-        constexpr auto Source = "source";
-        constexpr auto Target = "target";
-        constexpr auto Lib = "lib";
-        constexpr auto Define = "define";
-        constexpr auto Include = "include";
+    #define X(day, name) day,
+    enum Command {
+        COMMANDS
     };
+    #undef X
+
+    #define X(day, name) name,
+    const std::array<std::string, 6> commandString = {
+        COMMANDS
+    };
+    #undef X
+
+    Command commandValue(const std::string &string);
 
     namespace Modifier {
         constexpr auto Type = "type";

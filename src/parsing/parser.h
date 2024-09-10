@@ -1,7 +1,7 @@
 #pragma once
 
-#include "apperror.h"
 #include "command.h"
+#include "tools/apperror.h"
 
 #include <string>
 #include <vector>
