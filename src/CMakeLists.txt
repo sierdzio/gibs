@@ -17,6 +17,7 @@ set(gibs_srcs
     parsing/syntax.cpp parsing/syntax.h
     parsing/command.cpp parsing/command.h
     parsing/parser.cpp parsing/parser.h
+    processing/processor.cpp processing/processor.h
     )
 
 configure_file(versioninfo.h.in versioninfo.h

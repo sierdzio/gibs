@@ -20,6 +20,8 @@ namespace Syntax {
         constexpr auto HeaderFile1 = ".h";
         constexpr auto HeaderFile2 = ".hpp";
         constexpr auto HeaderFile3 = ".hxx";
+        constexpr auto ObjectFile1 = ".o";
+        constexpr auto ObjectFile2 = ".obj";
         constexpr auto Main = "main";
     };
 
