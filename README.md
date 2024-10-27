@@ -293,10 +293,13 @@ Ibs will not synchronise until it is absolutely necessary: main app and the
 subproject will be compiled in parallel. Only when linking, gibs will wait for
 the library to be ready before linking the app.
 
+#### Options
+
+See: Features.
+
 #### Features
 
-Feature is a compile-time piece of functionality that can be turned on or off.
-Internally, features are just Subprojects with some extra bits attached.
+Feature (also called Option) is a compile-time piece of functionality that can be turned on or off.
 
 A feature can be easily turned on or off via a command line flag (during
 compilation). Internally, feature always adds a compiler define when it is turned
@@ -304,14 +307,22 @@ on. For example, if feature named `tts-support` is added, your C++ code will see
 `TTS_SUPPORT` ifdef as being true. You can use this in code to respond to the
 feature being active or not.
 
-A feature typically comes with it's own set of C++ files. These are pointed to
-by feature definition.
+A feature can come with it's own set of C++ files. These are pointed to by feature definition.
+
+**TODO: how to define which files belong to a feature?**
 
 To define a feature, use this syntax:
 
 ```text
 //i feature tts-support [default on|off]
 ```
+
+Or:
+
+```text
+//i option tts-support [default on|off]
+```
+
 
 Then you can select the feature next time you build your project, like this:
 

@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 struct Command
 {
@@ -20,6 +21,11 @@ struct Command
     Syntax::Command command = Syntax::Command::Invalid;
     std::vector<std::string> modifiers;
     std::string value;
+
+    // Children commands, for example compilation commands for objects under a single linker
+    std::unique_ptr<Command> children;
+    // Parent in compilation is the linker
+    std::weak_ptr<Command> parent;
 
 private:
     bool isValidCommand(const std::string &command) const;
