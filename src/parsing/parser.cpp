@@ -141,17 +141,40 @@ void Parser::parseCppFile(const std::filesystem::path &path)
 
     file.close();
 
-    // Now, add compilation command for this cpp file:
-    Command command;
+    const auto ext = path.extension();
 
-    command.command = Syntax::Command::Source;
-    command.value = path;
+    if (ext == Syntax::Extension::CppFile1 || ext == Syntax::Extension::CppFile2) {
+        // Now, add compilation command for this cpp file:
+        Command command;
 
-    Log::information("Compiling cpp file:", command.whole());
-    _commands.push_back(command);
-    // TODO: start running commands immediately
+        command.command = Syntax::Command::Source;
+        command.value = path;
 
-    // TODO: add this file to list of objects to be linked
+        Log::information("Compiling cpp file:", path.filename());
+        _commands.push_back(command);
+        // TODO: start running commands immediately
+
+        // TODO: add this file to list of objects to be linked
+        Log::information("Adding object file to linker command:", path.filename());
+    } else if (ext == Syntax::Extension::HeaderFile1 || ext == Syntax::Extension::HeaderFile2
+                || ext == Syntax::Extension::HeaderFile3) {
+        // TODO: find source file and parse it
+        Log::debug("Looking for a source file accompanying this header:", path.filename());
+
+        for (auto const& it : std::filesystem::directory_iterator(path.parent_path())) {
+            const auto &current = it.path();
+            const auto &extension = current.extension();
+
+            if (current.filename() == path.filename()) {
+                if (extension == Syntax::Extension::CppFile1 || extension == Syntax::Extension::CppFile2) {
+                    if (current.filename() == Syntax::Extension::Main) {
+                        parseCppFile(current);
+                    }
+                }
+            }
+            // TODO: handle case where source file is in a different directory... maybe cache the dir structure ?
+        }
+    }
 }
 
 void Parser::parseProjectLine(std::string &&line)

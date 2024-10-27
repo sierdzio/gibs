@@ -17,6 +17,9 @@ namespace Syntax {
         constexpr auto ProjectFile = ".gibs";
         constexpr auto CppFile1 = ".cpp";
         constexpr auto CppFile2 = ".cxx";
+        constexpr auto HeaderFile1 = ".h";
+        constexpr auto HeaderFile2 = ".hpp";
+        constexpr auto HeaderFile3 = ".hxx";
         constexpr auto Main = "main";
     };
 

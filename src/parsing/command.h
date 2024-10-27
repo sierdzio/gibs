@@ -23,7 +23,7 @@ struct Command
     std::string value;
 
     // Children commands, for example compilation commands for objects under a single linker
-    std::unique_ptr<Command> children;
+    std::shared_ptr<Command> children;
     // Parent in compilation is the linker
     std::weak_ptr<Command> parent;
 
