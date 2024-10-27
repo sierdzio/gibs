@@ -41,14 +41,14 @@ std::string Command::whole() const
         mods.append(current);
     }
 
-    return Syntax::commandString[command] + mods + value;
+    return Syntax::commandString(command) + mods + value;
 }
 
 bool Command::isValidCommand(const std::string &command) const
 {
-    return command == Syntax::commandString[Syntax::Command::Source]
-        || command == Syntax::commandString[Syntax::Command::Target]
-        || command == Syntax::commandString[Syntax::Command::Lib]
-        || command == Syntax::commandString[Syntax::Command::Define]
-        || command == Syntax::commandString[Syntax::Command::Include];
+    return command == Syntax::commandString(Syntax::Command::Source)
+        || command == Syntax::commandString(Syntax::Command::Target)
+        || command == Syntax::commandString(Syntax::Command::Lib)
+        || command == Syntax::commandString(Syntax::Command::Define)
+        || command == Syntax::commandString(Syntax::Command::Include);
 }

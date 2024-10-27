@@ -140,6 +140,18 @@ void Parser::parseCppFile(const std::filesystem::path &path)
     }
 
     file.close();
+
+    // Now, add compilation command for this cpp file:
+    Command command;
+
+    command.command = Syntax::Command::Source;
+    command.value = path;
+
+    Log::information("Compiling cpp file:", command.whole());
+    _commands.push_back(command);
+    // TODO: start running commands immediately
+
+    // TODO: add this file to list of objects to be linked
 }
 
 void Parser::parseProjectLine(std::string &&line)
@@ -255,7 +267,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
             if (word == Syntax::CppKeywords::Include) {
                 isIncludeCommand = true;
-                command.append(Syntax::commandString[Syntax::Command::Include]);
+                command.append(Syntax::commandString(Syntax::Command::Include));
             }
 
             continue;

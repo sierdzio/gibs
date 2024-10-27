@@ -30,18 +30,19 @@ namespace Syntax {
         constexpr auto MultilineEnd = "*/";
     };
 
-    #define X(day, name) day,
-    enum Command {
+    #define X(key, name) key,
+    enum class Command {
         COMMANDS
     };
     #undef X
 
-    #define X(day, name) name,
-    const std::array<std::string, 6> commandString = {
+    #define X(key, name) name,
+    constexpr std::array commandStrings = {
         COMMANDS
     };
     #undef X
 
+    const std::string commandString(const Command command);
     Command commandValue(const std::string &string);
 
     namespace Modifier {
