@@ -1,5 +1,4 @@
 #include "command.h"
-#include "syntax.h"
 
 #include "tools/log.h"
 

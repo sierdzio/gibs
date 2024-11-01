@@ -2,7 +2,6 @@
 
 #include <array>
 #include <string>
-#include <algorithm>
 
 #define COMMANDS \
 X(Invalid, "") \

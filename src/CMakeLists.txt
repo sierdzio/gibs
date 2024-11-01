@@ -15,8 +15,9 @@ set(gibs_srcs
     tools/commandline.cpp tools/commandline.h
     tools/tools.cpp tools/tools.h
     parsing/syntax.cpp parsing/syntax.h
-    parsing/command.cpp parsing/command.h
     parsing/parser.cpp parsing/parser.h
+    processing/command.cpp processing/command.h
+    processing/commandbundle.cpp processing/commandbundle.h
     processing/processor.cpp processing/processor.h
     )
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "command.h"
+#include "processing/command.h"
 #include "tools/apperror.h"
 
 #include <string>

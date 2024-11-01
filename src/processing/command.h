@@ -1,6 +1,6 @@
 #pragma once
 
-#include "syntax.h"
+#include "parsing/syntax.h"
 
 #include <string>
 #include <vector>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "parsing/command.h"
+#include "processing/command.h"
 
 class Processor
 {
