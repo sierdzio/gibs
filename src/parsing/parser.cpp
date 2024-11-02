@@ -1,10 +1,16 @@
 #include "parser.h"
+#include "cppstate.h"
 #include "syntax.h"
+
 #include "tools/commandline.h"
 #include "tools/tools.h"
 #include "tools/log.h"
 
+#include "project/targetid.h"
+#include "project/command.h"
+
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <utility>
 #include <cassert>
@@ -59,11 +65,11 @@ void Parser::parse()
     // Nothing, for now.
 
     if (_projectFile.has_filename()) {
-        parseProjectFile(_projectFile);
+        parseProjectFile(_projectFile, {});
     }
 
     if (_projectEntryPoint.has_filename()) {
-        parseCppFile(_projectEntryPoint);
+        parseCppFile(_projectEntryPoint, {});
     }
 }
 
@@ -94,7 +100,7 @@ bool Parser::scanProjectDirectoryForEntryPoints()
     return false;
 }
 
-void Parser::parseProjectFile(const std::filesystem::path &path)
+void Parser::parseProjectFile(const std::filesystem::path &path, const TargetId &id)
 {
     std::ifstream file(path, std::iostream::in);
 
@@ -109,13 +115,13 @@ void Parser::parseProjectFile(const std::filesystem::path &path)
     // TODO: implement a custom file reading routine to read it character by character and parse on the fly
     while (std::getline(file, line)) {
         Log::debug("Read:", line);
-        parseProjectLine(std::move(line));
+        parseProjectLine(std::move(line), id);
     }
 
     file.close();
 }
 
-void Parser::parseCppFile(const std::filesystem::path &path)
+void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 {
     std::ifstream file(path, std::iostream::in);
 
@@ -127,6 +133,7 @@ void Parser::parseCppFile(const std::filesystem::path &path)
     Log::debug("Reading C++ file:", path);
 
     CppState state;
+    state.id = id;
     std::string line;
 
     // TODO: implement a custom file reading routine to read it character by character and parse on the fly
@@ -151,7 +158,7 @@ void Parser::parseCppFile(const std::filesystem::path &path)
         command.value = path;
 
         Log::information("Compiling cpp file:", path.filename());
-        _commands.push_back(command);
+        _project.addCommand(command, id);
         // TODO: start running commands immediately
 
         // TODO: add this file to list of objects to be linked
@@ -168,7 +175,7 @@ void Parser::parseCppFile(const std::filesystem::path &path)
             if (current.filename() == path.filename()) {
                 if (extension == Syntax::Extension::CppFile1 || extension == Syntax::Extension::CppFile2) {
                     if (current.filename() == Syntax::Extension::Main) {
-                        parseCppFile(current);
+                        parseCppFile(current, state.id);
                     }
                 }
             }
@@ -177,7 +184,7 @@ void Parser::parseCppFile(const std::filesystem::path &path)
     }
 }
 
-void Parser::parseProjectLine(std::string &&line)
+void Parser::parseProjectLine(std::string &&line, const TargetId &id)
 {
     if (line.size() == 0) {
         return;
@@ -214,7 +221,7 @@ void Parser::parseProjectLine(std::string &&line)
 
     if (command.isValid()) {
         Log::information("Found command:", command.whole());
-        _commands.push_back(command);
+        _project.addCommand(command, id);
         // TODO: start running commands immediately
     }
 }
@@ -251,6 +258,8 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             }
 
             // TODO: when a comment begins mid-line, finish existing Command
+
+            // TODO: update TargetId properly!
 
             // Recognize project comments and comment blocks:
             if (word == Syntax::Comment::MultilineBeginProject) {
@@ -301,7 +310,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
     if (command.isValid()) {
         Log::information("Found command:", command.whole());
-        _commands.push_back(command);
+        _project.addCommand(command, state->id);
         // TODO: start running commands immediately
     }
 }

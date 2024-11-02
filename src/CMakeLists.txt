@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -16,8 +16,10 @@ set(gibs_srcs
     tools/tools.cpp tools/tools.h
     parsing/syntax.cpp parsing/syntax.h
     parsing/parser.cpp parsing/parser.h
-    processing/command.cpp processing/command.h
-    processing/commandbundle.cpp processing/commandbundle.h
+    project/project.cpp project/project.h
+    project/command.cpp project/command.h
+    project/targetid.cpp project/targetid.h
+    project/target.cpp project/target.h
     processing/processor.cpp processing/processor.h
     )
 

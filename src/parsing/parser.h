@@ -1,16 +1,16 @@
 #pragma once
 
-#include "processing/command.h"
+#include "project/project.h"
 #include "tools/apperror.h"
 
 #include <string>
-#include <vector>
-#include <fstream>
-#include <optional>
 #include <filesystem>
 
 class CommandLine;
-class Parser {
+struct CppState;
+struct TargetId;
+class Parser
+{
 public:
     Parser(const CommandLine *cmd);
 
@@ -19,19 +19,12 @@ public:
     void parse();
 
 private:
-    struct CppState
-    {
-        bool isCommentBlock = false;
-        bool isProjectCommentBlock = false;
-        bool shouldFinish = false;
-    };
-
     bool scanProjectDirectoryForEntryPoints();
 
-    void parseProjectFile(const std::filesystem::path &path);
-    void parseCppFile(const std::filesystem::path &path);
+    void parseProjectFile(const std::filesystem::path &path, const TargetId &id);
+    void parseCppFile(const std::filesystem::path &path, const TargetId &id);
 
-    void parseProjectLine(std::string &&line);
+    void parseProjectLine(std::string &&line, const TargetId &id);
     void parseCppLine(std::string &&line, CppState *state);
 
     std::filesystem::path _input;
@@ -39,7 +32,7 @@ private:
     std::filesystem::path _projectFile;
     std::filesystem::path _projectEntryPoint;
 
-    std::vector<Command> _commands;
+    Project _project;
 
     const CommandLine* _cmd = nullptr;
 

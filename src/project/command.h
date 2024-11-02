@@ -1,10 +1,11 @@
 #pragma once
 
 #include "parsing/syntax.h"
+#include "targetid.h"
 
 #include <string>
 #include <vector>
-#include <memory>
+// #include <memory>
 
 struct Command
 {
@@ -22,10 +23,12 @@ struct Command
     std::vector<std::string> modifiers;
     std::string value;
 
-    // Children commands, for example compilation commands for objects under a single linker
-    std::shared_ptr<Command> children;
-    // Parent in compilation is the linker
-    std::weak_ptr<Command> parent;
+    // // Children commands, for example compilation commands for objects under a single linker
+    // std::shared_ptr<Command> children;
+    // // Parent in compilation is the linker
+    // std::weak_ptr<Command> parent;
+
+    TargetId targetId;
 
 private:
     bool isValidCommand(const std::string &command) const;
