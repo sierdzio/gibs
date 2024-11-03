@@ -1,6 +1,5 @@
 #include "parser.h"
 #include "cppstate.h"
-#include "syntax.h"
 
 #include "tools/commandline.h"
 #include "tools/tools.h"
@@ -35,15 +34,15 @@ Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
         const auto base = std::filesystem::path(_input).remove_filename();
         _projectDirectory = std::filesystem::directory_entry(base);
 
-        const auto extension = _input.extension();
+        const auto type = fileType(_input);
 
-        if (extension == Syntax::Extension::ProjectFile) {
+        if (type == Syntax::FileType::Project) {
             _projectFile = dir;
-        } else if (extension == Syntax::Extension::CppFile1 || extension == Syntax::Extension::CppFile2) {
+        } else if (type == Syntax::FileType::Cpp) {
             _projectEntryPoint = dir;
         } else {
             Log::error("Input file type is incorrect: neither .gibs, nor a C++ source file:",
-                      _input, "Extension is:", extension);
+                      _input, "Extension is:", _input.extension());
             _status = AppError::IncorrectInputFileType;
             return;
         }
@@ -69,6 +68,7 @@ void Parser::parse()
     }
 
     if (_projectEntryPoint.has_filename()) {
+        // TODO: construct proper TargetId (project name, binary name or sth)
         parseCppFile(_projectEntryPoint, {});
     }
 }
@@ -78,11 +78,11 @@ bool Parser::scanProjectDirectoryForEntryPoints()
     const auto &dir = _projectDirectory;
 
     for (auto const& it : std::filesystem::directory_iterator(dir)) {
-        const auto extension = it.path().extension();
+        const auto type = fileType(it.path());
 
-        if (extension == Syntax::Extension::ProjectFile) {
+        if (type == Syntax::FileType::Project) {
             _projectFile = it.path();
-        } else if (extension == Syntax::Extension::CppFile1 || extension == Syntax::Extension::CppFile2) {
+        } else if (type == Syntax::FileType::Cpp) {
             if (it.path().filename() == Syntax::Extension::Main) {
                 _projectEntryPoint = it.path();
             }
@@ -148,9 +148,9 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     file.close();
 
-    const auto ext = path.extension();
+    const auto type = fileType(path);
 
-    if (ext == Syntax::Extension::CppFile1 || ext == Syntax::Extension::CppFile2) {
+    if (type == Syntax::FileType::Cpp) {
         // Now, add compilation command for this cpp file:
         Command command;
 
@@ -163,17 +163,16 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
         // TODO: add this file to list of objects to be linked
         Log::information("Adding object file to linker command:", path.filename());
-    } else if (ext == Syntax::Extension::HeaderFile1 || ext == Syntax::Extension::HeaderFile2
-                || ext == Syntax::Extension::HeaderFile3) {
+    } else if (type == Syntax::FileType::H) {
         // TODO: find source file and parse it
         Log::debug("Looking for a source file accompanying this header:", path.filename());
 
         for (auto const& it : std::filesystem::directory_iterator(path.parent_path())) {
             const auto &current = it.path();
-            const auto &extension = current.extension();
 
             if (current.filename() == path.filename()) {
-                if (extension == Syntax::Extension::CppFile1 || extension == Syntax::Extension::CppFile2) {
+                const auto currentType = fileType(current);
+                if (currentType == Syntax::FileType::Cpp) {
                     if (current.filename() == Syntax::Extension::Main) {
                         parseCppFile(current, state.id);
                     }
@@ -313,4 +312,25 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         _project.addCommand(command, state->id);
         // TODO: start running commands immediately
     }
+}
+
+Syntax::FileType Parser::fileType(const std::filesystem::path &path) const
+{
+    const auto& extension = path.extension();
+
+    if (extension == Syntax::Extension::ProjectFile) {
+        return Syntax::FileType::Project;
+    } else if (extension == Syntax::Extension::CppFile1
+            || extension == Syntax::Extension::CppFile2) {
+        return Syntax::FileType::Cpp;
+    } else if (extension == Syntax::Extension::HeaderFile1
+            || extension == Syntax::Extension::HeaderFile2
+            || extension == Syntax::Extension::HeaderFile3) {
+        return Syntax::FileType::H;
+    } else if (extension == Syntax::Extension::ObjectFile1
+            || extension == Syntax::Extension::ObjectFile2) {
+        return Syntax::FileType::Object;
+    }
+
+    return Syntax::FileType::Other;
 }

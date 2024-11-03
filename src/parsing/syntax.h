@@ -24,6 +24,14 @@ namespace Syntax {
         constexpr auto Main = "main";
     };
 
+    enum class FileType {
+        Other,
+        Project,
+        Cpp,
+        H,
+        Object
+    };
+
     namespace Comment {
         constexpr auto OneLineProject = "//i";
         constexpr auto MultilineBeginProject = "/*i";

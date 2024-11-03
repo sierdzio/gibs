@@ -1,5 +1,6 @@
 #pragma once
 
+#include "syntax.h"
 #include "project/project.h"
 #include "tools/apperror.h"
 
@@ -26,6 +27,8 @@ private:
 
     void parseProjectLine(std::string &&line, const TargetId &id);
     void parseCppLine(std::string &&line, CppState *state);
+
+    Syntax::FileType fileType(const std::filesystem::path& path) const;
 
     std::filesystem::path _input;
     std::filesystem::path _projectDirectory;
