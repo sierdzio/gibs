@@ -9,7 +9,9 @@ struct TargetId;
 
 struct Project
 {
-    bool addCommand(const Command &command, const TargetId &id);
+    void addDependency(const TargetId& target, const TargetId& dependency);
+    bool addCommand(const Command &command, const TargetId& id, const Stage stage);
 
     std::vector<Target> targets;
+    TargetId id;
 };

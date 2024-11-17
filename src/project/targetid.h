@@ -8,9 +8,10 @@ struct TargetId
     TargetId(std::string&& name);
 
     bool operator<=>(const TargetId& other) const = default;
-
     bool isNull() const;
 
     std::string name;
+
+private:
     uint id = 0;
 };

@@ -61,15 +61,16 @@ AppError Parser::status() const
 
 void Parser::parse()
 {
-    // Nothing, for now.
+    // Take project name from parent directory - for now. It can be adjusted later if "target name"
+    // command is found inside project files
+    _project.id = TargetId(_projectDirectory.filename());
 
     if (_projectFile.has_filename()) {
-        parseProjectFile(_projectFile, {});
+        parseProjectFile(_projectFile, _project.id);
     }
 
     if (_projectEntryPoint.has_filename()) {
-        // TODO: construct proper TargetId (project name, binary name or sth)
-        parseCppFile(_projectEntryPoint, {});
+        parseCppFile(_projectEntryPoint, _project.id);
     }
 }
 
@@ -158,13 +159,12 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         command.value = path;
 
         Log::information("Compiling cpp file:", path.filename());
-        _project.addCommand(command, id);
+        _project.addCommand(command, id, Stage::First);
         // TODO: start running commands immediately
 
         // TODO: add this file to list of objects to be linked
         Log::information("Adding object file to linker command:", path.filename());
     } else if (type == Syntax::FileType::H) {
-        // TODO: find source file and parse it
         Log::debug("Looking for a source file accompanying this header:", path.filename());
 
         for (auto const& it : std::filesystem::directory_iterator(path.parent_path())) {
@@ -173,9 +173,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             if (current.filename() == path.filename()) {
                 const auto currentType = fileType(current);
                 if (currentType == Syntax::FileType::Cpp) {
-                    if (current.filename() == Syntax::Extension::Main) {
-                        parseCppFile(current, state.id);
-                    }
+                    parseCppFile(current, state.id);
                 }
             }
             // TODO: handle case where source file is in a different directory... maybe cache the dir structure ?
@@ -220,7 +218,25 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
 
     if (command.isValid()) {
         Log::information("Found command:", command.whole());
-        _project.addCommand(command, id);
+
+        auto stage = Stage::Unknown;
+        if (command.command == Syntax::Command::Source)
+        {
+            stage = Stage::First;
+        }
+        else if (command.command == Syntax::Command::Lib
+                 || command.command == Syntax::Command::Target)
+        {
+            stage = Stage::Second;
+        }
+
+        if (stage != Stage::Unknown)
+        {
+            _project.addCommand(command, id, stage);
+        }
+
+        // TODO: handle non-compilation commands
+
         // TODO: start running commands immediately
     }
 }
@@ -309,7 +325,25 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
     if (command.isValid()) {
         Log::information("Found command:", command.whole());
-        _project.addCommand(command, state->id);
+
+        auto stage = Stage::Unknown;
+        if (command.command == Syntax::Command::Source)
+        {
+            stage = Stage::First;
+        }
+        else if (command.command == Syntax::Command::Lib
+                 || command.command == Syntax::Command::Target)
+        {
+            stage = Stage::Second;
+        }
+
+        if (stage != Stage::Unknown)
+        {
+            _project.addCommand(command, state->id, stage);
+        }
+
+        // TODO: handle non-compilation commands
+
         // TODO: start running commands immediately
     }
 }

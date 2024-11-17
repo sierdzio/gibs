@@ -8,6 +8,13 @@
 
 // TODO: pointers! Or?
 
+enum class Stage
+{
+    Unknown,
+    First,
+    Second
+};
+
 struct CommandBundle
 {
     std::vector<Command> commands;
@@ -17,6 +24,7 @@ struct Target
 {
 public:
     TargetId id;
-    CommandBundle dependsOn;
-    CommandBundle commands;
+    std::vector<TargetId> dependencies;
+    CommandBundle stageOne;
+    CommandBundle stageTwo;
 };
