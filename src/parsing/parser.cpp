@@ -175,7 +175,12 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             if (current.filename() == path.filename()) {
                 const auto currentType = fileType(current);
                 if (currentType == Syntax::FileType::Cpp) {
-                    parseCppFile(current, state.id);
+                    Command command;
+                    command.command = Syntax::Command::Include;
+                    command.value = current;
+
+                    Log::information("Parsing cpp file for header:", path.filename());
+                    _project.addCommand(command, id, Stage::First);
                 }
             }
             // TODO: handle case where source file is in a different directory... maybe cache the dir structure ?
@@ -282,6 +287,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             // Handle commands in comments:
             if (isOneLineCommand || state->isProjectCommentBlock || isIncludeCommand) {
                 command.append(word);
+                // continue; ??
             }
 
             // Recognize interesting parts of C++ code:
@@ -294,10 +300,9 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
             if (word == Syntax::CppKeywords::Include) {
                 isIncludeCommand = true;
-                command.append(Syntax::commandString(Syntax::Command::Include));
+                //command.append(Syntax::commandString(Syntax::Command::Include));
+                command.command = Syntax::Command::Include;
             }
-
-            continue;
         }
 
         word.push_back(character);
@@ -340,6 +345,7 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
     if (shouldParse)
     {
         const auto& path = command.modifiers.front();
+        // TODO: add base path and such
 
         if (std::filesystem::path(path).extension() == Syntax::Extension::ProjectFile)
         {
