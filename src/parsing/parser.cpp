@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "cppstate.h"
 
+#include "parsing/syntax.h"
 #include "tools/commandline.h"
 #include "tools/tools.h"
 #include "tools/log.h"
@@ -8,6 +9,7 @@
 #include "project/targetid.h"
 #include "project/command.h"
 
+#include <filesystem>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -216,29 +218,7 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
         }
     }
 
-    if (command.isValid()) {
-        Log::information("Found command:", command.whole());
-
-        auto stage = Stage::Unknown;
-        if (command.command == Syntax::Command::Source)
-        {
-            stage = Stage::First;
-        }
-        else if (command.command == Syntax::Command::Lib
-                 || command.command == Syntax::Command::Target)
-        {
-            stage = Stage::Second;
-        }
-
-        if (stage != Stage::Unknown)
-        {
-            _project.addCommand(command, id, stage);
-        }
-
-        // TODO: handle non-compilation commands
-
-        // TODO: start running commands immediately
-    }
+    handleCommand(command, id);
 }
 
 void Parser::parseCppLine(std::string &&line, CppState *state)
@@ -323,46 +303,81 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         word.push_back(character);
     }
 
-    if (command.isValid()) {
-        Log::information("Found command:", command.whole());
+    handleCommand(command, state->id);
+}
 
-        auto stage = Stage::Unknown;
-        if (command.command == Syntax::Command::Source)
-        {
-            stage = Stage::First;
-        }
-        else if (command.command == Syntax::Command::Lib
-                 || command.command == Syntax::Command::Target)
-        {
-            stage = Stage::Second;
-        }
-
-        if (stage != Stage::Unknown)
-        {
-            _project.addCommand(command, state->id, stage);
-        }
-
-        // TODO: handle non-compilation commands
-
-        // TODO: start running commands immediately
+void Parser::handleCommand(const Command& command, const TargetId& id)
+{
+    if (command.isValid() == false)
+    {
+        return;
     }
+
+    Log::information("Found command:", command.whole());
+
+    bool shouldParse = false;
+    auto stage = Stage::Unknown;
+    if (command.command == Syntax::Command::Source)
+    {
+        stage = Stage::First;
+        shouldParse = true;
+    }
+    else if (command.command == Syntax::Command::Lib
+            || command.command == Syntax::Command::Target)
+    {
+        stage = Stage::Second;
+    }
+    else if (command.command == Syntax::Command::Include)
+    {
+        shouldParse = true;
+    }
+
+    if (stage != Stage::Unknown)
+    {
+        _project.addCommand(command, id, stage);
+    }
+
+    if (shouldParse)
+    {
+        const auto& path = command.modifiers.front();
+
+        if (std::filesystem::path(path).extension() == Syntax::Extension::ProjectFile)
+        {
+            parseProjectFile(path, id);
+        }
+        else
+        {
+            parseCppFile(command.modifiers.front(), id);
+        }
+    }
+
+    // TODO: handle non-compilation commands
+
+    // TODO: start running commands immediately
 }
 
 Syntax::FileType Parser::fileType(const std::filesystem::path &path) const
 {
     const auto& extension = path.extension();
 
-    if (extension == Syntax::Extension::ProjectFile) {
+    if (extension == Syntax::Extension::ProjectFile)
+    {
         return Syntax::FileType::Project;
-    } else if (extension == Syntax::Extension::CppFile1
-            || extension == Syntax::Extension::CppFile2) {
+    }
+    else if (extension == Syntax::Extension::CppFile1
+            || extension == Syntax::Extension::CppFile2)
+    {
         return Syntax::FileType::Cpp;
-    } else if (extension == Syntax::Extension::HeaderFile1
+    }
+    else if (extension == Syntax::Extension::HeaderFile1
             || extension == Syntax::Extension::HeaderFile2
-            || extension == Syntax::Extension::HeaderFile3) {
+            || extension == Syntax::Extension::HeaderFile3)
+    {
         return Syntax::FileType::H;
-    } else if (extension == Syntax::Extension::ObjectFile1
-            || extension == Syntax::Extension::ObjectFile2) {
+    }
+    else if (extension == Syntax::Extension::ObjectFile1
+            || extension == Syntax::Extension::ObjectFile2)
+    {
         return Syntax::FileType::Object;
     }
 

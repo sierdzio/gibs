@@ -3,7 +3,6 @@
 #include "command.h"
 #include "targetid.h"
 
-#include <string>
 #include <vector>
 
 // TODO: pointers! Or?
