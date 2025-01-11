@@ -62,11 +62,15 @@ namespace Syntax {
         constexpr auto App = "app";
         constexpr auto Static = "static";
         constexpr auto Dynamic = "dynamic";
+        constexpr auto Name = "name";
     };
 
     namespace CppKeywords {
         constexpr auto Class = "class";
         constexpr auto Struct = "struct";
         constexpr auto Include = "#include";
+        constexpr auto Main = "main";
+        constexpr auto Int = "int";
+        constexpr auto Char = "char";
     };
 };

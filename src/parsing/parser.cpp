@@ -117,7 +117,7 @@ void Parser::parseProjectFile(const std::filesystem::path &path, const TargetId 
     std::string line;
     // TODO: implement a custom file reading routine to read it character by character and parse on the fly
     while (std::getline(file, line)) {
-        Log::debug("Read:", line);
+        Log::verbose("Read:", line);
         parseProjectLine(std::move(line), id);
     }
 
@@ -141,7 +141,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     // TODO: implement a custom file reading routine to read it character by character and parse on the fly
     while (std::getline(file,line)) {
-        Log::debug("Read:", line);
+        Log::verbose("Read:", line);
         parseCppLine(std::move(line), &state);
 
         if (state.shouldFinish) {
@@ -238,74 +238,118 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     Command command;
     bool isOneLineCommand = false;
 
+    enum class Action
+    {
+        Continue,
+        Break
+    };
+
+    const auto processWord = [&](auto& word, auto& state) -> Action
+    {
+        // Make sure word gets cleaned up even if we exit early
+        const auto guard = Tools::ScopeGuard([&word]{
+            word.clear();
+        });
+
+        if (word == Syntax::Comment::MultilineEnd)
+        {
+            state->isCommentBlock = false;
+            state->isProjectCommentBlock = false;
+            return Action::Continue;
+        }
+
+        // TODO: when a comment begins mid-line, finish existing Command
+
+        // TODO: update TargetId properly!
+
+        // Recognize project comments and comment blocks:
+        if (word == Syntax::Comment::MultilineBeginProject)
+        {
+            state->isProjectCommentBlock = true;
+            return Action::Continue;
+        }
+        else if (word == Syntax::Comment::OneLine)
+        {
+            return Action::Continue;
+        }
+        else if (word == Syntax::Comment::MultilineBegin)
+        {
+            // Recognize C++ comments and comment blocks:
+            state->isCommentBlock = true;
+            return Action::Continue;
+        }
+
+        if (state->isCommentBlock)
+        {
+            // Skip C++ comments
+            return Action::Continue;
+        }
+
+        if (word == Syntax::CppKeywords::Include)
+        {
+            isOneLineCommand = true;
+            command.append(word);
+            return Action::Continue;
+        }
+
+        if (word == Syntax::Comment::OneLineProject)
+        {
+            isOneLineCommand = true;
+            return Action::Continue;
+        }
+
+        // Processing of comment meta data is done. Now we can proceed with parsing other parts of text:
+
+        // Handle commands in comments:
+        if (isOneLineCommand
+            || state->isProjectCommentBlock
+            // TODO: c++20 modules
+            )
+        {
+            command.append(word);
+            return Action::Continue;
+        }
+
+        // Recognize interesting parts of C++ code:
+        if (_cmd->isQuickMode()
+            && (word == Syntax::CppKeywords::Class
+                || word == Syntax::CppKeywords::Struct
+                || word == Syntax::CppKeywords::Int
+                || word == Syntax::CppKeywords::Char
+                || word.starts_with(Syntax::CppKeywords::Main)))
+        {
+            Log::debug("Finishing c++ file parsing early due to --quick flag");
+            state->shouldFinish = true;
+            isOneLineCommand = false;
+            return Action::Break;
+        }
+
+        return Action::Continue;
+    };
+
     for (const auto &character : std::as_const(line)) {
         if (character == ' ' || character == '\t') {
-            if (word.empty() == true) {
+            if (word.empty()) {
                 // Skip indentation and long whitespace
                 continue;
             }
 
-            // Make sure word gets cleaned up even if we exit early
-            const auto guard = Tools::ScopeGuard([&word]{
-                word.clear();
-            });
+            const auto action = processWord(word, state);
 
-            if (word == Syntax::Comment::MultilineEnd) {
-                state->isCommentBlock = false;
-                state->isProjectCommentBlock = false;
-                continue;
+            if (action == Action::Break)
+            {
+                break;
             }
-
-            // TODO: when a comment begins mid-line, finish existing Command
-
-            // TODO: update TargetId properly!
-
-            // Recognize project comments and comment blocks:
-            if (word == Syntax::Comment::MultilineBeginProject) {
-                state->isProjectCommentBlock = true;
-                continue;
-            } else if (word == Syntax::Comment::OneLine) {
-                continue;
-            } else if (word == Syntax::Comment::MultilineBegin) {
-                // Recognize C++ comments and comment blocks:
-                state->isCommentBlock = true;
-                continue;
-            }
-
-            if (state->isCommentBlock) {
-                // Skip C++ comments
-                continue;
-            }
-
-            if (word == Syntax::Comment::OneLineProject) {
-                isOneLineCommand = true;
-                continue;
-            }
-
-            // Processing of comment meta data is done. Now we can proceed with parsing other parts of text:
-
-            // Handle commands in comments:
-            if (isOneLineCommand || state->isProjectCommentBlock) {
-                command.append(word);
-                continue;
-            }
-
-            // Recognize interesting parts of C++ code:
-            if (_cmd->isQuickMode() && (word == Syntax::CppKeywords::Class
-                || word == Syntax::CppKeywords::Struct)) {
-                state->shouldFinish = true;
-                isOneLineCommand = false;
-                return;
-            }
-
-            //if (word == Syntax::CppKeywords::Include) {
-            //    isIncludeCommand = true;
-            //    //command.append(Syntax::commandString(Syntax::Command::Include));
-            //    command.command = Syntax::Command::Include;
-            //}
         }
+        else
+        {
+            word.push_back(character);
+        }
+    }
 
-        word.push_back(character);
+    if (not word.empty())
+    {
+        processWord(word, state);
     }
 
     handleCommand(command, state->id);

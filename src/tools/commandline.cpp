@@ -19,22 +19,24 @@ namespace
     constexpr auto RunExplanation = "Run the executable immediately after building.";
     constexpr auto D = "-d";
     constexpr auto Debug = "--debug";
-    constexpr auto DebugExplanation = "Compile in debug mode. By default, gibs compiles release binaries.";
-    constexpr auto Q = "-d";
+    constexpr auto DebugExplanation = "Compile in debug mode. By default, gibs "
+        "compiles release binaries.";
+    constexpr auto Q = "-q";
     constexpr auto Quick = "--quick";
-    constexpr auto QuickExplanation = "'Convention over configuration' mode - parse files only up to first "
-                        "line of 'concrete code'. Do not check file checksums when doing incremental "
-                        "builds.";
+    constexpr auto QuickExplanation = "'Convention over configuration' mode - parse "
+        "files only up to first line of 'concrete code'. Do not check file checksums when doing "
+        "incremental builds.";
+
+    constexpr auto FlagEnabled = "Flag enabled:";
 };
 
 CommandLine::CommandLine(int argc, char *argv[])
 {
-    Log::information("Arg. count:", argc, "args:", std::string(*argv));
+    Log::debug("Arg. count:", argc, "args:", std::string(*argv));
 
     for (int i = 0; i < argc; ++i) {
         const auto current = std::string(argv[i]);
         _args.push_back(current);
-        Log::debug("Found a word:", current);
     }
 
     _isValid = parse();
@@ -116,16 +118,19 @@ bool CommandLine::parse()
         }
 
         if (current == R || current == Run) {
+            Log::debug(FlagEnabled, Run);
             _runImmediately = true;
             continue;
         }
 
         if (current == D || current == Debug) {
+            Log::debug(FlagEnabled, Debug);
             _isDebug = true;
             continue;
         }
 
         if (current == Q || current == Quick) {
+            Log::debug(FlagEnabled, Quick);
             _isQuick = true;
             continue;
         }

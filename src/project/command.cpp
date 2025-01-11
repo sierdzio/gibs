@@ -24,6 +24,7 @@ bool Command::append(const std::string &part)
         if (part == Syntax::CppKeywords::Include)
         {
             command = Syntax::Command::Include;
+            return true;
         }
         else if (isValidCommand(part))
         {

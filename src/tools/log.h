@@ -9,6 +9,7 @@ std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &s
 namespace Log
 {
     enum class Type {
+        Verbose,
         Debug,
         Information,
         Warning,
@@ -16,6 +17,12 @@ namespace Log
     };
 
     std::string type(const Type type);
+
+    template<typename... Types>
+    void verbose(Types&&... args)
+    {
+        log(Type::Verbose, args...);
+    }
 
     template<typename... Types>
     void debug(Types&&... args)

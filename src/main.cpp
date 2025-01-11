@@ -1,14 +1,10 @@
 #include <iostream>
-#include <string>
 
-#include "tools/log.h"
 #include "tools/commandline.h"
 #include "parsing/parser.h"
 
 int main(int argc, char *argv[])
 {
-    Log::information("Hello, gibs!");
-
     const CommandLine cmd(argc, argv);
 
     if (cmd.hasHelp()) {

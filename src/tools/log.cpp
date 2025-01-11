@@ -14,6 +14,7 @@ std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &s
 }
 
 namespace {
+    constexpr auto Verbose = "V:";
     constexpr auto Debug = "D:";
     constexpr auto Information = "I:";
     constexpr auto Warning = "W:";
@@ -24,6 +25,8 @@ std::string Log::type(const Type type)
 {
     switch (type)
     {
+        case Type::Verbose:
+            return Verbose;
         case Type::Debug:
             return Debug;
         case Type::Information:
