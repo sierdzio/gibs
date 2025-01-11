@@ -16,11 +16,12 @@ struct Command
      \note This method constructs the text each time it is called. Use sparringly.
      */
     std::string whole() const;
+    std::string value() const;
 
     Syntax::Command command = Syntax::Command::Invalid;
     std::vector<std::string> modifiers;
-    std::string value;
 
 private:
     bool isValidCommand(const std::string &command) const;
+    bool supportsModifiers(const Syntax::Command command) const;
 };

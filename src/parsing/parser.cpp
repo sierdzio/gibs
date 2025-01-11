@@ -158,7 +158,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         Command command;
 
         command.command = Syntax::Command::Source;
-        command.value = path;
+        command.append(path.string());
 
         Log::information("Compiling cpp file:", path.filename());
         _project.addCommand(command, id, Stage::First);
@@ -177,7 +177,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                 if (currentType == Syntax::FileType::Cpp) {
                     Command command;
                     command.command = Syntax::Command::Include;
-                    command.value = current;
+                    command.append(current);
 
                     Log::information("Parsing cpp file for header:", path.filename());
                     _project.addCommand(command, id, Stage::First);
@@ -237,7 +237,6 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     std::string word;
     Command command;
     bool isOneLineCommand = false;
-    bool isIncludeCommand = false;
 
     for (const auto &character : std::as_const(line)) {
         if (character == ' ' || character == '\t') {
@@ -286,9 +285,9 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             // Processing of comment meta data is done. Now we can proceed with parsing other parts of text:
 
             // Handle commands in comments:
-            if (isOneLineCommand || state->isProjectCommentBlock || isIncludeCommand) {
+            if (isOneLineCommand || state->isProjectCommentBlock) {
                 command.append(word);
-                // continue; ??
+                continue;
             }
 
             // Recognize interesting parts of C++ code:
@@ -299,11 +298,11 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
                 return;
             }
 
-            if (word == Syntax::CppKeywords::Include) {
-                isIncludeCommand = true;
-                //command.append(Syntax::commandString(Syntax::Command::Include));
-                command.command = Syntax::Command::Include;
-            }
+            //if (word == Syntax::CppKeywords::Include) {
+            //    isIncludeCommand = true;
+            //    //command.append(Syntax::commandString(Syntax::Command::Include));
+            //    command.command = Syntax::Command::Include;
+            //}
         }
 
         word.push_back(character);
