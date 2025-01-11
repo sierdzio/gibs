@@ -280,6 +280,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
             if (word == Syntax::Comment::OneLineProject) {
                 isOneLineCommand = true;
+                continue;
             }
 
             // Processing of comment meta data is done. Now we can proceed with parsing other parts of text:
@@ -342,7 +343,7 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
         _project.addCommand(command, id, stage);
     }
 
-    if (shouldParse)
+    if (shouldParse and not command.modifiers.empty())
     {
         const auto& path = command.modifiers.front();
         // TODO: add base path and such
