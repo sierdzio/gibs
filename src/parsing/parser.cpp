@@ -54,6 +54,8 @@ Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
 
         scanProjectDirectoryForEntryPoints();
     }
+
+    _includePaths.push_back(_projectDirectory);
 }
 
 AppError Parser::status() const
@@ -137,6 +139,12 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     CppState state;
     state.id = id;
+    {
+        std::filesystem::path basePath = path;
+        basePath.replace_extension(std::string());
+        state.currentFileBaseName = basePath.string();
+    }
+
     std::string line;
 
     // TODO: implement a custom file reading routine to read it character by character and parse on the fly
@@ -352,7 +360,18 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         processWord(word, state);
     }
 
-    handleCommand(command, state->id);
+    if (command.command == Syntax::Command::Include
+        // TODO: convert command.value() to base name, too! (no extension)
+        && command.value() == state->currentFileBaseName)
+    {
+        // Skipping parsing when we are already parsing this file.
+        // TODO: also skip parsing when this file was already parsed or compiled! Do not duplicate the work!
+
+    }
+    else
+    {
+        handleCommand(command, state->id);
+    }
 }
 
 void Parser::handleCommand(const Command& command, const TargetId& id)
@@ -397,7 +416,15 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
         }
         else
         {
-            parseCppFile(command.modifiers.front(), id);
+            const auto pathOptional = findCppFile(command.modifiers.front());
+            if (pathOptional.has_value())
+            {
+                parseCppFile(pathOptional.value(), id);
+            }
+            else
+            {
+                Log::error("Included file not found:", command.modifiers.front());
+            }
         }
     }
 
@@ -432,4 +459,56 @@ Syntax::FileType Parser::fileType(const std::filesystem::path &path) const
     }
 
     return Syntax::FileType::Other;
+}
+
+std::optional<std::filesystem::path> Parser::findFile(const std::string &name) const
+{
+    // TODO: add known files cache to speed things up
+
+    Log::verbose("Looking for:", name);
+
+    for  (const auto& dir : _includePaths)
+    {
+        for (auto const& it : std::filesystem::directory_iterator(dir))
+        {
+            if (it.exists() && it.is_regular_file() && it.path().filename() == name) {
+                return it;
+            }
+        }
+    }
+
+    return {};
+}
+
+std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name) const
+{
+    Log::verbose("Looking for CPP file for:", name);
+
+    if (name.ends_with(Syntax::Extension::HeaderFile1)
+        || name.ends_with(Syntax::Extension::HeaderFile2)
+        || name.ends_with(Syntax::Extension::HeaderFile3))
+    {
+        // TODO: replace extension with cpp extension and then proceed with search
+        std::filesystem::path path = name;
+        path.replace_extension(Syntax::Extension::CppFile1);
+
+        std::filesystem::directory_entry checker(path);
+
+        if (auto option = findFile(path.string()); option.has_value())
+        {
+            return option;
+        }
+        else
+        {
+            path.replace_extension(Syntax::Extension::CppFile2);
+            checker = std::filesystem::directory_entry(path);
+
+            if (auto option = findFile(path.string()); option.has_value())
+            {
+                return option;
+            }
+        }
+    }
+
+    return {};
 }

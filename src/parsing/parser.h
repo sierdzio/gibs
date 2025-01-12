@@ -4,8 +4,10 @@
 #include "project/project.h"
 #include "tools/apperror.h"
 
+#include <optional>
 #include <string>
 #include <filesystem>
+#include <vector>
 
 class CommandLine;
 struct CppState;
@@ -32,10 +34,17 @@ private:
 
     Syntax::FileType fileType(const std::filesystem::path& path) const;
 
+    std::optional<std::filesystem::path> findFile(const std::string &name) const;
+    std::optional<std::filesystem::path> findCppFile(const std::string &name) const;
+
     std::filesystem::path _input;
+
+    // TODO: move to Project?
+
     std::filesystem::path _projectDirectory;
     std::filesystem::path _projectFile;
     std::filesystem::path _projectEntryPoint;
+    std::vector<std::filesystem::path> _includePaths;
 
     Project _project;
 

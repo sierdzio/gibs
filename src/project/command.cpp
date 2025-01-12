@@ -2,6 +2,7 @@
 
 #include "parsing/syntax.h"
 #include "tools/log.h"
+#include "tools/tools.h"
 
 bool Command::isValid() const
 {
@@ -46,7 +47,7 @@ bool Command::append(const std::string &part)
             return false;
         }
 
-        modifiers.push_back(part);
+        modifiers.push_back(Tools::removeQuotes(std::move(part)));
         return true;
     }
 

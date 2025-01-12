@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 
 namespace Tools {
     class ScopeGuard {
@@ -11,4 +12,6 @@ namespace Tools {
         private:
             std::function<void()> _function;
     };
+
+    std::string removeQuotes(const std::string& path);
 };
