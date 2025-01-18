@@ -48,6 +48,15 @@ private:
 
     Project _project;
 
+    // TODO: move to project?
+    // TODO: separate list per-target and project; optimize lookup
+    /*!
+     * Of course, no header files are actually being compiled. But this keeps track of
+     * header files for which a corresponding source file has already been found and
+     * processed through handleCommand().
+    */
+    std::vector<std::string> _compiledHeaders;
+
     const CommandLine* _cmd = nullptr;
 
     AppError _status = AppError::NoError;

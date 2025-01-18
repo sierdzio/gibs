@@ -1,5 +1,7 @@
 #include "tools.h"
 
+#include <algorithm>
+
 Tools::ScopeGuard::ScopeGuard(const std::function<void()> &function) : _function(function)
 {
     // Nothing
@@ -25,4 +27,9 @@ std::string Tools::removeQuotes(const std::string& path)
     }
 
     return result;
+}
+
+bool Tools::contains(const std::vector<std::string>& list, const std::string& string)
+{
+    return std::find(list.cbegin(), list.cend(), string) != list.cend();
 }

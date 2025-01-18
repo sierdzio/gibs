@@ -72,5 +72,8 @@ namespace Syntax {
         constexpr auto Main = "main";
         constexpr auto Int = "int";
         constexpr auto Char = "char";
+        constexpr auto DoubleColon = "::";
+        constexpr auto RoundBrackets = "()";
+        constexpr auto OpenLibraryInclude = "<";
     };
 };

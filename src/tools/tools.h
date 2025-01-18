@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 
+
 namespace Tools {
     class ScopeGuard {
         public:
@@ -14,4 +15,6 @@ namespace Tools {
     };
 
     std::string removeQuotes(const std::string& path);
+
+    bool contains(const std::vector<std::string>& list, const std::string& string);
 };

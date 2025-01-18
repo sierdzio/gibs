@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <vector>
 #include <utility>
 #include <cassert>
@@ -139,11 +140,6 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     CppState state;
     state.id = id;
-    {
-        std::filesystem::path basePath = path;
-        basePath.replace_extension(std::string());
-        state.currentFileBaseName = basePath.string();
-    }
 
     std::string line;
 
@@ -296,7 +292,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         if (word == Syntax::CppKeywords::Include)
         {
             isOneLineCommand = true;
-            command.append(word);
+            command.command = Syntax::Command::Include;
             return Action::Continue;
         }
 
@@ -306,11 +302,20 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             return Action::Continue;
         }
 
+        // TODO: add code to check if first word was not recognized - then we can skip the line?
+
         // Processing of comment meta data is done. Now we can proceed with parsing other parts of text:
 
+        if (command.command == Syntax::Command::Include
+            and word.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
+        {
+            // Library include - can be skipped
+            command.command = Syntax::Command::Invalid;
+            return Action::Break;
+        }
+
         // Handle commands in comments:
-        if (isOneLineCommand
-            || state->isProjectCommentBlock
+        if (isOneLineCommand or state->isProjectCommentBlock
             // TODO: c++20 modules
             )
         {
@@ -324,7 +329,11 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
                 || word == Syntax::CppKeywords::Struct
                 || word == Syntax::CppKeywords::Int
                 || word == Syntax::CppKeywords::Char
-                || word.starts_with(Syntax::CppKeywords::Main)))
+                || word.starts_with(Syntax::CppKeywords::Main)
+                // TODO: C++23 use contains()
+                || word.find(Syntax::CppKeywords::DoubleColon) != std::string::npos
+                || word.find(Syntax::CppKeywords::RoundBrackets) != std::string::npos
+                ))
         {
             Log::debug("Finishing c++ file parsing early due to --quick flag");
             state->shouldFinish = true;
@@ -360,17 +369,14 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         processWord(word, state);
     }
 
-    if (command.command == Syntax::Command::Include
-        // TODO: convert command.value() to base name, too! (no extension)
-        && command.value() == state->currentFileBaseName)
+    if (command.command == Syntax::Command::Include and not Tools::contains(_compiledHeaders, command.value()))
     {
-        // Skipping parsing when we are already parsing this file.
-        // TODO: also skip parsing when this file was already parsed or compiled! Do not duplicate the work!
-
+        handleCommand(command, state->id);
     }
     else
     {
-        handleCommand(command, state->id);
+        // Skipping command handling when we are already parsing this file.
+        // TODO: also skip parsing when this file was already parsed or compiled! Do not duplicate the work!
     }
 }
 
@@ -398,6 +404,7 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
     else if (command.command == Syntax::Command::Include)
     {
         shouldParse = true;
+        _compiledHeaders.push_back(command.value());
     }
 
     if (stage != Stage::Unknown)
