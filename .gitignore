@@ -44,4 +44,4 @@ doc/html/
 *.doxytag.*
 
 .cache/
-.vscode
+.vscode/
