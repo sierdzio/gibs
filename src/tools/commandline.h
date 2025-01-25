@@ -1,7 +1,10 @@
 #pragma once
 
+#include "log.h"
+
 #include <vector>
 #include <string>
+
 class CommandLine
 {
 public:
@@ -27,6 +30,8 @@ private:
 
     std::vector<std::string> _args;
     std::string _input;
+    Log::Type _logLevel = Log::Type::Information;
+
     bool _isValid = false;
     bool _hasHelp = false;
     bool _hasVersion = false;

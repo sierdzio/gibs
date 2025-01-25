@@ -1,20 +1,39 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <vector>
 #include <iostream>
+
+#define LOG_TYPES \
+X(Silent, "silent") \
+X(Error, "error") \
+X(Warning, "warning") \
+X(Information, "information") \
+X(Debug, "debug") \
+X(Verbose, "verbose")
 
 std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &stringList);
 
 namespace Log
 {
-    enum class Type {
-        Verbose,
-        Debug,
-        Information,
-        Warning,
-        Error
+    #define X(key, name) key
+    enum class Type
+    {
+        LOG_TYPES
     };
+    #undef X
+
+    #define X(key, name) name,
+    constexpr std::array typeStrings = {
+        LOG_TYPES
+    };
+    #undef X
+
+    const std::string typeString(const Type type);
+    Type typeValue(const std::string &string);
+
+    void setLogLevel(const Type type);
 
     std::string type(const Type type);
 

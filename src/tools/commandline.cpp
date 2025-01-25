@@ -26,6 +26,13 @@ namespace
     constexpr auto QuickExplanation = "'Convention over configuration' mode - parse "
         "files only up to first line of 'concrete code'. Do not check file checksums when doing "
         "incremental builds.";
+    constexpr auto Verbose = "--verbose";
+    constexpr auto VerboseExplanation = "Sets log level to 'Verbose'";
+
+    constexpr auto L = "-l";
+    constexpr auto LogLevel = "--log-level";
+    // TODO: use the X macro to list all log levels automatically
+    constexpr auto LogLevelExplanation = "Sets log level to one of: Silent, Error, Warning, Information, Debug, Verbose. Logs are printed for selected level and all levels above it. For example, when Information is set, all Error, Warning and Information logs will be printed, but no Debug or Verbose ones. 'Silent' setting will not print any logs at all. Log level parser is case-insentitive";
 
     constexpr auto FlagEnabled = "Flag enabled:";
 };
@@ -54,6 +61,8 @@ std::string CommandLine::helpText() const
     result = helpAppend(std::move(result), {R, Run}, RunExplanation);
     result = helpAppend(std::move(result), {D, Debug}, DebugExplanation);
     result = helpAppend(std::move(result), {Q, Quick}, QuickExplanation);
+    result = helpAppend(std::move(result), {Verbose}, VerboseExplanation);
+    result = helpAppend(std::move(result), {L, LogLevel}, LogLevelExplanation);
 
     return result;
 }
@@ -132,6 +141,19 @@ bool CommandLine::parse()
         if (current == Q || current == Quick) {
             Log::debug(FlagEnabled, Quick);
             _isQuick = true;
+            continue;
+        }
+
+        if (current == Verbose) {
+            Log::debug(FlagEnabled, Verbose);
+            _logLevel = Log::Type::Verbose;
+            continue;
+        }
+
+        if (current == L || current == LogLevel) {
+            Log::debug(FlagEnabled, LogLevel);
+            // TODO: set log level
+            //_logLevel = Log::typeValue(value);
             continue;
         }
 
