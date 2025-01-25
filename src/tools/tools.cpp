@@ -33,3 +33,9 @@ bool Tools::contains(const std::vector<std::string>& list, const std::string& st
 {
     return std::find(list.cbegin(), list.cend(), string) != list.cend();
 }
+
+bool Tools::contains(const std::string& string, const std::string& toFind)
+{
+    // TODO: C++23 use contains()
+    return string.find(toFind) != std::string::npos;
+}

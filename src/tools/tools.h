@@ -17,4 +17,5 @@ namespace Tools {
     std::string removeQuotes(const std::string& path);
 
     bool contains(const std::vector<std::string>& list, const std::string& string);
+    bool contains(const std::string& string, const std::string& toFind);
 };

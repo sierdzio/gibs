@@ -248,7 +248,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         Break
     };
 
-    const auto processWord = [&](auto& word, auto& state) -> Action
+    const auto processWord = [&](std::string& word, auto& state) -> Action
     {
         // Make sure word gets cleaned up even if we exit early
         const auto guard = Tools::ScopeGuard([&word]{
@@ -325,14 +325,13 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
         // Recognize interesting parts of C++ code:
         if (_cmd->isQuickMode()
-            && (word == Syntax::CppKeywords::Class
-                || word == Syntax::CppKeywords::Struct
-                || word == Syntax::CppKeywords::Int
-                || word == Syntax::CppKeywords::Char
-                || word.starts_with(Syntax::CppKeywords::Main)
-                // TODO: C++23 use contains()
-                || word.find(Syntax::CppKeywords::DoubleColon) != std::string::npos
-                || word.find(Syntax::CppKeywords::RoundBrackets) != std::string::npos
+            and (word == Syntax::CppKeywords::Class
+                or word == Syntax::CppKeywords::Struct
+                or word == Syntax::CppKeywords::Int
+                or word == Syntax::CppKeywords::Char
+                or word.starts_with(Syntax::CppKeywords::Main)
+                or Tools::contains(word, Syntax::CppKeywords::DoubleColon)
+                or Tools::contains(word, Syntax::CppKeywords::RoundBrackets)
                 ))
         {
             Log::debug("Finishing c++ file parsing early due to --quick flag");
@@ -397,7 +396,7 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
         shouldParse = true;
     }
     else if (command.command == Syntax::Command::Lib
-            || command.command == Syntax::Command::Target)
+            or command.command == Syntax::Command::Target)
     {
         stage = Stage::Second;
     }
