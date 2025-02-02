@@ -2,6 +2,7 @@
 
 #include "tools/commandline.h"
 #include "parsing/parser.h"
+#include "tools/log.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +17,9 @@ int main(int argc, char *argv[])
         std::cout << cmd.versionText() << std::endl;
         return 0;
     }
+
+    Log::information("Setting log level to:", Log::typeString(cmd.logLevel()));
+    Log::setLogLevel(cmd.logLevel());
 
     Parser parser(&cmd);
 

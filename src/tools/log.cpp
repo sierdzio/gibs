@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+static Log::Type RuntimeLogLevel = Log::Type::Information;
+
 std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &stringList)
 {
     for (std::size_t i = 0; i < stringList.size(); ++i) {
@@ -13,6 +15,33 @@ std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &s
     }
 
     return stream;
+}
+
+const std::string Log::typeString(const Log::Type type)
+{
+    return typeStrings.at(static_cast<size_t>(type));
+}
+
+Log::Type Log::typeValue(const std::string &string)
+{
+    // TODO: make it case-insensitive
+    const auto it = std::find(typeStrings.cbegin(), typeStrings.cend(), string);
+
+    if (it == typeStrings.cend()) {
+        return Type::Information;
+    }
+
+    return static_cast<Type>(std::distance(typeStrings.cbegin(), it));
+}
+
+void Log::setLogLevel(const Type type)
+{
+    RuntimeLogLevel = type;
+}
+
+bool Log::isWithinLogLevel(const Type type)
+{
+    return static_cast<int>(type) <= static_cast<int>(RuntimeLogLevel);
 }
 
 namespace {
@@ -42,21 +71,4 @@ std::string Log::type(const Type type)
     }
 
     return {};
-}
-
-const std::string Log::typeString(const Log::Type type)
-{
-    return typeStrings.at(static_cast<size_t>(type));
-}
-
-Log::Type Log::typeValue(const std::string &string)
-{
-    // TODO: make it case-insensitive
-    const auto it = std::find(typeStrings.cbegin(), typeStrings.cend(), string);
-
-    if (it == typeStrings.cend()) {
-        return Type::Information;
-    }
-
-    return static_cast<Type>(std::distance(typeStrings.cbegin(), it));
 }

@@ -2,6 +2,7 @@
 #include "versioninfo.h"
 #include "log.h"
 
+#include <cstddef>
 #include <string>
 #include <vector>
 #include <cassert>
@@ -32,7 +33,7 @@ namespace
     constexpr auto L = "-l";
     constexpr auto LogLevel = "--log-level";
     // TODO: use the X macro to list all log levels automatically
-    constexpr auto LogLevelExplanation = "Sets log level to one of: Silent, Error, Warning, Information, Debug, Verbose. Logs are printed for selected level and all levels above it. For example, when Information is set, all Error, Warning and Information logs will be printed, but no Debug or Verbose ones. 'Silent' setting will not print any logs at all. Log level parser is case-insentitive";
+    constexpr auto LogLevelExplanation = "Sets log level to one of: Silent, Error, Warning, Information, Debug, Verbose. Logs are printed for selected level and all levels above it. For example, when Information is set, all Error, Warning and Information logs will be printed, but no Debug or Verbose ones. 'Silent' setting will not print any logs at all. Log level parser is case-sentitive, please make sure to provide log levels in lower case.";
 
     constexpr auto FlagEnabled = "Flag enabled:";
 };
@@ -77,6 +78,11 @@ std::string CommandLine::input() const
     return _input;
 }
 
+Log::Type CommandLine::logLevel() const
+{
+    return _logLevel;
+}
+
 bool CommandLine::isValid() const
 {
     return _isValid;
@@ -109,10 +115,27 @@ bool CommandLine::isQuickMode() const
 
 bool CommandLine::parse()
 {
+    const auto canAdvance = [](const std::size_t i, const std::size_t size) -> bool {
+        return i < size;
+    };
+
+    const auto size = _args.size();
+
+    std::string holdOverArgument;
+
     // Check if version or health flag is present
-    for (std::size_t i = 0; i < _args.size(); ++i)
+    for (std::size_t i = 0; canAdvance(i, size); ++i)
     {
         const auto &current = _args.at(i);
+
+        // Handle held over options with values:
+
+        if (holdOverArgument == LogLevel) {
+            holdOverArgument.clear();
+            _logLevel = Log::typeValue(current);
+            Log::debug("Flag", LogLevel, "raw value:", current, "read value:", Log::typeString(_logLevel));
+            continue;
+        }
 
         // Handle simple options (flags):
 
@@ -150,14 +173,13 @@ bool CommandLine::parse()
             continue;
         }
 
+        // Handle options with values:
+
         if (current == L || current == LogLevel) {
             Log::debug(FlagEnabled, LogLevel);
-            // TODO: set log level
-            //_logLevel = Log::typeValue(value);
+            holdOverArgument = LogLevel;
             continue;
         }
-
-        // TODO: handle options with values
 
         // Handle positional arguments:
         _input = current;
@@ -172,7 +194,7 @@ std::string CommandLine::helpAppend(std::string &&string,
 {
     assert(flags.size() > 0);
 
-    string.push_back(' ');
+    string.push_back('\t');
 
     bool isFirst = true;
     for (const auto &flag : flags) {

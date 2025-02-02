@@ -17,7 +17,7 @@ std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &s
 
 namespace Log
 {
-    #define X(key, name) key
+    #define X(key, name) key,
     enum class Type
     {
         LOG_TYPES
@@ -34,6 +34,7 @@ namespace Log
     Type typeValue(const std::string &string);
 
     void setLogLevel(const Type type);
+    bool isWithinLogLevel(const Type type);
 
     std::string type(const Type type);
 
@@ -70,6 +71,11 @@ namespace Log
     template<typename... Types>
     void log(const Type type, Types&&... args)
     {
+        if (not isWithinLogLevel(type))
+        {
+            return;
+        }
+
         constexpr auto Space = ' ';
 
         std::cout << Log::type(type) << Space;

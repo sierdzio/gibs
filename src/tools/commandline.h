@@ -15,6 +15,8 @@ public:
 
     std::string input() const;
 
+    Log::Type logLevel() const;
+
     bool isValid() const;
     bool hasHelp() const;
     bool hasVersion() const;
