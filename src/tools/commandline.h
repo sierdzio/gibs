@@ -10,6 +10,8 @@ class CommandLine
 public:
     CommandLine(int argc, char *argv[]);
 
+    std::string parsedFlagsText() const;
+
     std::string helpText() const;
     std::string versionText() const;
 

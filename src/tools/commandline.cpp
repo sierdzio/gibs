@@ -35,12 +35,12 @@ namespace
     // TODO: use the X macro to list all log levels automatically
     constexpr auto LogLevelExplanation = "Sets log level to one of: Silent, Error, Warning, Information, Debug, Verbose. Logs are printed for selected level and all levels above it. For example, when Information is set, all Error, Warning and Information logs will be printed, but no Debug or Verbose ones. 'Silent' setting will not print any logs at all. Log level parser is case-sentitive, please make sure to provide log levels in lower case.";
 
-    constexpr auto FlagEnabled = "Flag enabled:";
+    constexpr auto DoubleSpace = "  ";
 };
 
 CommandLine::CommandLine(int argc, char *argv[])
 {
-    Log::debug("Arg. count:", argc, "args:", std::string(*argv));
+    Log::verbose("Arg. count:", argc, "args:", std::string(*argv));
 
     for (int i = 0; i < argc; ++i) {
         const auto current = std::string(argv[i]);
@@ -48,6 +48,38 @@ CommandLine::CommandLine(int argc, char *argv[])
     }
 
     _isValid = parse();
+}
+
+std::string CommandLine::parsedFlagsText() const
+{
+    std::string result = "Set flags:\n";
+
+    const auto appendIf = [](std::string* result,
+                                             const bool shouldAppend,
+                                             const std::string& flag,
+                                             const std::string& extraValue = {})
+    {
+        if (shouldAppend)
+        {
+            result->append(DoubleSpace);
+            result->append(flag);
+
+            if (not extraValue.empty())
+            {
+                result->append(": ");
+                result->append(extraValue);
+            }
+
+            result->push_back('\n');
+        }
+    };
+
+    appendIf(&result, runImmediately(), Run);
+    appendIf(&result, isDebug(), Debug);
+    appendIf(&result, isQuickMode(), Quick);
+    appendIf(&result, true, LogLevel, Log::typeString(_logLevel));
+
+    return result;
 }
 
 std::string CommandLine::helpText() const
@@ -133,7 +165,6 @@ bool CommandLine::parse()
         if (holdOverArgument == LogLevel) {
             holdOverArgument.clear();
             _logLevel = Log::typeValue(current);
-            Log::debug("Flag", LogLevel, "raw value:", current, "read value:", Log::typeString(_logLevel));
             continue;
         }
 
@@ -150,25 +181,21 @@ bool CommandLine::parse()
         }
 
         if (current == R || current == Run) {
-            Log::debug(FlagEnabled, Run);
             _runImmediately = true;
             continue;
         }
 
         if (current == D || current == Debug) {
-            Log::debug(FlagEnabled, Debug);
             _isDebug = true;
             continue;
         }
 
         if (current == Q || current == Quick) {
-            Log::debug(FlagEnabled, Quick);
             _isQuick = true;
             continue;
         }
 
         if (current == Verbose) {
-            Log::debug(FlagEnabled, Verbose);
             _logLevel = Log::Type::Verbose;
             continue;
         }
@@ -176,7 +203,6 @@ bool CommandLine::parse()
         // Handle options with values:
 
         if (current == L || current == LogLevel) {
-            Log::debug(FlagEnabled, LogLevel);
             holdOverArgument = LogLevel;
             continue;
         }
@@ -194,7 +220,7 @@ std::string CommandLine::helpAppend(std::string &&string,
 {
     assert(flags.size() > 0);
 
-    string.push_back('\t');
+    string.append(DoubleSpace);
 
     bool isFirst = true;
     for (const auto &flag : flags) {
