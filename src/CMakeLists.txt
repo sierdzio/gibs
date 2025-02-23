@@ -19,7 +19,6 @@ set(gibs_srcs
     project/project.cpp project/project.h
     project/command.cpp project/command.h
     project/targetid.cpp project/targetid.h
-    project/target.cpp project/target.h
     processing/processor.cpp processing/processor.h
     )
 

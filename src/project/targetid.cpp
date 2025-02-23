@@ -1,5 +1,7 @@
 #include "targetid.h"
 
+#include "tools/log.h"
+
 namespace {
     static uint uniqueId = 0;
 
@@ -9,13 +11,35 @@ namespace {
     }
 }
 
-TargetId::TargetId() : id(nextId())
+TargetId::TargetId()
 {}
 
-TargetId::TargetId(std::string&& name) : name(name), id(nextId())
-{}
+TargetId::TargetId(std::string&& name)
+{
+    setName(name);
+}
 
 bool TargetId::isNull() const
 {
-    return name.empty();
+    return _name.empty();
+}
+
+const std::string& TargetId::name() const
+{
+    return _name;
+}
+
+void TargetId::setName(const std::string& name)
+{
+    if (isNull())
+    {
+        _name = name;
+        _id = nextId();
+    }
+    else
+    {
+        // TODO: probably best throw something :-)
+        Log::error("Cannot set target name twice. Attempting to change target name from:",
+            _name, "to:", name);
+    }
 }

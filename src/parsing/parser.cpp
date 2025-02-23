@@ -75,6 +75,11 @@ void Parser::parse()
     }
 
     if (_projectEntryPoint.has_filename()) {
+        Command link;
+        link.targetId = _project.id;
+        link.command = Syntax::Command::Executable;
+        link.modifiers.push_back(_project.id.name());
+        _project.addCommand(link);
         parseCppFile(_projectEntryPoint, _project.id);
     }
 }
@@ -163,10 +168,11 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
         command.command = Syntax::Command::Source;
         command.append(path.string());
+        command.parentId = id;
 
         Log::information("Compiling cpp file:", path.filename());
-        _project.addCommand(command, id, Stage::First);
-        // TODO: start running commands immediately
+        _project.addCommand(command);
+        _processor.schedule(command);
 
         // TODO: add this file to list of objects to be linked
         Log::information("Adding object file to linker command:", path.filename());
@@ -182,9 +188,10 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                     Command command;
                     command.command = Syntax::Command::Include;
                     command.append(current);
+                    command.parentId = id;
 
                     Log::information("Parsing cpp file for header:", path.filename());
-                    _project.addCommand(command, id, Stage::First);
+                    _project.addCommand(command);
                 }
             }
             // TODO: handle case where source file is in a different directory... maybe cache the dir structure ?
@@ -389,16 +396,16 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
     Log::information("Found command:", command.whole());
 
     bool shouldParse = false;
-    auto stage = Stage::Unknown;
+    bool shouldAdd = false;
     if (command.command == Syntax::Command::Source)
     {
-        stage = Stage::First;
+        shouldAdd = true;
         shouldParse = true;
     }
     else if (command.command == Syntax::Command::Lib
             or command.command == Syntax::Command::Target)
     {
-        stage = Stage::Second;
+        shouldAdd = true;
     }
     else if (command.command == Syntax::Command::Include)
     {
@@ -406,9 +413,9 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
         _compiledHeaders.push_back(command.value());
     }
 
-    if (stage != Stage::Unknown)
+    if (shouldAdd)
     {
-        _project.addCommand(command, id, stage);
+        _project.addCommand(command);
     }
 
     if (shouldParse and not command.modifiers.empty())

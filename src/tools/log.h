@@ -15,6 +15,8 @@ X(Verbose, "verbose")
 
 std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &stringList);
 
+// TODO: add colors to logs
+
 namespace Log
 {
     #define X(key, name) key,

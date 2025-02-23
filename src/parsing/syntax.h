@@ -9,7 +9,8 @@ X(Source, "source") \
 X(Target, "target") \
 X(Lib, "lib") \
 X(Define, "define") \
-X(Include, "include")
+X(Include, "include") \
+X(Executable, "executable")
 
 namespace Syntax {
     namespace Extension {

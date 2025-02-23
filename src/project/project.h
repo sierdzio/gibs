@@ -1,17 +1,15 @@
 #pragma once
 
-#include "target.h"
+#include "targetid.h"
 
 #include <vector>
 
 struct Command;
-struct TargetId;
 
 struct Project
 {
-    void addDependency(const TargetId& target, const TargetId& dependency);
-    bool addCommand(const Command &command, const TargetId& id, const Stage stage);
+    bool addCommand(const Command &command);
 
-    std::vector<Target> targets;
+    std::vector<Command> commands;
     TargetId id;
 };

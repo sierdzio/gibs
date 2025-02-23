@@ -10,8 +10,11 @@ struct TargetId
     bool operator<=>(const TargetId& other) const = default;
     bool isNull() const;
 
-    std::string name;
+    const std::string& name() const;
 
 private:
-    uint id = 0;
+    void setName(const std::string& name);
+
+    std::string _name;
+    uint _id = 0;
 };

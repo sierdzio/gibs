@@ -4,6 +4,11 @@
 #include "tools/log.h"
 #include "tools/tools.h"
 
+bool ExecutableComponent::isValid(const Syntax::Command type) const
+{
+    return type == Syntax::Command::Executable && name.size() > 0;
+}
+
 bool Command::isValid() const
 {
     if (command == Syntax::Command::Invalid) {
@@ -54,6 +59,16 @@ bool Command::append(const std::string &part)
     return false;
 }
 
+bool Command::isReadyToExecute() const
+{
+    return isReadyToExe;
+}
+
+void Command::setIsReadyToExecute(const bool ready)
+{
+    isReadyToExe = ready;
+}
+
 std::string Command::whole() const
 {
     std::string mods;
@@ -85,6 +100,7 @@ bool Command::supportsModifiers(const Syntax::Command command) const
     switch (command) {
     case Syntax::Command::Lib:
     case Syntax::Command::Target:
+    case Syntax::Command::Executable:
         return true;
     case Syntax::Command::Invalid:
     case Syntax::Command::Define:

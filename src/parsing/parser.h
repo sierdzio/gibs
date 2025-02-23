@@ -1,5 +1,6 @@
 #pragma once
 
+#include "processing/processor.h"
 #include "syntax.h"
 #include "project/project.h"
 #include "tools/apperror.h"
@@ -47,6 +48,7 @@ private:
     std::vector<std::filesystem::path> _includePaths;
 
     Project _project;
+    Processor _processor;
 
     // TODO: move to project?
     // TODO: separate list per-target and project; optimize lookup
