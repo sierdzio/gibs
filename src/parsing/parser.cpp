@@ -68,7 +68,9 @@ void Parser::parse()
 {
     // Take project name from parent directory - for now. It can be adjusted later if "target name"
     // command is found inside project files
-    _project.id = TargetId(_projectDirectory.filename());
+    _project.id = TargetId(_projectDirectory.parent_path().filename());
+
+    Log::information("Project name:", _project.id.name());
 
     if (_projectFile.has_filename()) {
         parseProjectFile(_projectFile, _project.id);
@@ -82,6 +84,8 @@ void Parser::parse()
         _project.addCommand(link);
         parseCppFile(_projectEntryPoint, _project.id);
     }
+
+    _project.logCommandTree();
 }
 
 bool Parser::scanProjectDirectoryForEntryPoints()
@@ -163,19 +167,32 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     const auto type = fileType(path);
 
     if (type == Syntax::FileType::Cpp) {
-        // Now, add compilation command for this cpp file:
-        Command command;
+        // Prepare link command if not already present:
+        // TODO: check for existing link commands
+        auto linkId = _project.linkCommandIdFor(id);
+        if (linkId == 0) {
+            Command link;
+            link.command = Syntax::Command::Executable; // TODO: ... or library!
+            link.targetId = id;
+            link.append(id.name());
+            _project.addCommand(link);
+            linkId = link.id();
+        }
 
-        command.command = Syntax::Command::Source;
-        command.append(path.string());
-        command.parentId = id;
+        // Now, add compilation command for this cpp file:
+        Command compile;
+        compile.command = Syntax::Command::Source;
+        compile.append(path.string());
+        compile.targetId = id;
+        compile.parentId = linkId;
 
         Log::information("Compiling cpp file:", path.filename());
-        _project.addCommand(command);
-        _processor.schedule(command);
+        _project.addCommand(compile);
+        _processor.schedule(compile);
 
-        // TODO: add this file to list of objects to be linked
         Log::information("Adding object file to linker command:", path.filename());
+        // TODO: only execute this command after all children have finished processing!
+        //_processor.schedule(link);
     } else if (type == Syntax::FileType::H) {
         Log::debug("Looking for a source file accompanying this header:", path.filename());
 
@@ -188,10 +205,12 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                     Command command;
                     command.command = Syntax::Command::Include;
                     command.append(current);
-                    command.parentId = id;
+                    command.targetId = id;
+                    command.parentId = _project.linkCommandIdFor(id);
 
                     Log::information("Parsing cpp file for header:", path.filename());
-                    _project.addCommand(command);
+                    handleCommand(command, id);
+                    break;
                 }
             }
             // TODO: handle case where source file is in a different directory... maybe cache the dir structure ?

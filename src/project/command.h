@@ -19,8 +19,15 @@ struct ExecutableComponent : public Component
     std::vector<std::string> objects;
 };
 
+using CommandId = uint;
+
 struct Command
 {
+    Command();
+    //Command(const Command& other);
+
+    CommandId id() const;
+
     bool isValid() const;
     bool append(const std::string &part);
 
@@ -40,7 +47,7 @@ struct Command
 
     // General members
     TargetId targetId;
-    TargetId parentId;
+    CommandId parentId;
     Syntax::Command command = Syntax::Command::Invalid;
     std::vector<std::string> modifiers;
     bool isReadyToExe = false;
@@ -48,4 +55,6 @@ struct Command
 private:
     bool isValidCommand(const std::string &command) const;
     bool supportsModifiers(const Syntax::Command command) const;
+
+    const CommandId _id = 0;
 };

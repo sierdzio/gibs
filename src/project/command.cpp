@@ -4,9 +4,27 @@
 #include "tools/log.h"
 #include "tools/tools.h"
 
+namespace {
+    static CommandId uniqueId = 1;
+
+    static CommandId nextId()
+    {
+        return uniqueId++;
+    }
+}
+
 bool ExecutableComponent::isValid(const Syntax::Command type) const
 {
     return type == Syntax::Command::Executable && name.size() > 0;
+}
+
+Command::Command() : _id(nextId())
+{
+}
+
+uint Command::id() const
+{
+    return _id;
 }
 
 bool Command::isValid() const
