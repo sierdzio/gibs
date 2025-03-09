@@ -63,6 +63,14 @@ bool Command::append(const std::string &part)
     }
     else
     {
+        if (supportsModifiers(command) and modifiers.empty())
+        {
+            if (part == Syntax::Modifier::Name)
+            {
+                // TODO: remember this and use the NEXT part to change the name of the command
+            }
+        }
+
         if (not supportsModifiers(command) and not modifiers.empty())
         {
             Log::warning("Got another command value:", part,

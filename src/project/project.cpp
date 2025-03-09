@@ -2,6 +2,7 @@
 #include "command.h"
 #include "tools/log.h"
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
 bool Project::addCommand(const Command& command)
@@ -18,6 +19,20 @@ CommandId Project::linkCommandIdFor(const TargetId& id) const
         });
 
     return it == commands.cend() ? CommandId() : it->id();
+}
+
+Command& Project::commandRef(const CommandId id)
+{
+    for (auto& current : commands)
+    {
+        if (current.id() == id)
+        {
+            return current;
+        }
+    }
+
+    // Cannot happen! TODO: throw?
+    assert(false);
 }
 
 /*!

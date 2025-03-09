@@ -79,6 +79,7 @@ void Parser::parse()
     if (_projectEntryPoint.has_filename()) {
         Command link;
         link.targetId = _project.id;
+        // TODO: executable or library or just target - decide
         link.command = Syntax::Command::Executable;
         link.modifiers.push_back(_project.id.name());
         _project.addCommand(link);
@@ -394,7 +395,8 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         processWord(word, state);
     }
 
-    if (command.command == Syntax::Command::Include and not Tools::contains(_compiledHeaders, command.value()))
+    if (command.command == Syntax::Command::Target
+        or (command.command == Syntax::Command::Include and not Tools::contains(_compiledHeaders, command.value())))
     {
         handleCommand(command, state->id);
     }
@@ -422,9 +424,20 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
         shouldParse = true;
     }
     else if (command.command == Syntax::Command::Lib
+            or command.command == Syntax::Command::Executable
             or command.command == Syntax::Command::Target)
     {
-        shouldAdd = true;
+        // If this is first Target command, and/ or it is issued in main.cpp, assume
+        // it is naming the whole project and executable
+        if (id == _project.id)
+        {
+            const auto& commandId = _project.linkCommandIdFor(id);
+            _project.commandRef(commandId).executable.name = command.executable.name;
+        }
+        else
+        {
+            shouldAdd = true;
+        }
     }
     else if (command.command == Syntax::Command::Include)
     {
