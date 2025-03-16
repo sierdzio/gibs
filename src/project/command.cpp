@@ -3,6 +3,7 @@
 #include "parsing/syntax.h"
 #include "tools/log.h"
 #include "tools/tools.h"
+#include <filesystem>
 
 namespace
 {
@@ -22,6 +23,11 @@ bool ExecutableComponent::isValid(const Syntax::Command type) const
 bool LibraryComponent::isValid(const Syntax::Command type) const
 {
     return type == Syntax::Command::Lib && name.size() > 0;
+}
+
+bool ObjectComponent::isValid(const Syntax::Command type) const
+{
+    return type == Syntax::Command::Source && name.size() > 0;
 }
 
 Command::Command() : _id(nextId())
@@ -83,6 +89,10 @@ bool Command::append(const std::string &part)
 
 void Command::finalize()
 {
+    if (modifiers.empty()) {
+        return;
+    }
+
     if (supportsModifiers(command))
     {
         std::string previous;
@@ -106,6 +116,15 @@ void Command::finalize()
 
             previous = current;
         }
+    } else {
+        if (command == Syntax::Command::Source)
+        {
+            std::filesystem::path filePath = modifiers.back();
+            filePath.replace_extension(Syntax::Extension::ObjectFile1);
+            // TODO: use different extension per platform!
+            Log::verbose("Appending object file:", filePath.string());
+            object.name = filePath.string();
+        }
     }
 }
 
@@ -128,7 +147,30 @@ std::string Command::whole() const
         mods.append(current);
     }
 
-    return Syntax::commandString(command) + mods;
+    std::string extra;
+
+    if (Log::isWithinLogLevel(Log::Type::Verbose))
+    {
+        switch (command)
+        {
+            case Syntax::Command::Executable:
+                extra = ' ' + Tools::inBrackets(Tools::listToString(executable.objects));
+                break;
+            case Syntax::Command::Lib:
+                extra = ' ' + Tools::inBrackets(Tools::listToString(library.objects));
+                break;
+            case Syntax::Command::Source:
+                extra = ' ' + Tools::inBrackets(object.name);
+                break;
+            case Syntax::Command::Target:
+            case Syntax::Command::Define:
+            case Syntax::Command::Include:
+            case Syntax::Command::Invalid:
+                break;
+        }
+    }
+
+    return Syntax::commandString(command) + mods + extra;
 }
 
 std::string Command::value() const

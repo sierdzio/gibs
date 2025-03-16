@@ -2,7 +2,7 @@
 
 #include <functional>
 #include <string>
-
+#include <vector>
 
 namespace Tools {
     class ScopeGuard {
@@ -18,4 +18,7 @@ namespace Tools {
 
     bool contains(const std::vector<std::string>& list, const std::string& string);
     bool contains(const std::string& string, const std::string& toFind);
+
+    std::string listToString(const std::vector<std::string>& list);
+    std::string inBrackets(const std::string& string);
 };

@@ -24,6 +24,13 @@ struct LibraryComponent : public ExecutableComponent
     bool isValid(const Syntax::Command type) const final;
 };
 
+struct ObjectComponent : public Component
+{
+    bool isValid(const Syntax::Command type) const override;
+
+    std::string name;
+};
+
 using CommandId = uint;
 
 struct Command
@@ -56,6 +63,7 @@ struct Command
     // Composition: additional members used by some command types
     ExecutableComponent executable;
     LibraryComponent library;
+    ObjectComponent object;
 
     // General members
     TargetId targetId;

@@ -170,7 +170,6 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     if (type == Syntax::FileType::Cpp) {
         // Prepare link command if not already present:
-        // TODO: check for existing link commands
         auto linkId = _project.linkCommandIdFor(id);
         if (linkId == 0) {
             Command link;
@@ -179,22 +178,33 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             link.append(id.name());
             link.finalize();
             _project.addCommand(link);
-            linkId = link.id();
         }
+
+        auto linkCommand = &_project.commandRef(linkId);
 
         // Now, add compilation command for this cpp file:
         Command compile;
         compile.command = Syntax::Command::Source;
         compile.append(path.string());
         compile.targetId = id;
-        compile.parentId = linkId;
+        compile.parentId = linkCommand->id();
+        compile.finalize();
+
+        Log::debug("Adding object file to linker command:", compile.object.name);
+
+        if (linkCommand->command == Syntax::Command::Executable)
+        {
+            linkCommand->executable.objects.push_back(compile.object.name);
+        }
+        else if (linkCommand->command == Syntax::Command::Lib)
+        {
+            linkCommand->library.objects.push_back(compile.object.name);
+        }
 
         Log::information("Compiling cpp file:", path.filename());
-        compile.finalize();
         _project.addCommand(compile);
         _processor.schedule(compile);
 
-        Log::information("Adding object file to linker command:", path.filename());
         // TODO: only execute this command after all children have finished processing!
         //_processor.schedule(link);
     } else if (type == Syntax::FileType::H) {

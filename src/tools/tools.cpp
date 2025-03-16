@@ -39,3 +39,27 @@ bool Tools::contains(const std::string& string, const std::string& toFind)
     // TODO: C++23 use contains()
     return string.find(toFind) != std::string::npos;
 }
+
+std::string Tools::listToString(const std::vector<std::string>& list)
+{
+    constexpr auto listSep = ", ";
+
+    std::string result;
+
+    for (const auto& current : list)
+    {
+        if (not result.empty())
+        {
+            result.append(listSep);
+        }
+
+        result.append(current);
+    }
+
+    return result;
+}
+
+std::string Tools::inBrackets(const std::string& string)
+{
+    return '(' + string + ')';
+}
