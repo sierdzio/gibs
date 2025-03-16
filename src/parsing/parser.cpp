@@ -82,6 +82,7 @@ void Parser::parse()
         // TODO: executable or library or just target - decide
         link.command = Syntax::Command::Executable;
         link.modifiers.push_back(_project.id.name());
+        link.finalize();
         _project.addCommand(link);
         parseCppFile(_projectEntryPoint, _project.id);
     }
@@ -176,6 +177,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             link.command = Syntax::Command::Executable; // TODO: ... or library!
             link.targetId = id;
             link.append(id.name());
+            link.finalize();
             _project.addCommand(link);
             linkId = link.id();
         }
@@ -188,6 +190,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         compile.parentId = linkId;
 
         Log::information("Compiling cpp file:", path.filename());
+        compile.finalize();
         _project.addCommand(compile);
         _processor.schedule(compile);
 
@@ -398,6 +401,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     if (command.command == Syntax::Command::Target
         or (command.command == Syntax::Command::Include and not Tools::contains(_compiledHeaders, command.value())))
     {
+        command.finalize();
         handleCommand(command, state->id);
     }
     else

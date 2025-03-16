@@ -3,6 +3,7 @@
 #include "parsing/syntax.h"
 #include "tools/log.h"
 #include "tools/tools.h"
+#include <string>
 
 namespace {
     static CommandId uniqueId = 1;
@@ -16,6 +17,11 @@ namespace {
 bool ExecutableComponent::isValid(const Syntax::Command type) const
 {
     return type == Syntax::Command::Executable && name.size() > 0;
+}
+
+bool LibraryComponent::isValid(const Syntax::Command type) const
+{
+    return type == Syntax::Command::Lib && name.size() > 0;
 }
 
 Command::Command() : _id(nextId())
@@ -63,14 +69,6 @@ bool Command::append(const std::string &part)
     }
     else
     {
-        if (supportsModifiers(command) and modifiers.empty())
-        {
-            if (part == Syntax::Modifier::Name)
-            {
-                // TODO: remember this and use the NEXT part to change the name of the command
-            }
-        }
-
         if (not supportsModifiers(command) and not modifiers.empty())
         {
             Log::warning("Got another command value:", part,
@@ -83,6 +81,33 @@ bool Command::append(const std::string &part)
     }
 
     return false;
+}
+
+void Command::finalize()
+{
+    if (supportsModifiers(command)) {
+        std::string previous;
+        for (const auto& current : modifiers)
+        {
+            if (not previous.empty())
+            {
+                if (command == Syntax::Command::Executable && previous == Syntax::Modifier::Name)
+                {
+                    executable.name = current;
+                    previous.clear();
+                    continue;
+                }
+                else if (command == Syntax::Command::Lib && previous == Syntax::Modifier::Name)
+                {
+                    library.name = current;
+                    previous.clear();
+                    continue;
+                }
+            }
+
+            previous = current;
+        }
+    }
 }
 
 bool Command::isReadyToExecute() const
@@ -118,7 +143,8 @@ bool Command::isValidCommand(const std::string &command) const
         || command == Syntax::commandString(Syntax::Command::Target)
         || command == Syntax::commandString(Syntax::Command::Lib)
         || command == Syntax::commandString(Syntax::Command::Define)
-        || command == Syntax::commandString(Syntax::Command::Include);
+        || command == Syntax::commandString(Syntax::Command::Include)
+        || command == Syntax::commandString(Syntax::Command::Executable);
 }
 
 bool Command::supportsModifiers(const Syntax::Command command) const

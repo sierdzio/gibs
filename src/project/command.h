@@ -13,10 +13,15 @@ struct Component
 
 struct ExecutableComponent : public Component
 {
-    bool isValid(const Syntax::Command type) const final;
+    bool isValid(const Syntax::Command type) const override;
 
     std::string name;
     std::vector<std::string> objects;
+};
+
+struct LibraryComponent : public ExecutableComponent
+{
+    bool isValid(const Syntax::Command type) const final;
 };
 
 using CommandId = uint;
@@ -31,6 +36,12 @@ struct Command
     bool isValid() const;
     bool append(const std::string &part);
 
+    /*!
+     * After calling append() to add data to the command, call this method
+     * to do processing of all the modifiers.
+     */
+    void finalize();
+
     bool isReadyToExecute() const;
     void setIsReadyToExecute(const bool ready);
 
@@ -44,6 +55,7 @@ struct Command
 
     // Composition: additional members used by some command types
     ExecutableComponent executable;
+    LibraryComponent library;
 
     // General members
     TargetId targetId;
