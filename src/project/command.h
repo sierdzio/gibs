@@ -69,4 +69,6 @@ private:
     bool supportsModifiers(const Syntax::Command command) const;
 
     const CommandId _id = 0;
+
+    bool parsingFailed = false;
 };

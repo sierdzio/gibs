@@ -3,9 +3,9 @@
 #include "parsing/syntax.h"
 #include "tools/log.h"
 #include "tools/tools.h"
-#include <string>
 
-namespace {
+namespace
+{
     static CommandId uniqueId = 1;
 
     static CommandId nextId()
@@ -35,22 +35,17 @@ uint Command::id() const
 
 bool Command::isValid() const
 {
-    if (command == Syntax::Command::Invalid) {
+    if (parsingFailed or command == Syntax::Command::Invalid) {
         return false;
     }
-
-    // TODO: check modifiers
-    // || first == Syntax::Command::Type
-    // || first == Syntax::Command::App
-    // || first == Syntax::Command::Static
-    // || first == Syntax::Command::Dynamic
 
     return true;
 }
 
 bool Command::append(const std::string &part)
 {
-    if (command == Syntax::Command::Invalid) {
+    if (command == Syntax::Command::Invalid)
+    {
         if (part == Syntax::CppKeywords::Include)
         {
             command = Syntax::Command::Include;
@@ -64,6 +59,7 @@ bool Command::append(const std::string &part)
         else
         {
             Log::warning("Invalid project command:", part);
+            parsingFailed = true;
             return false;
         }
     }
@@ -73,6 +69,7 @@ bool Command::append(const std::string &part)
         {
             Log::warning("Got another command value:", part,
                 "but a previous one already exists:", value());
+                parsingFailed = true;
             return false;
         }
 
@@ -80,12 +77,14 @@ bool Command::append(const std::string &part)
         return true;
     }
 
+    parsingFailed = true;
     return false;
 }
 
 void Command::finalize()
 {
-    if (supportsModifiers(command)) {
+    if (supportsModifiers(command))
+    {
         std::string previous;
         for (const auto& current : modifiers)
         {

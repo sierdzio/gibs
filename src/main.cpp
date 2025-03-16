@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 
 #include "tools/commandline.h"
 #include "parsing/parser.h"
@@ -6,14 +7,18 @@
 
 int main(int argc, char *argv[])
 {
+    const auto begin = std::chrono::steady_clock::now();
+
     const CommandLine cmd(argc, argv);
 
-    if (cmd.hasHelp()) {
+    if (cmd.hasHelp())
+    {
         std::cout << cmd.helpText() << std::endl;
         return 0;
     }
 
-    if (cmd.hasVersion()) {
+    if (cmd.hasVersion())
+    {
         std::cout << cmd.versionText() << std::endl;
         return 0;
     }
@@ -24,15 +29,22 @@ int main(int argc, char *argv[])
 
     Parser parser(&cmd);
 
-    if (parser.status() != AppError::NoError) {
+    if (parser.status() != AppError::NoError)
+    {
         return static_cast<int>(parser.status());
     }
 
     parser.parse();
 
-    if (parser.status() != AppError::NoError) {
+    if (parser.status() != AppError::NoError)
+    {
         return static_cast<int>(parser.status());
     }
+
+    const auto end = std::chrono::steady_clock::now();
+    const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+
+    Log::information("gibs took:", duration, "ms of your time");
 
     return 0;
 }
