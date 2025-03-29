@@ -2,34 +2,10 @@
 
 #include "parsing/syntax.h"
 #include "targetid.h"
+#include "commandcomponents.h"
 
 #include <string>
 #include <vector>
-
-struct Component
-{
-    virtual bool isValid(const Syntax::Command type) const = 0;
-};
-
-struct ExecutableComponent : public Component
-{
-    bool isValid(const Syntax::Command type) const override;
-
-    std::string name;
-    std::vector<std::string> objects;
-};
-
-struct LibraryComponent : public ExecutableComponent
-{
-    bool isValid(const Syntax::Command type) const final;
-};
-
-struct ObjectComponent : public Component
-{
-    bool isValid(const Syntax::Command type) const override;
-
-    std::string name;
-};
 
 using CommandId = uint;
 
@@ -64,6 +40,8 @@ struct Command
     ExecutableComponent executable;
     LibraryComponent library;
     ObjectComponent object;
+    IncludeComponent include;
+    OptionComponent option;
 
     // General members
     TargetId targetId;

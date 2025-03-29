@@ -6,11 +6,15 @@
 #define COMMANDS \
 X(Invalid, "") \
 X(Source, "source") \
-X(Target, "target") \
-X(Lib, "lib") \
+X(Library, "library") \
 X(Define, "define") \
 X(Include, "include") \
-X(Executable, "executable")
+X(Executable, "executable") \
+X(Feature, "feature") \
+X(Option, "option") \
+X(Subproject, "subproject") \
+X(Tool, "tool") \
+X(Qt, "qt")
 
 namespace Syntax {
     namespace Extension {
@@ -64,6 +68,16 @@ namespace Syntax {
         constexpr auto Static = "static";
         constexpr auto Dynamic = "dynamic";
         constexpr auto Name = "name";
+        constexpr auto Library = "library";
+        constexpr auto Default = "default";
+        constexpr auto On = "on";
+        constexpr auto Off = "off";
+    };
+
+    enum class LibraryType
+    {
+        Dynamic,
+        Static
     };
 
     namespace CppKeywords {

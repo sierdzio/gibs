@@ -173,29 +173,25 @@ You can specify an extra source file to compile like this:
 This is especially useful for cases where gibs cannot guess the source file for
 given header.
 
-#### Target
+#### Targets
 
-Target command can be used to define 3 things:
+Targets are applications or libraries that gibs is compiling and linking.
 
-* executable / library name
+* to create an executable or library with a given name:
 
 ```text
-//i target name MyAwesomeApp
+//i executable name MyAwesomeApp
+//i library name MyAwesomeLibrary
 ```
 
-* target type: either a library or an application
+If no other information is provided, gibs will assume it is compiling
+an executable and it will be named the same as parent directory name.
+
+* libraries can additionally be marked as static or dynamic. Libraries are dynamic by default
 
 ```text
-//i target type app
-//i target type lib
-```
-
-* libraries can additionally be marked as static or dynamic. Dynamic libraries
-are the default value, it can be skipped
-
-```text
-//i target type lib static
-//i target type lib dynamic
+//i library MyAwesomeLib type static
+//i library MyAwesomeLib type dynamic
 ```
 
 #### Defines
@@ -206,7 +202,7 @@ To pass custom defines to the compiler, use the following command:
 //i define MY_DEFINE
 ```
 
-#### Include
+#### Include paths
 
 Include paths are specified using `include` command:
 
@@ -218,14 +214,14 @@ If a path to a directory is provided, it will be added to C++ include paths (`-I
 
 If a path to gibs project file is provided, the file will be loaded and parsed.
 
-#### Libraries
+#### Include libraries
 
 To include and link to an external library, you need to specify both the include
 and gibs commands.
 
 ```text
-//i include some/path
-//i lib -Lsome/path -llibrary1 -llibrary2
+//i include library some/path
+//i include library -Lsome/path -llibrary1 -llibrary2
 ```
 
 #### Qt support
@@ -235,7 +231,7 @@ In order to compile a Qt application or library, you need to specify Qt
 directory by runnig gibs with `--qt-dir` flag:
 
 ```bash
-gibs --qt-dir /home/qt/5.9.4/gcc_64 main.cpp
+gibs --qt-dir /home/qt/6.8.1/gcc_64 main.cpp
 ```
 
 This will tell gibs which Qt version should it use. Then, in the source code of
@@ -256,7 +252,7 @@ You do not need to run MOC manually, gibs will run it automatically when needed.
 
 #### Tools
 
-Ibs can run external tools, applications and processes. To do this, use the `tool`
+Gibs can run external tools, applications and processes. To do this, use the `tool`
 command, followed by executable path and any necessary arguments.
 
 There are some tools which are pre-configured (like Qt's tools: `rcc` and `uic`)

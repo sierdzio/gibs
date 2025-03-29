@@ -196,7 +196,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         {
             linkCommand->executable.objects.push_back(compile.object.name);
         }
-        else if (linkCommand->command == Syntax::Command::Lib)
+        else if (linkCommand->command == Syntax::Command::Library)
         {
             linkCommand->library.objects.push_back(compile.object.name);
         }
@@ -408,7 +408,8 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         processWord(word, state);
     }
 
-    if (command.command == Syntax::Command::Target
+    if (command.command == Syntax::Command::Executable
+        or command.command == Syntax::Command::Library
         or (command.command == Syntax::Command::Include and not Tools::contains(_compiledHeaders, command.value())))
     {
         command.finalize();
@@ -437,9 +438,8 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
         shouldAdd = true;
         shouldParse = true;
     }
-    else if (command.command == Syntax::Command::Lib
-            or command.command == Syntax::Command::Executable
-            or command.command == Syntax::Command::Target)
+    else if (command.command == Syntax::Command::Library
+            or command.command == Syntax::Command::Executable)
     {
         // If this is first Target command, and/ or it is issued in main.cpp, assume
         // it is naming the whole project and executable

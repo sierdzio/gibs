@@ -17,6 +17,7 @@ set(gibs_srcs
     parsing/syntax.cpp parsing/syntax.h
     parsing/parser.cpp parsing/parser.h
     project/project.cpp project/project.h
+    project/commandcomponents.cpp project/commandcomponents.h
     project/command.cpp project/command.h
     project/targetid.cpp project/targetid.h
     processing/processor.cpp processing/processor.h
