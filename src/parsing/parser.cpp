@@ -346,12 +346,14 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
         // Processing of comment meta data is done. Now we can proceed with parsing other parts of text:
 
-        if (command.type == Syntax::Command::Include
-            and word.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
+        if (command.type == Syntax::Command::Include)
         {
-            // Library include - can be skipped
-            command.type = Syntax::Command::Invalid;
-            return Action::Break;
+            if (word.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
+            {
+                // Library include - can be skipped
+                command.type = Syntax::Command::Invalid;
+                return Action::Break;
+            }
         }
 
         // Handle commands in comments:
@@ -430,7 +432,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
 void Parser::handleCommand(const Command& command, const TargetId& id)
 {
-    if (command.isValid() == false)
+    if (not command.isValid())
     {
         return;
     }
