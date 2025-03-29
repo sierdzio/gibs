@@ -214,6 +214,9 @@ If a path to a directory is provided, it will be added to C++ include paths (`-I
 
 If a path to gibs project file is provided, the file will be loaded and parsed.
 
+If a path to a C++ header file is provided, it will be parsed by gibs and potentially
+the corresponding source file will be compiled.
+
 #### Include libraries
 
 To include and link to an external library, you need to specify both the include

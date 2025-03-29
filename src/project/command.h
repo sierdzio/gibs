@@ -46,7 +46,7 @@ struct Command
     // General members
     TargetId targetId;
     CommandId parentId;
-    Syntax::Command command = Syntax::Command::Invalid;
+    Syntax::Command type = Syntax::Command::Invalid;
     std::vector<std::string> modifiers;
     bool isReadyToExe = false;
 

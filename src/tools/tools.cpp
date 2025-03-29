@@ -63,3 +63,8 @@ std::string Tools::inBrackets(const std::string& string)
 {
     return '(' + string + ')';
 }
+
+std::string Tools::boolToString(const bool value)
+{
+    return value ? "true" : "false";
+}

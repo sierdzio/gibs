@@ -28,7 +28,7 @@ uint Command::id() const
 
 bool Command::isValid() const
 {
-    if (parsingFailed or command == Syntax::Command::Invalid) {
+    if (parsingFailed or type == Syntax::Command::Invalid) {
         return false;
     }
 
@@ -37,16 +37,16 @@ bool Command::isValid() const
 
 bool Command::append(const std::string &part)
 {
-    if (command == Syntax::Command::Invalid)
+    if (type == Syntax::Command::Invalid)
     {
         if (part == Syntax::CppKeywords::Include)
         {
-            command = Syntax::Command::Include;
+            type = Syntax::Command::Include;
             return true;
         }
         else if (isValidCommand(part))
         {
-            command = Syntax::commandValue(part);
+            type = Syntax::commandValue(part);
             return true;
         }
         else
@@ -58,7 +58,7 @@ bool Command::append(const std::string &part)
     }
     else
     {
-        if (not supportsModifiers(command) and not modifiers.empty())
+        if (not supportsModifiers(type) and not modifiers.empty())
         {
             Log::warning("Got another command value:", part,
                 "but a previous one already exists:", value());
@@ -80,20 +80,20 @@ void Command::finalize()
         return;
     }
 
-    if (supportsModifiers(command))
+    if (supportsModifiers(type))
     {
         std::string previous;
         for (const auto& current : modifiers)
         {
             if (not previous.empty())
             {
-                if (command == Syntax::Command::Executable && previous == Syntax::Modifier::Name)
+                if (type == Syntax::Command::Executable && previous == Syntax::Modifier::Name)
                 {
                     executable.name = current;
                     previous.clear();
                     continue;
                 }
-                else if (command == Syntax::Command::Library)
+                else if (type == Syntax::Command::Library)
                 {
                     if (previous == Syntax::Modifier::Type)
                     {
@@ -120,7 +120,7 @@ void Command::finalize()
                         continue;
                     }
                 }
-                else if (command == Syntax::Command::Include)
+                else if (type == Syntax::Command::Include)
                 {
                     if (previous == Syntax::Modifier::Library)
                     {
@@ -131,7 +131,7 @@ void Command::finalize()
 
                     include.path = current;
                 }
-                else if (command == Syntax::Command::Feature or command == Syntax::Command::Option)
+                else if (type == Syntax::Command::Feature or type == Syntax::Command::Option)
                 {
                     if (previous == Syntax::Modifier::Default)
                     {
@@ -146,7 +146,7 @@ void Command::finalize()
                         else
                         {
                             Log::warning("Unrecognised default value:", current,
-                                "for option:", Syntax::commandString(command));
+                                "for option:", Syntax::commandString(type));
                         }
 
                         previous.clear();
@@ -163,7 +163,7 @@ void Command::finalize()
             previous = current;
         }
     } else {
-        if (command == Syntax::Command::Source)
+        if (type == Syntax::Command::Source)
         {
             std::filesystem::path filePath = modifiers.back();
             filePath.replace_extension(Syntax::Extension::ObjectFile1);
@@ -197,7 +197,7 @@ std::string Command::whole() const
 
     if (Log::isWithinLogLevel(Log::Type::Verbose))
     {
-        switch (command)
+        switch (type)
         {
             case Syntax::Command::Executable:
                 extra = Space + Tools::inBrackets(Tools::listToString(executable.objects));
@@ -208,10 +208,18 @@ std::string Command::whole() const
             case Syntax::Command::Source:
                 extra = Space + Tools::inBrackets(object.name);
                 break;
-            case Syntax::Command::Define:
             case Syntax::Command::Include:
+                if (include.isLibrary)
+                extra = Space + Tools::inBrackets(Syntax::commandString(Syntax::Command::Library));
+                break;
             case Syntax::Command::Feature:
             case Syntax::Command::Option:
+                extra = Space + Tools::inBrackets(
+                    std::string(Syntax::Modifier::Default)
+                    + Space
+                    + Tools::boolToString(option.defaultValue));
+                break;
+            case Syntax::Command::Define:
             case Syntax::Command::Subproject:
             case Syntax::Command::Tool:
             case Syntax::Command::Qt:
@@ -220,7 +228,7 @@ std::string Command::whole() const
         }
     }
 
-    return Syntax::commandString(command) + mods + extra;
+    return Syntax::commandString(type) + mods + extra;
 }
 
 std::string Command::value() const
@@ -230,11 +238,15 @@ std::string Command::value() const
 
 bool Command::isValidCommand(const std::string &command) const
 {
-    return command == Syntax::commandString(Syntax::Command::Source)
-        || command == Syntax::commandString(Syntax::Command::Library)
-        || command == Syntax::commandString(Syntax::Command::Define)
-        || command == Syntax::commandString(Syntax::Command::Include)
-        || command == Syntax::commandString(Syntax::Command::Executable);
+    for (const auto& current : Syntax::commandStrings)
+    {
+        if (command == current)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool Command::supportsModifiers(const Syntax::Command command) const

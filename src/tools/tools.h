@@ -21,4 +21,5 @@ namespace Tools {
 
     std::string listToString(const std::vector<std::string>& list);
     std::string inBrackets(const std::string& string);
+    std::string boolToString(const bool value);
 };

@@ -80,7 +80,7 @@ void Parser::parse()
         Command link;
         link.targetId = _project.id;
         // TODO: executable or library or just target - decide
-        link.command = Syntax::Command::Executable;
+        link.type = Syntax::Command::Executable;
         link.modifiers.push_back(_project.id.name());
         link.finalize();
         _project.addCommand(link);
@@ -173,7 +173,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         auto linkId = _project.linkCommandIdFor(id);
         if (linkId == 0) {
             Command link;
-            link.command = Syntax::Command::Executable; // TODO: ... or library!
+            link.type = Syntax::Command::Executable; // TODO: ... or library!
             link.targetId = id;
             link.append(id.name());
             link.finalize();
@@ -184,7 +184,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
         // Now, add compilation command for this cpp file:
         Command compile;
-        compile.command = Syntax::Command::Source;
+        compile.type = Syntax::Command::Source;
         compile.append(path.string());
         compile.targetId = id;
         compile.parentId = linkCommand->id();
@@ -192,11 +192,11 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
         Log::debug("Adding object file to linker command:", compile.object.name);
 
-        if (linkCommand->command == Syntax::Command::Executable)
+        if (linkCommand->type == Syntax::Command::Executable)
         {
             linkCommand->executable.objects.push_back(compile.object.name);
         }
-        else if (linkCommand->command == Syntax::Command::Library)
+        else if (linkCommand->type == Syntax::Command::Library)
         {
             linkCommand->library.objects.push_back(compile.object.name);
         }
@@ -217,7 +217,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                 const auto currentType = fileType(current);
                 if (currentType == Syntax::FileType::Cpp) {
                     Command command;
-                    command.command = Syntax::Command::Include;
+                    command.type = Syntax::Command::Include;
                     command.append(current);
                     command.targetId = id;
                     command.parentId = _project.linkCommandIdFor(id);
@@ -332,7 +332,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         if (word == Syntax::CppKeywords::Include)
         {
             isOneLineCommand = true;
-            command.command = Syntax::Command::Include;
+            command.type = Syntax::Command::Include;
             return Action::Continue;
         }
 
@@ -346,11 +346,11 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
         // Processing of comment meta data is done. Now we can proceed with parsing other parts of text:
 
-        if (command.command == Syntax::Command::Include
+        if (command.type == Syntax::Command::Include
             and word.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
         {
             // Library include - can be skipped
-            command.command = Syntax::Command::Invalid;
+            command.type = Syntax::Command::Invalid;
             return Action::Break;
         }
 
@@ -408,11 +408,17 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         processWord(word, state);
     }
 
-    if (command.command == Syntax::Command::Executable
-        or command.command == Syntax::Command::Library
-        or (command.command == Syntax::Command::Include and not Tools::contains(_compiledHeaders, command.value())))
+    if (command.isValid())
     {
         command.finalize();
+
+        if (command.type == Syntax::Command::Include
+            and not command.include.isLibrary
+            and Tools::contains(_compiledHeaders, command.value()))
+        {
+            return;
+        }
+
         handleCommand(command, state->id);
     }
     else
@@ -433,13 +439,14 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
 
     bool shouldParse = false;
     bool shouldAdd = false;
-    if (command.command == Syntax::Command::Source)
+
+    if (command.type == Syntax::Command::Source)
     {
         shouldAdd = true;
         shouldParse = true;
     }
-    else if (command.command == Syntax::Command::Library
-            or command.command == Syntax::Command::Executable)
+    else if (command.type == Syntax::Command::Library
+            or command.type == Syntax::Command::Executable)
     {
         // If this is first Target command, and/ or it is issued in main.cpp, assume
         // it is naming the whole project and executable
@@ -453,10 +460,23 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
             shouldAdd = true;
         }
     }
-    else if (command.command == Syntax::Command::Include)
+    else if (command.type == Syntax::Command::Include)
     {
         shouldParse = true;
-        _compiledHeaders.push_back(command.value());
+
+        if (command.include.isLibrary)
+        {
+            // TODO: load library! If it is a gibs library
+        }
+        else
+        {
+            _compiledHeaders.push_back(command.value());
+        }
+    }
+    else if (command.type == Syntax::Command::Feature
+            or command.type == Syntax::Command::Option)
+    {
+        // TODO: handle option
     }
 
     if (shouldAdd)
