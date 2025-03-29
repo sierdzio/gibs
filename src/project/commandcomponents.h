@@ -36,6 +36,10 @@ struct IncludeComponent : public Component
 {
     bool isValid(const Syntax::Command type) const override;
 
+    // TODO: these checks and results should be cached!
+    bool isPathToFile() const;
+    std::string libraryDirPath() const;
+
     std::string path; // TODO: or maybe std::filesystem::path?
     // TODO: add -L and -l flags support
     bool isLibrary = false;

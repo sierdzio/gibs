@@ -464,14 +464,25 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
     }
     else if (command.type == Syntax::Command::Include)
     {
-        shouldParse = true;
-
         if (command.include.isLibrary)
         {
             // TODO: load library! If it is a gibs library
+
+            // TODO: only parse if: not parsed already and it is a local library (part of the same project)
+            shouldParse = true;
+
+            if (command.include.isPathToFile())
+            {
+                _compiledHeaders.push_back(command.include.path);
+            }
+            else
+            {
+                _compiledHeaders.push_back(command.include.libraryDirPath());
+            }
         }
         else
         {
+            shouldParse = true;
             _compiledHeaders.push_back(command.value());
         }
     }
@@ -496,6 +507,7 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
             parseProjectFile(path, id);
         }
         else
+        // TODO: handle library includes here!
         {
             const auto pathOptional = findCppFile(command.modifiers.front());
             if (pathOptional.has_value())

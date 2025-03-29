@@ -1,7 +1,7 @@
 
 #include "anotherclass.h"
 
-//! include library lib
+//i include library lib
 #include <exported.h>
 
 std::string AnotherClass::text() const
