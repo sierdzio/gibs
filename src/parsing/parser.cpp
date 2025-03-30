@@ -477,7 +477,7 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
             }
             else
             {
-                _compiledHeaders.push_back(command.include.libraryDirPath());
+                _includePaths.push_back(command.include.libraryDirPath());
             }
         }
         else
@@ -517,12 +517,12 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
             {
                 Log::verbose("Parsing", command.include.path,
                              "as entry point of of library:", command.include.libraryName());
-                parseCppFile(_projectDirectory.string() + '/' + command.include.path, libraryId);
+                parseCppFile(root() / command.include.path, libraryId);
             }
             else
             {
                 // Since we only have a path to a directory, we try to parse all files inside...
-                const std::filesystem::directory_entry dir(_projectDirectory.string() + '/' + command.include.path);
+                const std::filesystem::directory_entry dir(root() / command.include.path);
 
                 for (auto const& it : std::filesystem::directory_iterator(dir))
                 {
@@ -531,6 +531,7 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
                         Log::verbose("Parsing", it.path(),
                                      "to see if it is part of library:",
                                      command.include.libraryName());
+                        _compiledHeaders.push_back(it.path());
                         parseCppFile(it.path(), libraryId);
                     }
                 }
@@ -591,7 +592,7 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 
     for  (const auto& dir : _includePaths)
     {
-        for (auto const& it : std::filesystem::directory_iterator(dir))
+        for (auto const& it : std::filesystem::directory_iterator(root() / dir))
         {
             if (it.exists() && it.is_regular_file() && it.path().filename() == name) {
                 return it;
@@ -631,4 +632,9 @@ std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name
     }
 
     return {};
+}
+
+const std::filesystem::path& Parser::root() const
+{
+    return _projectDirectory;
 }

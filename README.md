@@ -322,7 +322,6 @@ Or:
 //i option tts-support [default on|off]
 ```
 
-
 Then you can select the feature next time you build your project, like this:
 
 ```bash

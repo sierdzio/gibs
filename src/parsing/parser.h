@@ -37,6 +37,7 @@ private:
 
     std::optional<std::filesystem::path> findFile(const std::string &name) const;
     std::optional<std::filesystem::path> findCppFile(const std::string &name) const;
+    const std::filesystem::path& root() const;
 
     std::filesystem::path _input;
 
