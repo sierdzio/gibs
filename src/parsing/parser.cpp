@@ -511,6 +511,7 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
             // Note: this is temporary library name based on folder. A real name needs to
             // be used once it becomes known (when some library file is parsed and contains
             // the name)
+            // TODO: make sure IDs don't get duplicated for this library
             TargetId libraryId(command.include.libraryName());
 
             if (command.include.isPathToFile() && std::filesystem::exists(command.include.path))
