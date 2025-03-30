@@ -125,6 +125,7 @@ void Command::finalize()
                     if (previous == Syntax::Modifier::Library)
                     {
                         include.isLibrary = true;
+                        include.path = current;
                         previous.clear();
                         continue;
                     }

@@ -506,8 +506,37 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
         {
             parseProjectFile(path, id);
         }
+        else if (command.type == Syntax::Command::Include && command.include.isLibrary)
+        {
+            // Note: this is temporary library name based on folder. A real name needs to
+            // be used once it becomes known (when some library file is parsed and contains
+            // the name)
+            TargetId libraryId(command.include.libraryName());
+
+            if (command.include.isPathToFile() && std::filesystem::exists(command.include.path))
+            {
+                Log::verbose("Parsing", command.include.path,
+                             "as entry point of of library:", command.include.libraryName());
+                parseCppFile(_projectDirectory.string() + '/' + command.include.path, libraryId);
+            }
+            else
+            {
+                // Since we only have a path to a directory, we try to parse all files inside...
+                const std::filesystem::directory_entry dir(_projectDirectory.string() + '/' + command.include.path);
+
+                for (auto const& it : std::filesystem::directory_iterator(dir))
+                {
+                    if (it.is_regular_file())
+                    {
+                        Log::verbose("Parsing", it.path(),
+                                     "to see if it is part of library:",
+                                     command.include.libraryName());
+                        parseCppFile(it.path(), libraryId);
+                    }
+                }
+            }
+        }
         else
-        // TODO: handle library includes here!
         {
             const auto pathOptional = findCppFile(command.modifiers.front());
             if (pathOptional.has_value())
@@ -585,8 +614,6 @@ std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name
         std::filesystem::path path = name;
         path.replace_extension(Syntax::Extension::CppFile1);
 
-        std::filesystem::directory_entry checker(path);
-
         if (auto option = findFile(path.string()); option.has_value())
         {
             return option;
@@ -594,7 +621,7 @@ std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name
         else
         {
             path.replace_extension(Syntax::Extension::CppFile2);
-            checker = std::filesystem::directory_entry(path);
+            auto checker = std::filesystem::directory_entry(path);
 
             if (auto option = findFile(path.string()); option.has_value())
             {
