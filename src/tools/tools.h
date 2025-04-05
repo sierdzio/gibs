@@ -24,4 +24,7 @@ bool contains(const std::string &string, const std::string &toFind);
 std::string listToString(const std::vector<std::string> &list);
 std::string inBrackets(const std::string &string);
 std::string boolToString(const bool value);
+
+bool isPathToFile(const std::string &path);
+bool isHeaderFile(const std::string &path);
 }; // namespace Tools

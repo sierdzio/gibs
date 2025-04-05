@@ -58,7 +58,7 @@ class Parser
      * header files for which a corresponding source file has already been found and
      * processed through handleCommand().
      */
-    std::vector<std::string> _compiledHeaders;
+    std::vector<std::string> _compiledFiles;
 
     const CommandLine *_cmd = nullptr;
 

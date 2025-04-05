@@ -162,6 +162,12 @@ void Parser::parseProjectFile(const std::filesystem::path &path, const TargetId 
 
 void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 {
+    if (Tools::contains(_compiledFiles, path.string()))
+    {
+        Log::verbose("Skipping, already parsed:", path);
+        return;
+    }
+
     std::ifstream file(path, std::iostream::in);
 
     if (file.is_open() == false)
@@ -170,7 +176,8 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         return;
     }
 
-    Log::debug("Reading C++ file:", path);
+    Log::debug("Reading file:", path);
+    _compiledFiles.push_back(path);
 
     CppState state;
     state.id = id;
@@ -240,29 +247,25 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     else if (type == Syntax::FileType::H)
     {
         Log::debug("Looking for a source file accompanying this header:", path.filename());
+        // TODO: handle case where source file is in a different directory... maybe cache the
+        // dir structure ?
+        // }
+        const auto cppPathOptional = findCppFile(path);
 
-        for (auto const &it : std::filesystem::directory_iterator(path.parent_path()))
+        if (cppPathOptional.has_value())
         {
-            const auto &current = it.path();
-
-            if (current.filename() == path.filename())
+            const auto &cppPath = cppPathOptional.value();
+            if (fileType(cppPath) == Syntax::FileType::Cpp)
             {
-                const auto currentType = fileType(current);
-                if (currentType == Syntax::FileType::Cpp)
-                {
-                    Command command;
-                    command.type = Syntax::Command::Include;
-                    command.append(current);
-                    command.targetId = id;
-                    command.parentId = _project.linkCommandIdFor(id);
+                Command command;
+                command.type = Syntax::Command::Source;
+                command.append(std::filesystem::relative(cppPath, root()));
+                command.targetId = id;
+                command.parentId = _project.linkCommandIdFor(id);
 
-                    Log::information("Parsing cpp file for header:", path.filename());
-                    handleCommand(command, id);
-                    break;
-                }
+                Log::information("Parsing cpp file for header:", path.filename());
+                handleCommand(command, id);
             }
-            // TODO: handle case where source file is in a different directory... maybe cache the
-            // dir structure ?
         }
     }
 }
@@ -454,7 +457,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         command.finalize();
 
         if (command.type == Syntax::Command::Include and not command.include.isLibrary and
-            Tools::contains(_compiledHeaders, command.value()))
+            Tools::contains(_compiledFiles, command.value()))
         {
             return;
         }
@@ -510,7 +513,7 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
         // TODO: only parse if: not parsed already and it is a local library (part of the same
         // project)
 
-        if (not command.include.isPathToFile())
+        if (not Tools::isPathToFile(command.include.path))
         {
             _includePaths.push_back(command.include.dirPath());
         }
@@ -525,17 +528,27 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
         _project.addCommand(command);
     }
 
+    Log::verbose("Command:", command.whole(), "should parse:", shouldParse,
+                 "has mods:", (not command.modifiers.empty()),
+                 "type:", Syntax::commandString(command.type));
+
     if (shouldParse and not command.modifiers.empty())
     {
-        const auto &path = command.modifiers.front();
+        const auto &path = root() / command.modifiers.front();
         // TODO: add base path and such
 
         if (std::filesystem::path(path).extension() == Syntax::Extension::ProjectFile)
         {
             parseProjectFile(path, id);
         }
+        else if (command.type == Syntax::Command::Source)
+        {
+            parseCppFile(path, id);
+        }
         else if (command.type == Syntax::Command::Include)
         {
+            Log::verbose("is library:", command.include.isLibrary, "is path to file:", path);
+
             if (command.include.isLibrary)
             {
                 // Note: this is temporary library name based on folder. A real name
@@ -545,19 +558,17 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
                 // this library and folder is already known
                 TargetId libraryId(command.include.libraryName(), TargetId::Type::Library);
 
-                if (command.include.isPathToFile() and
-                    std::filesystem::exists(command.include.path))
+                if (Tools::isPathToFile(path) and std::filesystem::exists(path))
                 {
-                    Log::verbose("Parsing", command.include.path,
+                    Log::verbose("Parsing", path,
                                  "as entry point of of library:", command.include.libraryName());
-                    _compiledHeaders.push_back(command.include.path);
-                    parseCppFile(root() / command.include.path, libraryId);
+                    parseCppFile(path, libraryId);
                 }
                 else
                 {
                     // Since we only have a path to a directory, we try to parse all
                     // files inside...
-                    const std::filesystem::directory_entry dir(root() / command.include.path);
+                    const std::filesystem::directory_entry dir(path);
 
                     for (auto const &it : std::filesystem::directory_iterator(dir))
                     {
@@ -565,22 +576,29 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
                         {
                             Log::verbose("Parsing", it.path(), "to see if it is part of library:",
                                          command.include.libraryName());
-                            _compiledHeaders.push_back(it.path());
                             parseCppFile(it.path(), libraryId);
                         }
                     }
                 }
             }
-            else if (command.include.isPathToFile())
+            else if (Tools::isPathToFile(path))
             {
-                const auto pathOptional = findCppFile(command.modifiers.front());
-                if (pathOptional.has_value())
+                Log::verbose("is header?", Tools::isHeaderFile(path), "file:", path);
+                if (Tools::isHeaderFile(path))
                 {
-                    parseCppFile(pathOptional.value(), id);
+                    parseCppFile(path, id);
                 }
                 else
                 {
-                    Log::error("Included file not found:", command.modifiers.front());
+                    const auto pathOptional = findCppFile(path);
+                    if (pathOptional.has_value())
+                    {
+                        parseCppFile(pathOptional.value(), id);
+                    }
+                    else
+                    {
+                        Log::error("Included file not found:", path);
+                    }
                 }
             }
             else
@@ -626,7 +644,12 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 {
     // TODO: add known files cache to speed things up
 
-    Log::verbose("Looking for:", name);
+    Log::verbose("Looking for file:", name);
+
+    if (const std::filesystem::path current(name); std::filesystem::exists(current))
+    {
+        return current;
+    }
 
     for (const auto &dir : _includePaths)
     {
@@ -644,30 +667,34 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 
 std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name) const
 {
-    Log::verbose("Looking for CPP file for:", name);
+    Log::verbose("Looking for CPP file for:", name, "is header?", Tools::isHeaderFile(name));
 
-    if (name.ends_with(Syntax::Extension::HeaderFile1) ||
-        name.ends_with(Syntax::Extension::HeaderFile2) ||
-        name.ends_with(Syntax::Extension::HeaderFile3))
+    if (Tools::isHeaderFile(name))
     {
-        // TODO: replace extension with cpp extension and then proceed with search
+        // Replace extension with cpp extension and then proceed with search
         std::filesystem::path path = name;
         path.replace_extension(Syntax::Extension::CppFile1);
 
+        Log::verbose("Check:", path);
+
         if (auto option = findFile(path.string()); option.has_value())
         {
+            Log::verbose("Found!", option.value());
             return option;
         }
         else
         {
             path.replace_extension(Syntax::Extension::CppFile2);
-            auto checker = std::filesystem::directory_entry(path);
+            Log::verbose("Check:", path);
 
             if (auto option = findFile(path.string()); option.has_value())
             {
+                Log::verbose("Found!", option.value());
                 return option;
             }
         }
+
+        // TODO: also look in other directories!
     }
 
     return {};

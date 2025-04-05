@@ -1,4 +1,6 @@
 #include "commandcomponents.h"
+#include "parsing/syntax.h"
+#include "tools/tools.h"
 
 #include <filesystem>
 
@@ -22,13 +24,6 @@ bool IncludeComponent::isValid(const Syntax::Command type) const
     return type == Syntax::Command::Include and not path.empty();
 }
 
-bool IncludeComponent::isPathToFile() const
-{
-    // TODO: these checks and results should be cached!
-    const std::filesystem::path rawPath(path);
-    return std::filesystem::is_regular_file(rawPath);
-}
-
 std::string IncludeComponent::dirPath() const
 {
     // TODO: these checks and results should be cached!
@@ -44,7 +39,7 @@ std::string IncludeComponent::libraryName() const
 
     const std::filesystem::path rawPath(path);
 
-    if (isPathToFile())
+    if (Tools::isPathToFile(path))
     {
         return rawPath.parent_path().filename();
     }
