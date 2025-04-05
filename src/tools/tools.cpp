@@ -91,3 +91,26 @@ bool Tools::isHeaderFile(const std::string &path)
            path.ends_with(Syntax::Extension::HeaderFile2) or
            path.ends_with(Syntax::Extension::HeaderFile3);
 }
+
+std::string Tools::prepareIncludePath(const std::string &input)
+{
+    // TODO: immediate return if path is correct and does not need cleaning
+    if (not input.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
+    {
+        return input;
+    }
+
+    auto result = input;
+
+    if (result.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
+    {
+        result.erase(0, 1);
+    }
+
+    if (result.ends_with(Syntax::CppKeywords::CloseLibraryInclude))
+    {
+        result.pop_back();
+    }
+
+    return result;
+}

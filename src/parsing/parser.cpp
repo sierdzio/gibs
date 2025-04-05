@@ -390,12 +390,12 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
         if (command.type == Syntax::Command::Include)
         {
-            if (word.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
-            {
-                // TODO: parse library header
-                // command.type = Syntax::Command::Include;
-                return Action::Continue;
-            }
+            // if (word.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
+            // {
+            //     // TODO: parse library header
+            //     // command.type = Syntax::Command::Include;
+            //     return Action::Continue;
+            // }
         }
 
         // Handle commands in comments:

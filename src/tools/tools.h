@@ -27,4 +27,6 @@ std::string boolToString(const bool value);
 
 bool isPathToFile(const std::string &path);
 bool isHeaderFile(const std::string &path);
+
+std::string prepareIncludePath(const std::string &input);
 }; // namespace Tools

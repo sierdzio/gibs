@@ -133,7 +133,7 @@ void Command::finalize()
                         continue;
                     }
 
-                    include.path = current;
+                    include.path = Tools::prepareIncludePath(current);
                 }
                 else if (type == Syntax::Command::Feature or
                          type == Syntax::Command::Option)

@@ -94,6 +94,7 @@ constexpr auto Int = "int";
 constexpr auto Char = "char";
 constexpr auto DoubleColon = "::";
 constexpr auto RoundBrackets = "()";
-constexpr auto OpenLibraryInclude = "<";
+constexpr auto OpenLibraryInclude = '<';
+constexpr auto CloseLibraryInclude = '>';
 }; // namespace CppKeywords
 }; // namespace Syntax
