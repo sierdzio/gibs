@@ -467,33 +467,15 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
     }
     else if (command.type == Syntax::Command::Include)
     {
-        if (command.include.isLibrary)
-        {
-            // TODO: load library! If it is a gibs library
+        shouldParse = true;
 
-            // TODO: only parse if: not parsed already and it is a local library (part of the same project)
-            shouldParse = true;
+        // TODO: load library! If it is a gibs library
 
-            if (command.include.isPathToFile())
-            {
-                _compiledHeaders.push_back(command.include.path);
-            }
-            else
-            {
-                _includePaths.push_back(command.include.libraryDirPath());
-            }
-        }
-        else
+        // TODO: only parse if: not parsed already and it is a local library (part of the same project)
+
+        if (not command.include.isPathToFile())
         {
-            if (command.include.isPathToFile())
-            {
-                shouldParse = true;
-                _compiledHeaders.push_back(command.value());
-            }
-            else
-            {
-                _includePaths.push_back(command.include.libraryDirPath());
-            }
+            _includePaths.push_back(command.include.dirPath());
         }
     }
     else if (command.type == Syntax::Command::Feature
@@ -507,60 +489,62 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
         _project.addCommand(command);
     }
 
-    if (shouldParse and not command.modifiers.empty())
-    {
-        const auto& path = command.modifiers.front();
-        // TODO: add base path and such
+    if (shouldParse and not command.modifiers.empty()) {
+      const auto &path = command.modifiers.front();
+      // TODO: add base path and such
 
-        if (std::filesystem::path(path).extension() == Syntax::Extension::ProjectFile)
+      if (std::filesystem::path(path).extension() == Syntax::Extension::ProjectFile)
+      {
+        parseProjectFile(path, id);
+      }
+      else if (command.type == Syntax::Command::Include)
+      {
+        if (command.include.isLibrary)
         {
-            parseProjectFile(path, id);
-        }
-        else if (command.type == Syntax::Command::Include && command.include.isLibrary)
-        {
-            // Note: this is temporary library name based on folder. A real name needs to
-            // be used once it becomes known (when some library file is parsed and contains
-            // the name)
-            // TODO: make sure IDs don't get duplicated for this library, check if this library
-            // and folder is already known
-            TargetId libraryId(command.include.libraryName(), TargetId::Type::Library);
+          // Note: this is temporary library name based on folder. A real name
+          // needs to be used once it becomes known (when some library file is
+          // parsed and contains the name)
+          // TODO: make sure IDs don't get duplicated for this library, check if
+          // this library and folder is already known
+          TargetId libraryId(command.include.libraryName(),
+                             TargetId::Type::Library);
 
-            if (command.include.isPathToFile() && std::filesystem::exists(command.include.path))
-            {
-                Log::verbose("Parsing", command.include.path,
-                             "as entry point of of library:", command.include.libraryName());
-                parseCppFile(root() / command.include.path, libraryId);
-            }
-            else
-            {
-                // Since we only have a path to a directory, we try to parse all files inside...
-                const std::filesystem::directory_entry dir(root() / command.include.path);
+          if (command.include.isPathToFile() and std::filesystem::exists(command.include.path))
+          {
+            Log::verbose(
+                "Parsing", command.include.path,
+                "as entry point of of library:", command.include.libraryName());
+            _compiledHeaders.push_back(command.include.path);
+            parseCppFile(root() / command.include.path, libraryId);
+          }
+          else
+          {
+            // Since we only have a path to a directory, we try to parse all
+            // files inside...
+            const std::filesystem::directory_entry dir(root() /
+                                                       command.include.path);
 
-                for (auto const& it : std::filesystem::directory_iterator(dir))
-                {
-                    if (it.is_regular_file())
-                    {
-                        Log::verbose("Parsing", it.path(),
-                                     "to see if it is part of library:",
-                                     command.include.libraryName());
-                        _compiledHeaders.push_back(it.path());
-                        parseCppFile(it.path(), libraryId);
-                    }
-                }
+            for (auto const &it : std::filesystem::directory_iterator(dir)) {
+              if (it.is_regular_file()) {
+                Log::verbose("Parsing", it.path(),
+                             "to see if it is part of library:",
+                             command.include.libraryName());
+                _compiledHeaders.push_back(it.path());
+                parseCppFile(it.path(), libraryId);
+              }
             }
+          }
+        } else if (command.include.isPathToFile()) {
+          const auto pathOptional = findCppFile(command.modifiers.front());
+          if (pathOptional.has_value()) {
+            parseCppFile(pathOptional.value(), id);
+          } else {
+            Log::error("Included file not found:", command.modifiers.front());
+          }
+        } else {
+          // Include path - maybe scan it for file names?
         }
-        else
-        {
-            const auto pathOptional = findCppFile(command.modifiers.front());
-            if (pathOptional.has_value())
-            {
-                parseCppFile(pathOptional.value(), id);
-            }
-            else
-            {
-                Log::error("Included file not found:", command.modifiers.front());
-            }
-        }
+      }
     }
 
     // TODO: handle non-compilation commands

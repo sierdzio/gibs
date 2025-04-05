@@ -4,22 +4,22 @@
 
 bool ExecutableComponent::isValid(const Syntax::Command type) const
 {
-    return type == Syntax::Command::Executable and name.size() > 0;
+    return type == Syntax::Command::Executable and not name.empty();
 }
 
 bool LibraryComponent::isValid(const Syntax::Command type) const
 {
-    return type == Syntax::Command::Library and name.size() > 0;
+    return type == Syntax::Command::Library and not name.empty();
 }
 
 bool ObjectComponent::isValid(const Syntax::Command type) const
 {
-    return type == Syntax::Command::Source and name.size() > 0;
+    return type == Syntax::Command::Source and not name.empty();
 }
 
 bool IncludeComponent::isValid(const Syntax::Command type) const
 {
-    return type == Syntax::Command::Include and path.size() > 0;
+    return type == Syntax::Command::Include and not path.empty();
 }
 
 bool IncludeComponent::isPathToFile() const
@@ -29,7 +29,7 @@ bool IncludeComponent::isPathToFile() const
     return std::filesystem::is_regular_file(rawPath);
 }
 
-std::string IncludeComponent::libraryDirPath() const
+std::string IncludeComponent::dirPath() const
 {
     // TODO: these checks and results should be cached!
 

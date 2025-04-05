@@ -38,7 +38,7 @@ struct IncludeComponent : public Component
 
     // TODO: these checks and results should be cached!
     bool isPathToFile() const;
-    std::string libraryDirPath() const;
+    std::string dirPath() const;
     std::string libraryName() const;
 
     std::string path; // TODO: or maybe std::filesystem::path?
