@@ -67,7 +67,7 @@ bool Command::append(const std::string &part)
             return false;
         }
 
-        modifiers.push_back(Tools::removeQuotes(std::move(part)));
+        modifiers.push_back(Tools::prepareIncludePath(std::move(part)));
         return true;
     }
 

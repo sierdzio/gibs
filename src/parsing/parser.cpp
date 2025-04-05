@@ -535,8 +535,17 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
 
     if (shouldParse and not command.modifiers.empty())
     {
-        const auto &path = root() / command.modifiers.front();
-        // TODO: add base path and such
+        const auto pathOptional = findFile(command.modifiers.front());
+        //root() / command.modifiers.front();
+
+        if (not pathOptional.has_value())
+        {
+            Log::error("Could not find file:", command.modifiers.front());
+            // TODO: error, or throw, or otherwise handle it!
+            return;
+        }
+
+        const auto &path = pathOptional.value();
 
         if (std::filesystem::path(path).extension() == Syntax::Extension::ProjectFile)
         {
@@ -561,7 +570,7 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
                 TargetId libraryId(command.include.libraryName(),
                                    TargetId::Type::Library);
 
-                if (Tools::isPathToFile(path) and std::filesystem::exists(path))
+                if (Tools::isPathToFile(path))
                 {
                     Log::verbose("Parsing", path, "as entry point of of library:",
                                  command.include.libraryName());
@@ -608,6 +617,7 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
             else
             {
                 //include path - maybe scan it for file names?
+                _includePaths.push_back(path);
             }
         }
     }
@@ -658,7 +668,7 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
     {
         for (auto const &it : std::filesystem::directory_iterator(root() / dir))
         {
-            if (it.exists() && it.is_regular_file() && it.path().filename() == name)
+            if (it.exists() && it.path().filename() == name)
             {
                 return it;
             }

@@ -1,4 +1,3 @@
-
 #include "anotherclass.h"
 
 //i include lib

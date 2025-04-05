@@ -22,18 +22,27 @@ Tools::ScopeGuard::~ScopeGuard()
     _function();
 }
 
-std::string Tools::removeQuotes(const std::string &path)
+std::string Tools::prepareIncludePath(const std::string &input)
 {
-    std::string result = path;
-
-    if (result.ends_with(Quote))
+    // Immediate return if path is correct and does not need cleaning
+    if (not input.starts_with(Syntax::CppKeywords::OpenLibraryInclude) and
+        not input.starts_with(Quote))
     {
-        result.pop_back();
+        return input;
     }
 
-    if (result.starts_with(Quote))
+    auto result = input;
+
+    if (result.starts_with(Syntax::CppKeywords::OpenLibraryInclude) or
+        result.starts_with(Quote))
     {
-        result = result.substr(1);
+        result.erase(0, 1);
+    }
+
+    if (result.ends_with(Syntax::CppKeywords::CloseLibraryInclude) or
+        result.ends_with(Quote))
+    {
+        result.pop_back();
     }
 
     return result;
@@ -90,27 +99,4 @@ bool Tools::isHeaderFile(const std::string &path)
     return path.ends_with(Syntax::Extension::HeaderFile1) or
            path.ends_with(Syntax::Extension::HeaderFile2) or
            path.ends_with(Syntax::Extension::HeaderFile3);
-}
-
-std::string Tools::prepareIncludePath(const std::string &input)
-{
-    // TODO: immediate return if path is correct and does not need cleaning
-    if (not input.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
-    {
-        return input;
-    }
-
-    auto result = input;
-
-    if (result.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
-    {
-        result.erase(0, 1);
-    }
-
-    if (result.ends_with(Syntax::CppKeywords::CloseLibraryInclude))
-    {
-        result.pop_back();
-    }
-
-    return result;
 }

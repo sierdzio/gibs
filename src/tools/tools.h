@@ -16,7 +16,7 @@ class ScopeGuard
     std::function<void()> _function;
 };
 
-std::string removeQuotes(const std::string &path);
+std::string prepareIncludePath(const std::string &input);
 
 bool contains(const std::vector<std::string> &list, const std::string &string);
 bool contains(const std::string &string, const std::string &toFind);
@@ -27,6 +27,4 @@ std::string boolToString(const bool value);
 
 bool isPathToFile(const std::string &path);
 bool isHeaderFile(const std::string &path);
-
-std::string prepareIncludePath(const std::string &input);
 }; // namespace Tools
