@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <stdexcept>
 #include <vector>
 
 bool Project::addCommand(const Command& command)

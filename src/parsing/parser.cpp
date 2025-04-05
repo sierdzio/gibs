@@ -68,7 +68,8 @@ void Parser::parse()
 {
     // Take project name from parent directory - for now. It can be adjusted later if "target name"
     // command is found inside project files
-    _project.id = TargetId(_projectDirectory.parent_path().filename());
+    _project.id = TargetId(_projectDirectory.parent_path().filename(),
+                           TargetId::Type::Executable);
 
     Log::information("Project name:", _project.id.name());
 
@@ -173,7 +174,9 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         auto linkId = _project.linkCommandIdFor(id);
         if (linkId == 0) {
             Command link;
-            link.type = Syntax::Command::Executable; // TODO: ... or library!
+            link.type = id.type() == TargetId::Type::Executable
+                                     ? Syntax::Command::Executable
+                                     : Syntax::Command::Library;
             link.targetId = id;
             link.append(id.name());
             link.finalize();
@@ -350,7 +353,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         {
             if (word.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
             {
-                // Library include - can be skipped
+                // TODO: parse library header
                 command.type = Syntax::Command::Invalid;
                 return Action::Break;
             }
@@ -482,8 +485,15 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
         }
         else
         {
-            shouldParse = true;
-            _compiledHeaders.push_back(command.value());
+            if (command.include.isPathToFile())
+            {
+                shouldParse = true;
+                _compiledHeaders.push_back(command.value());
+            }
+            else
+            {
+                _includePaths.push_back(command.include.libraryDirPath());
+            }
         }
     }
     else if (command.type == Syntax::Command::Feature
@@ -511,8 +521,9 @@ void Parser::handleCommand(const Command& command, const TargetId& id)
             // Note: this is temporary library name based on folder. A real name needs to
             // be used once it becomes known (when some library file is parsed and contains
             // the name)
-            // TODO: make sure IDs don't get duplicated for this library
-            TargetId libraryId(command.include.libraryName());
+            // TODO: make sure IDs don't get duplicated for this library, check if this library
+            // and folder is already known
+            TargetId libraryId(command.include.libraryName(), TargetId::Type::Library);
 
             if (command.include.isPathToFile() && std::filesystem::exists(command.include.path))
             {

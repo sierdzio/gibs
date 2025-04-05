@@ -14,7 +14,8 @@ namespace {
 TargetId::TargetId()
 {}
 
-TargetId::TargetId(std::string&& name)
+TargetId::TargetId(std::string&& name, const Type type)
+    : _type(type)
 {
     setName(name);
 }
@@ -27,6 +28,11 @@ bool TargetId::isNull() const
 const std::string& TargetId::name() const
 {
     return _name;
+}
+
+TargetId::Type TargetId::type() const
+{
+    return _type;
 }
 
 void TargetId::setName(const std::string& name)
