@@ -1,8 +1,11 @@
 #include "project.h"
 #include "command.h"
 #include "tools/log.h"
+#include "exceptions/commandnotfound.h"
+
 #include <algorithm>
 #include <cassert>
+#include <stdexcept>
 #include <vector>
 
 bool Project::addCommand(const Command& command)
@@ -31,8 +34,7 @@ Command& Project::commandRef(const CommandId id)
         }
     }
 
-    // Cannot happen! TODO: throw?
-    assert(false);
+    throw CommandNotFound(id, commands);
 }
 
 /*!

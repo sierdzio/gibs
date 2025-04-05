@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 
+#include "exceptions/commandnotfound.h"
 #include "tools/commandline.h"
 #include "parsing/parser.h"
 #include "tools/log.h"
@@ -34,11 +35,22 @@ int main(int argc, char *argv[])
         return static_cast<int>(parser.status());
     }
 
-    parser.parse();
-
-    if (parser.status() != AppError::NoError)
+    try
     {
-        return static_cast<int>(parser.status());
+        parser.parse();
+
+        if (parser.status() != AppError::NoError)
+        {
+            return static_cast<int>(parser.status());
+        }
+    }
+    catch (const CommandNotFound& e)
+    {
+        Log::error(e.what());
+    }
+    catch (...)
+    {
+        Log::error("Unhandled exception");
     }
 
     const auto end = std::chrono::steady_clock::now();
