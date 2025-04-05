@@ -52,15 +52,17 @@ Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
         }
         else
         {
-            Log::error("Input file type is incorrect: neither .gibs, nor a C++ source file:",
-                       _input, "Extension is:", _input.extension());
+            Log::error(
+                "Input file type is incorrect: neither .gibs, nor a C++ source file:",
+                _input, "Extension is:", _input.extension());
             _status = AppError::IncorrectInputFileType;
             return;
         }
     }
     else if (dir.is_directory())
     {
-        Log::information("Got a directory, will scan it for project files or main.cpp:", _input);
+        Log::information("Got a directory, will scan it for project files or main.cpp:",
+                         _input);
         _projectDirectory = dir;
 
         scanProjectDirectoryForEntryPoints();
@@ -76,9 +78,10 @@ AppError Parser::status() const
 
 void Parser::parse()
 {
-    // Take project name from parent directory - for now. It can be adjusted later if "target name"
-    // command is found inside project files
-    _project.id = TargetId(_projectDirectory.parent_path().filename(), TargetId::Type::Executable);
+    // Take project name from parent directory - for now. It can be adjusted later if
+    // "target name" command is found inside project files
+    _project.id =
+        TargetId(_projectDirectory.parent_path().filename(), TargetId::Type::Executable);
 
     Log::information("Project name:", _project.id.name());
 
@@ -149,11 +152,11 @@ void Parser::parseProjectFile(const std::filesystem::path &path, const TargetId 
     Log::debug("Reading project file:", path);
 
     std::string line;
-    // TODO: implement a custom file reading routine to read it character by character and parse on
-    // the fly
+    // TODO: implement a custom file reading routine to read it character by character and
+    // parse on the fly
     while (std::getline(file, line))
     {
-        Log::verbose("Read:", line);
+        // Log::verbose("Read:", line);
         parseProjectLine(std::move(line), id);
     }
 
@@ -184,11 +187,11 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     std::string line;
 
-    // TODO: implement a custom file reading routine to read it character by character and parse on
-    // the fly
+    // TODO: implement a custom file reading routine to read it character by character and
+    // parse on the fly
     while (std::getline(file, line))
     {
-        Log::verbose("Read:", line);
+        Log::verbose("Read:", path.filename(), ":", line);
         parseCppLine(std::move(line), &state);
 
         if (state.shouldFinish)
@@ -208,10 +211,11 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         if (linkId == 0)
         {
             Command link;
-            link.type = id.type() == TargetId::Type::Executable ? Syntax::Command::Executable
-                                                                : Syntax::Command::Library;
+            link.type = id.type() == TargetId::Type::Executable
+                            ? Syntax::Command::Executable
+                            : Syntax::Command::Library;
             link.targetId = id;
-            link.append(id.name());
+            link.append(std::filesystem::relative(id.name(), root()));
             link.finalize();
             _project.addCommand(link);
         }
@@ -221,7 +225,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         // Now, add compilation command for this cpp file:
         Command compile;
         compile.type = Syntax::Command::Source;
-        compile.append(path.string());
+        compile.append(std::filesystem::relative(path, root()));
         compile.targetId = id;
         compile.parentId = linkCommand->id();
         compile.finalize();
@@ -246,9 +250,10 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     }
     else if (type == Syntax::FileType::H)
     {
-        Log::debug("Looking for a source file accompanying this header:", path.filename());
-        // TODO: handle case where source file is in a different directory... maybe cache the
-        // dir structure ?
+        Log::debug("Looking for a source file accompanying this header:",
+                   path.filename());
+        // TODO: handle case where source file is in a different directory... maybe cache
+        // the dir structure ?
         // }
         const auto cppPathOptional = findCppFile(path);
 
@@ -257,14 +262,8 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             const auto &cppPath = cppPathOptional.value();
             if (fileType(cppPath) == Syntax::FileType::Cpp)
             {
-                Command command;
-                command.type = Syntax::Command::Source;
-                command.append(std::filesystem::relative(cppPath, root()));
-                command.targetId = id;
-                command.parentId = _project.linkCommandIdFor(id);
-
                 Log::information("Parsing cpp file for header:", path.filename());
-                handleCommand(command, id);
+                parseCppFile(cppPath, id);
             }
         }
     }
@@ -383,18 +382,19 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             return Action::Continue;
         }
 
-        // TODO: add code to check if first word was not recognized - then we can skip the line?
+        // TODO: add code to check if first word was not recognized - then we can skip the
+        // line?
 
-        // Processing of comment meta data is done. Now we can proceed with parsing other parts of
-        // text:
+        // Processing of comment meta data is done. Now we can proceed with parsing other
+        // parts of text:
 
         if (command.type == Syntax::Command::Include)
         {
             if (word.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
             {
                 // TODO: parse library header
-                command.type = Syntax::Command::Invalid;
-                return Action::Break;
+                // command.type = Syntax::Command::Include;
+                return Action::Continue;
             }
         }
 
@@ -467,8 +467,8 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     else
     {
         // Skipping command handling when we are already parsing this file.
-        // TODO: also skip parsing when this file was already parsed or compiled! Do not duplicate
-        // the work!
+        // TODO: also skip parsing when this file was already parsed or compiled! Do not
+        // duplicate the work!
     }
 }
 
@@ -492,8 +492,8 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
     else if (command.type == Syntax::Command::Library or
              command.type == Syntax::Command::Executable)
     {
-        // If this is first Target command, and/ or it is issued in main.cpp, assume
-        // it is naming the whole project and executable
+        //if this is first Target command, and/ or it is issued in main.cpp, assume
+        //it is naming the whole project and executable
         if (id == _project.id)
         {
             const auto &commandId = _project.linkCommandIdFor(id);
@@ -510,15 +510,16 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
 
         // TODO: load library! If it is a gibs library
 
-        // TODO: only parse if: not parsed already and it is a local library (part of the same
-        // project)
+        // TODO: only parse if: not parsed already and it is a local library (part of the
+        // same project)
 
         if (not Tools::isPathToFile(command.include.path))
         {
             _includePaths.push_back(command.include.dirPath());
         }
     }
-    else if (command.type == Syntax::Command::Feature or command.type == Syntax::Command::Option)
+    else if (command.type == Syntax::Command::Feature or
+             command.type == Syntax::Command::Option)
     {
         // TODO: handle option
     }
@@ -547,7 +548,8 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
         }
         else if (command.type == Syntax::Command::Include)
         {
-            Log::verbose("is library:", command.include.isLibrary, "is path to file:", path);
+            // Log::verbose("is library:", command.include.isLibrary, "is path to file:",
+            // path);
 
             if (command.include.isLibrary)
             {
@@ -556,12 +558,13 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
                 // parsed and contains the name)
                 // TODO: make sure IDs don't get duplicated for this library, check if
                 // this library and folder is already known
-                TargetId libraryId(command.include.libraryName(), TargetId::Type::Library);
+                TargetId libraryId(command.include.libraryName(),
+                                   TargetId::Type::Library);
 
                 if (Tools::isPathToFile(path) and std::filesystem::exists(path))
                 {
-                    Log::verbose("Parsing", path,
-                                 "as entry point of of library:", command.include.libraryName());
+                    Log::verbose("Parsing", path, "as entry point of of library:",
+                                 command.include.libraryName());
                     parseCppFile(path, libraryId);
                 }
                 else
@@ -574,7 +577,8 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
                     {
                         if (it.is_regular_file())
                         {
-                            Log::verbose("Parsing", it.path(), "to see if it is part of library:",
+                            Log::verbose("Parsing", it.path(),
+                                         "to see if it is part of library:",
                                          command.include.libraryName());
                             parseCppFile(it.path(), libraryId);
                         }
@@ -583,7 +587,7 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
             }
             else if (Tools::isPathToFile(path))
             {
-                Log::verbose("is header?", Tools::isHeaderFile(path), "file:", path);
+                // Log::verbose("is header?", Tools::isHeaderFile(path), "file:", path);
                 if (Tools::isHeaderFile(path))
                 {
                     parseCppFile(path, id);
@@ -603,7 +607,7 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
             }
             else
             {
-                // Include path - maybe scan it for file names?
+                //include path - maybe scan it for file names?
             }
         }
     }
@@ -621,7 +625,8 @@ Syntax::FileType Parser::fileType(const std::filesystem::path &path) const
     {
         return Syntax::FileType::Project;
     }
-    else if (extension == Syntax::Extension::CppFile1 || extension == Syntax::Extension::CppFile2)
+    else if (extension == Syntax::Extension::CppFile1 ||
+             extension == Syntax::Extension::CppFile2)
     {
         return Syntax::FileType::Cpp;
     }
@@ -644,8 +649,6 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 {
     // TODO: add known files cache to speed things up
 
-    Log::verbose("Looking for file:", name);
-
     if (const std::filesystem::path current(name); std::filesystem::exists(current))
     {
         return current;
@@ -667,15 +670,11 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 
 std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name) const
 {
-    Log::verbose("Looking for CPP file for:", name, "is header?", Tools::isHeaderFile(name));
-
     if (Tools::isHeaderFile(name))
     {
         // Replace extension with cpp extension and then proceed with search
         std::filesystem::path path = name;
         path.replace_extension(Syntax::Extension::CppFile1);
-
-        Log::verbose("Check:", path);
 
         if (auto option = findFile(path.string()); option.has_value())
         {
@@ -685,7 +684,6 @@ std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name
         else
         {
             path.replace_extension(Syntax::Extension::CppFile2);
-            Log::verbose("Check:", path);
 
             if (auto option = findFile(path.string()); option.has_value())
             {

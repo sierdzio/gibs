@@ -3,17 +3,17 @@
 #include <array>
 #include <string>
 
-#define COMMANDS                                                                                   \
-    X(Invalid, "")                                                                                 \
-    X(Source, "source")                                                                            \
-    X(Library, "library")                                                                          \
-    X(Define, "define")                                                                            \
-    X(Include, "include")                                                                          \
-    X(Executable, "executable")                                                                    \
-    X(Feature, "feature")                                                                          \
-    X(Option, "option")                                                                            \
-    X(Subproject, "subproject")                                                                    \
-    X(Tool, "tool")                                                                                \
+#define COMMANDS                                                                         \
+    X(Invalid, "")                                                                       \
+    X(Source, "source")                                                                  \
+    X(Library, "library")                                                                \
+    X(Define, "define")                                                                  \
+    X(Include, "include")                                                                \
+    X(Executable, "executable")                                                          \
+    X(Feature, "feature")                                                                \
+    X(Option, "option")                                                                  \
+    X(Subproject, "subproject")                                                          \
+    X(Tool, "tool")                                                                      \
     X(Qt, "qt")
 
 namespace Syntax

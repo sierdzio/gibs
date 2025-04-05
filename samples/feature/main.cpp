@@ -1,6 +1,6 @@
-// i target name SimpleTestFeature
-// i qt core
-// i feature my-feature someclass.h default off
+//i target name SimpleTestFeature
+//i qt core
+//i feature my-feature someclass.h default off
 
 #ifdef MY_FEATURE
 #include "someclass.h"

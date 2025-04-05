@@ -1,5 +1,5 @@
-// i target name SimpleTestIfdefs
-// i qt core
+//i target name SimpleTestIfdefs
+//i qt core
 
 #include "someclass.h"
 

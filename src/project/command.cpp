@@ -89,7 +89,8 @@ void Command::finalize()
         {
             if (not previous.empty())
             {
-                if (type == Syntax::Command::Executable && previous == Syntax::Modifier::Name)
+                if (type == Syntax::Command::Executable &&
+                    previous == Syntax::Modifier::Name)
                 {
                     executable.name = current;
                     previous.clear();
@@ -134,7 +135,8 @@ void Command::finalize()
 
                     include.path = current;
                 }
-                else if (type == Syntax::Command::Feature or type == Syntax::Command::Option)
+                else if (type == Syntax::Command::Feature or
+                         type == Syntax::Command::Option)
                 {
                     if (previous == Syntax::Modifier::Default)
                     {
@@ -216,12 +218,14 @@ std::string Command::whole() const
             break;
         case Syntax::Command::Include:
             if (include.isLibrary)
-                extra = Space + Tools::inBrackets(Syntax::commandString(Syntax::Command::Library));
+                extra = Space + Tools::inBrackets(
+                                    Syntax::commandString(Syntax::Command::Library));
             break;
         case Syntax::Command::Feature:
         case Syntax::Command::Option:
-            extra = Space + Tools::inBrackets(std::string(Syntax::Modifier::Default) + Space +
-                                              Tools::boolToString(option.defaultValue));
+            extra =
+                Space + Tools::inBrackets(std::string(Syntax::Modifier::Default) + Space +
+                                          Tools::boolToString(option.defaultValue));
             break;
         case Syntax::Command::Define:
         case Syntax::Command::Subproject:
@@ -237,6 +241,11 @@ std::string Command::whole() const
 
 std::string Command::value() const
 {
+    if (modifiers.empty())
+    {
+        return {};
+    }
+
     return modifiers.back();
 }
 

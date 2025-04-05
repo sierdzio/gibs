@@ -1,4 +1,4 @@
-// i executable name MultipleFiles
+//i executable name MultipleFiles
 
 #include "anotherclass.h"
 #include "someclass.h"

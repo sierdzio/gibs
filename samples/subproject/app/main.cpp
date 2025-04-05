@@ -1,5 +1,5 @@
-// i target name SimpleTestSubproject
-// i subproject ../library/simpletest.h
+//i target name SimpleTestSubproject
+//i subproject ../library/simpletest.h
 
 #include "simpletest.h"
 
