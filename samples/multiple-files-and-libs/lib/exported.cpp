@@ -1,4 +1,3 @@
-
 #include "exported.h"
 
 std::string Exported::text() const

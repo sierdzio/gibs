@@ -388,16 +388,6 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         // Processing of comment meta data is done. Now we can proceed with parsing other
         // parts of text:
 
-        if (command.type == Syntax::Command::Include)
-        {
-            // if (word.starts_with(Syntax::CppKeywords::OpenLibraryInclude))
-            // {
-            //     // TODO: parse library header
-            //     // command.type = Syntax::Command::Include;
-            //     return Action::Continue;
-            // }
-        }
-
         // Handle commands in comments:
         if (isOneLineCommand or state->isProjectCommentBlock
             // TODO: c++20 modules
@@ -513,7 +503,8 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
         // TODO: only parse if: not parsed already and it is a local library (part of the
         // same project)
 
-        if (not Tools::isPathToFile(command.include.path))
+        if (not command.include.path.empty() and
+            not Tools::isPathToFile(command.include.path))
         {
             _includePaths.push_back(command.include.dirPath());
         }
@@ -536,13 +527,16 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
     if (shouldParse and not command.modifiers.empty())
     {
         const auto pathOptional = findFile(command.modifiers.front());
-        //root() / command.modifiers.front();
 
         if (not pathOptional.has_value())
         {
-            Log::error("Could not find file:", command.modifiers.front());
-            // TODO: error, or throw, or otherwise handle it!
+            Log::warning("Could not find file:", command.modifiers.front());
+            _compiledFiles.push_back(command.modifiers.front());
             return;
+        }
+        else
+        {
+            Log::verbose("Found:", pathOptional.value());
         }
 
         const auto &path = pathOptional.value();
@@ -594,7 +588,7 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
                     }
                 }
             }
-            else if (Tools::isPathToFile(path))
+            else if (Tools::isPathToFile(path.string()))
             {
                 // Log::verbose("is header?", Tools::isHeaderFile(path), "file:", path);
                 if (Tools::isHeaderFile(path))
@@ -614,9 +608,8 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
                     }
                 }
             }
-            else
+            else if (not path.empty())
             {
-                //include path - maybe scan it for file names?
                 _includePaths.push_back(path);
             }
         }
@@ -659,18 +652,25 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 {
     // TODO: add known files cache to speed things up
 
-    if (const std::filesystem::path current(name); std::filesystem::exists(current))
+    if (const std::filesystem::path current(root() / name);
+        std::filesystem::exists(current))
     {
-        return current;
+        return std::filesystem::relative(current, std::filesystem::current_path());
     }
 
     for (const auto &dir : _includePaths)
     {
-        for (auto const &it : std::filesystem::directory_iterator(root() / dir))
+        if (dir.empty())
+        {
+            continue;
+        }
+
+        //const auto relativeDir = std::filesystem::relative(dir, root());
+        for (auto const &it : std::filesystem::directory_iterator(dir))
         {
             if (it.exists() && it.path().filename() == name)
             {
-                return it;
+                return std::filesystem::relative(it, std::filesystem::current_path());
             }
         }
     }

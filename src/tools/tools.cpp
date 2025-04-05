@@ -90,7 +90,8 @@ bool Tools::isPathToFile(const std::string &path)
 {
     // TODO: these checks and results should be cached!
     const std::filesystem::path rawPath(path);
-    return std::filesystem::is_regular_file(rawPath);
+    return std::filesystem::is_regular_file(rawPath) and
+           not std::filesystem::is_directory(rawPath);
 }
 
 bool Tools::isHeaderFile(const std::string &path)
