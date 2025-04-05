@@ -1,5 +1,5 @@
-//i target name SimpleTestIfdefs
-//i qt core
+// i target name SimpleTestIfdefs
+// i qt core
 
 #include "someclass.h"
 
@@ -7,7 +7,8 @@
 #include <QDebug>
 #endif
 
-int main() {
+int main()
+{
     SomeClass sc;
 #ifdef Q_OS_LINUX
     qDebug() << sc.text();

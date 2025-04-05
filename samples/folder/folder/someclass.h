@@ -2,6 +2,6 @@
 
 class SomeClass
 {
-public:
+  public:
     const char *text() const;
 };

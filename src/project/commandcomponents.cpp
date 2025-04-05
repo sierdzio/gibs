@@ -54,6 +54,6 @@ std::string IncludeComponent::libraryName() const
 
 bool OptionComponent::isValid(const Syntax::Command type) const
 {
-    return (type == Syntax::Command::Feature or type == Syntax::Command::Option)
-        and name.size() > 0;
+    return (type == Syntax::Command::Feature or type == Syntax::Command::Option) and
+           name.size() > 0;
 }

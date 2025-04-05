@@ -10,6 +10,6 @@
 
 class LIBRARYSHARED_EXPORT SimpleTest
 {
-public:
+  public:
     const char *text() const;
 };

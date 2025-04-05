@@ -7,15 +7,15 @@
 
 namespace
 {
-    static CommandId uniqueId = 1;
+static CommandId uniqueId = 1;
 
-    static CommandId nextId()
-    {
-        return uniqueId++;
-    }
-
-    constexpr auto Space = " ";
+static CommandId nextId()
+{
+    return uniqueId++;
 }
+
+constexpr auto Space = " ";
+} // namespace
 
 Command::Command() : _id(nextId())
 {
@@ -28,7 +28,8 @@ uint Command::id() const
 
 bool Command::isValid() const
 {
-    if (parsingFailed or type == Syntax::Command::Invalid) {
+    if (parsingFailed or type == Syntax::Command::Invalid)
+    {
         return false;
     }
 
@@ -61,8 +62,8 @@ bool Command::append(const std::string &part)
         if (not supportsModifiers(type) and not modifiers.empty())
         {
             Log::warning("Got another command value:", part,
-                "but a previous one already exists:", value());
-                parsingFailed = true;
+                         "but a previous one already exists:", value());
+            parsingFailed = true;
             return false;
         }
 
@@ -76,14 +77,15 @@ bool Command::append(const std::string &part)
 
 void Command::finalize()
 {
-    if (modifiers.empty()) {
+    if (modifiers.empty())
+    {
         return;
     }
 
     if (supportsModifiers(type))
     {
         std::string previous;
-        for (const auto& current : modifiers)
+        for (const auto &current : modifiers)
         {
             if (not previous.empty())
             {
@@ -147,7 +149,7 @@ void Command::finalize()
                         else
                         {
                             Log::warning("Unrecognised default value:", current,
-                                "for option:", Syntax::commandString(type));
+                                         "for option:", Syntax::commandString(type));
                         }
 
                         previous.clear();
@@ -163,7 +165,9 @@ void Command::finalize()
 
             previous = current;
         }
-    } else {
+    }
+    else
+    {
         if (type == Syntax::Command::Source)
         {
             std::filesystem::path filePath = modifiers.back();
@@ -189,7 +193,8 @@ std::string Command::whole() const
 {
     std::string mods;
 
-    for (const auto &current : modifiers) {
+    for (const auto &current : modifiers)
+    {
         mods.append(Space);
         mods.append(current);
     }
@@ -200,32 +205,30 @@ std::string Command::whole() const
     {
         switch (type)
         {
-            case Syntax::Command::Executable:
-                extra = Space + Tools::inBrackets(Tools::listToString(executable.objects));
-                break;
-            case Syntax::Command::Library:
-                extra = Space + Tools::inBrackets(Tools::listToString(library.objects));
-                break;
-            case Syntax::Command::Source:
-                extra = Space + Tools::inBrackets(object.name);
-                break;
-            case Syntax::Command::Include:
-                if (include.isLibrary)
+        case Syntax::Command::Executable:
+            extra = Space + Tools::inBrackets(Tools::listToString(executable.objects));
+            break;
+        case Syntax::Command::Library:
+            extra = Space + Tools::inBrackets(Tools::listToString(library.objects));
+            break;
+        case Syntax::Command::Source:
+            extra = Space + Tools::inBrackets(object.name);
+            break;
+        case Syntax::Command::Include:
+            if (include.isLibrary)
                 extra = Space + Tools::inBrackets(Syntax::commandString(Syntax::Command::Library));
-                break;
-            case Syntax::Command::Feature:
-            case Syntax::Command::Option:
-                extra = Space + Tools::inBrackets(
-                    std::string(Syntax::Modifier::Default)
-                    + Space
-                    + Tools::boolToString(option.defaultValue));
-                break;
-            case Syntax::Command::Define:
-            case Syntax::Command::Subproject:
-            case Syntax::Command::Tool:
-            case Syntax::Command::Qt:
-            case Syntax::Command::Invalid:
-                break;
+            break;
+        case Syntax::Command::Feature:
+        case Syntax::Command::Option:
+            extra = Space + Tools::inBrackets(std::string(Syntax::Modifier::Default) + Space +
+                                              Tools::boolToString(option.defaultValue));
+            break;
+        case Syntax::Command::Define:
+        case Syntax::Command::Subproject:
+        case Syntax::Command::Tool:
+        case Syntax::Command::Qt:
+        case Syntax::Command::Invalid:
+            break;
         }
     }
 
@@ -239,7 +242,7 @@ std::string Command::value() const
 
 bool Command::isValidCommand(const std::string &command) const
 {
-    for (const auto& current : Syntax::commandStrings)
+    for (const auto &current : Syntax::commandStrings)
     {
         if (command == current)
         {
@@ -252,7 +255,8 @@ bool Command::isValidCommand(const std::string &command) const
 
 bool Command::supportsModifiers(const Syntax::Command command) const
 {
-    switch (command) {
+    switch (command)
+    {
     case Syntax::Command::Library:
     case Syntax::Command::Executable:
     case Syntax::Command::Include:

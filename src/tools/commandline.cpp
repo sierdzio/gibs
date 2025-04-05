@@ -1,48 +1,55 @@
 #include "commandline.h"
-#include "versioninfo.h"
 #include "log.h"
+#include "versioninfo.h"
 
+#include <cassert>
 #include <cstddef>
 #include <string>
 #include <vector>
-#include <cassert>
 
 namespace
 {
-    constexpr auto H = "-h";
-    constexpr auto Help = "--help";
-    constexpr auto HelpExplanation = "Displays this help information and exits.";
-    constexpr auto V = "-v";
-    constexpr auto Version = "--version";
-    constexpr auto VersionExplanation = "Displays gibs version info and exits.";
-    constexpr auto R = "-r";
-    constexpr auto Run = "--run";
-    constexpr auto RunExplanation = "Run the executable immediately after building.";
-    constexpr auto D = "-d";
-    constexpr auto Debug = "--debug";
-    constexpr auto DebugExplanation = "Compile in debug mode. By default, gibs "
-        "compiles release binaries.";
-    constexpr auto Q = "-q";
-    constexpr auto Quick = "--quick";
-    constexpr auto QuickExplanation = "'Convention over configuration' mode - parse "
-        "files only up to first line of 'concrete code'. Do not check file checksums when doing "
-        "incremental builds.";
-    constexpr auto Verbose = "--verbose";
-    constexpr auto VerboseExplanation = "Sets log level to 'Verbose'";
+constexpr auto H = "-h";
+constexpr auto Help = "--help";
+constexpr auto HelpExplanation = "Displays this help information and exits.";
+constexpr auto V = "-v";
+constexpr auto Version = "--version";
+constexpr auto VersionExplanation = "Displays gibs version info and exits.";
+constexpr auto R = "-r";
+constexpr auto Run = "--run";
+constexpr auto RunExplanation = "Run the executable immediately after building.";
+constexpr auto D = "-d";
+constexpr auto Debug = "--debug";
+constexpr auto DebugExplanation = "Compile in debug mode. By default, gibs "
+                                  "compiles release binaries.";
+constexpr auto Q = "-q";
+constexpr auto Quick = "--quick";
+constexpr auto QuickExplanation =
+    "'Convention over configuration' mode - parse "
+    "files only up to first line of 'concrete code'. Do not check file checksums when doing "
+    "incremental builds.";
+constexpr auto Verbose = "--verbose";
+constexpr auto VerboseExplanation = "Sets log level to 'Verbose'";
 
-    constexpr auto L = "-l";
-    constexpr auto LogLevel = "--log-level";
-    // TODO: use the X macro to list all log levels automatically
-    constexpr auto LogLevelExplanation = "Sets log level to one of: Silent, Error, Warning, Information, Debug, Verbose. Logs are printed for selected level and all levels above it. For example, when Information is set, all Error, Warning and Information logs will be printed, but no Debug or Verbose ones. 'Silent' setting will not print any logs at all. Log level parser is case-sentitive, please make sure to provide log levels in lower case.";
+constexpr auto L = "-l";
+constexpr auto LogLevel = "--log-level";
+// TODO: use the X macro to list all log levels automatically
+constexpr auto LogLevelExplanation =
+    "Sets log level to one of: Silent, Error, Warning, Information, Debug, Verbose. Logs are "
+    "printed for selected level and all levels above it. For example, when Information is set, all "
+    "Error, Warning and Information logs will be printed, but no Debug or Verbose ones. 'Silent' "
+    "setting will not print any logs at all. Log level parser is case-sentitive, please make sure "
+    "to provide log levels in lower case.";
 
-    constexpr auto DoubleSpace = "  ";
-};
+constexpr auto DoubleSpace = "  ";
+}; // namespace
 
 CommandLine::CommandLine(int argc, char *argv[])
 {
     Log::verbose("Arg. count:", argc, "args:", std::string(*argv));
 
-    for (int i = 0; i < argc; ++i) {
+    for (int i = 0; i < argc; ++i)
+    {
         const auto current = std::string(argv[i]);
         _args.push_back(current);
     }
@@ -54,10 +61,8 @@ std::string CommandLine::parsedFlagsText() const
 {
     std::string result = "Set flags:\n";
 
-    const auto appendIf = [](std::string* result,
-                                             const bool shouldAppend,
-                                             const std::string& flag,
-                                             const std::string& extraValue = {})
+    const auto appendIf = [](std::string *result, const bool shouldAppend, const std::string &flag,
+                             const std::string &extraValue = {})
     {
         if (shouldAppend)
         {
@@ -86,9 +91,10 @@ std::string CommandLine::helpText() const
 {
     std::string result;
 
-    result.append("C++ in-source project builder. Compile your projects without all the hassle "
-                  "connected with preparing a project file. Just run 'gibs main.cpp' and enjoy your "
-                  "compiled binary! More info: https://github.com/sierdzio/gibs\n\nOptions:\n");
+    result.append(
+        "C++ in-source project builder. Compile your projects without all the hassle "
+        "connected with preparing a project file. Just run 'gibs main.cpp' and enjoy your "
+        "compiled binary! More info: https://github.com/sierdzio/gibs\n\nOptions:\n");
     result = helpAppend(std::move(result), {H, Help}, HelpExplanation);
     result = helpAppend(std::move(result), {V, Version}, VersionExplanation);
     result = helpAppend(std::move(result), {R, Run}, RunExplanation);
@@ -147,9 +153,8 @@ bool CommandLine::isQuickMode() const
 
 bool CommandLine::parse()
 {
-    const auto canAdvance = [](const std::size_t i, const std::size_t size) -> bool {
-        return i < size;
-    };
+    const auto canAdvance = [](const std::size_t i, const std::size_t size) -> bool
+    { return i < size; };
 
     const auto size = _args.size();
 
@@ -162,7 +167,8 @@ bool CommandLine::parse()
 
         // Handle held over options with values:
 
-        if (holdOverArgument == LogLevel) {
+        if (holdOverArgument == LogLevel)
+        {
             holdOverArgument.clear();
             _logLevel = Log::typeValue(current);
             continue;
@@ -170,39 +176,46 @@ bool CommandLine::parse()
 
         // Handle simple options (flags):
 
-        if (current == H || current == Help) {
+        if (current == H || current == Help)
+        {
             _hasHelp = true;
             continue;
         }
 
-        if (current == V || current == Version) {
+        if (current == V || current == Version)
+        {
             _hasVersion = true;
             continue;
         }
 
-        if (current == R || current == Run) {
+        if (current == R || current == Run)
+        {
             _runImmediately = true;
             continue;
         }
 
-        if (current == D || current == Debug) {
+        if (current == D || current == Debug)
+        {
             _isDebug = true;
             continue;
         }
 
-        if (current == Q || current == Quick) {
+        if (current == Q || current == Quick)
+        {
             _isQuick = true;
             continue;
         }
 
-        if (current == Verbose) {
+        if (current == Verbose)
+        {
             _logLevel = Log::Type::Verbose;
             continue;
         }
 
         // Handle options with values:
 
-        if (current == L || current == LogLevel) {
+        if (current == L || current == LogLevel)
+        {
             holdOverArgument = LogLevel;
             continue;
         }
@@ -214,8 +227,7 @@ bool CommandLine::parse()
     return true;
 }
 
-std::string CommandLine::helpAppend(std::string &&string,
-                                    const std::vector<std::string> &flags,
+std::string CommandLine::helpAppend(std::string &&string, const std::vector<std::string> &flags,
                                     const std::string &explanation) const
 {
     assert(flags.size() > 0);
@@ -223,10 +235,14 @@ std::string CommandLine::helpAppend(std::string &&string,
     string.append(DoubleSpace);
 
     bool isFirst = true;
-    for (const auto &flag : flags) {
-        if (isFirst) {
+    for (const auto &flag : flags)
+    {
+        if (isFirst)
+        {
             isFirst = false;
-        } else {
+        }
+        else
+        {
             string.append(std::string(", "));
         }
 

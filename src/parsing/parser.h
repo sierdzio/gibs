@@ -1,13 +1,13 @@
 #pragma once
 
 #include "processing/processor.h"
-#include "syntax.h"
 #include "project/project.h"
+#include "syntax.h"
 #include "tools/apperror.h"
 
+#include <filesystem>
 #include <optional>
 #include <string>
-#include <filesystem>
 #include <vector>
 
 class CommandLine;
@@ -15,14 +15,14 @@ struct CppState;
 struct TargetId;
 class Parser
 {
-public:
+  public:
     Parser(const CommandLine *cmd);
 
     AppError status() const;
 
     void parse();
 
-private:
+  private:
     bool scanProjectDirectoryForEntryPoints();
 
     void parseProjectFile(const std::filesystem::path &path, const TargetId &id);
@@ -31,13 +31,13 @@ private:
     void parseProjectLine(std::string &&line, const TargetId &id);
     void parseCppLine(std::string &&line, CppState *state);
 
-    void handleCommand(const Command& command, const TargetId& id);
+    void handleCommand(const Command &command, const TargetId &id);
 
-    Syntax::FileType fileType(const std::filesystem::path& path) const;
+    Syntax::FileType fileType(const std::filesystem::path &path) const;
 
     std::optional<std::filesystem::path> findFile(const std::string &name) const;
     std::optional<std::filesystem::path> findCppFile(const std::string &name) const;
-    const std::filesystem::path& root() const;
+    const std::filesystem::path &root() const;
 
     std::filesystem::path _input;
 
@@ -57,10 +57,10 @@ private:
      * Of course, no header files are actually being compiled. But this keeps track of
      * header files for which a corresponding source file has already been found and
      * processed through handleCommand().
-    */
+     */
     std::vector<std::string> _compiledHeaders;
 
-    const CommandLine* _cmd = nullptr;
+    const CommandLine *_cmd = nullptr;
 
     AppError _status = AppError::NoError;
 };

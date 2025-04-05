@@ -1,31 +1,29 @@
 #include "project.h"
 #include "command.h"
-#include "tools/log.h"
 #include "exceptions/commandnotfound.h"
+#include "tools/log.h"
 
 #include <algorithm>
 #include <cassert>
 #include <vector>
 
-bool Project::addCommand(const Command& command)
+bool Project::addCommand(const Command &command)
 {
     commands.push_back(command);
     return true;
 }
 
-CommandId Project::linkCommandIdFor(const TargetId& id) const
+CommandId Project::linkCommandIdFor(const TargetId &id) const
 {
     const auto it = std::find_if(commands.cbegin(), commands.cend(),
-        [id](const Command& command) {
-            return command.targetId == id;
-        });
+                                 [id](const Command &command) { return command.targetId == id; });
 
     return it == commands.cend() ? CommandId() : it->id();
 }
 
-Command& Project::commandRef(const CommandId id)
+Command &Project::commandRef(const CommandId id)
 {
-    for (auto& current : commands)
+    for (auto &current : commands)
     {
         if (current.id() == id)
         {

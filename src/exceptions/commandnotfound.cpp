@@ -3,7 +3,7 @@
 #include "tools/log.h"
 #include <string>
 
-CommandNotFound::CommandNotFound(const CommandId& id, const std::vector<Command>& commands)
+CommandNotFound::CommandNotFound(const CommandId &id, const std::vector<Command> &commands)
 {
     message = "Command " + std::to_string(id) + " has not been found. ";
 
@@ -11,7 +11,7 @@ CommandNotFound::CommandNotFound(const CommandId& id, const std::vector<Command>
     {
         message += "Present commands are:\n";
 
-        for (const auto& current : commands)
+        for (const auto &current : commands)
         {
             message += " |- " + current.whole() + '\n';
         }
@@ -22,7 +22,7 @@ CommandNotFound::CommandNotFound(const CommandId& id, const std::vector<Command>
     }
 }
 
-const char* CommandNotFound::what() const noexcept
+const char *CommandNotFound::what() const noexcept
 {
     return message.c_str();
 }

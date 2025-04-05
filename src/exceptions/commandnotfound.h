@@ -1,17 +1,17 @@
-# pragma once
+#pragma once
 
 #include "project/command.h"
 
 #include <exception>
-#include <vector>
 #include <string>
+#include <vector>
 
 class CommandNotFound : public std::exception
 {
-public:
-    CommandNotFound(const CommandId& id, const std::vector<Command>& commands);
-    const char* what() const noexcept override;
+  public:
+    CommandNotFound(const CommandId &id, const std::vector<Command> &commands);
+    const char *what() const noexcept override;
 
-private:
+  private:
     std::string message;
 };

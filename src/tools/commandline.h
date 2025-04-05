@@ -2,12 +2,12 @@
 
 #include "log.h"
 
-#include <vector>
 #include <string>
+#include <vector>
 
 class CommandLine
 {
-public:
+  public:
     CommandLine(int argc, char *argv[]);
 
     std::string parsedFlagsText() const;
@@ -26,7 +26,7 @@ public:
     bool isDebug() const;
     bool isQuickMode() const;
 
-private:
+  private:
     bool parse();
     [[nodiscard]] std::string helpAppend(std::string &&string,
                                          const std::vector<std::string> &flags,

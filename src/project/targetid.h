@@ -12,16 +12,16 @@ struct TargetId
     };
 
     TargetId();
-    TargetId(std::string&& name, const Type type);
+    TargetId(std::string &&name, const Type type);
 
-    bool operator<=>(const TargetId& other) const = default;
+    bool operator<=>(const TargetId &other) const = default;
     bool isNull() const;
 
-    const std::string& name() const;
+    const std::string &name() const;
     Type type() const;
 
-private:
-    void setName(const std::string& name);
+  private:
+    void setName(const std::string &name);
 
     std::string _name;
     Type _type = Type::Unknown;

@@ -6,8 +6,10 @@ static Log::Type RuntimeLogLevel = Log::Type::Information;
 
 std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &stringList)
 {
-    for (std::size_t i = 0; i < stringList.size(); ++i) {
-        if (i != 0) {
+    for (std::size_t i = 0; i < stringList.size(); ++i)
+    {
+        if (i != 0)
+        {
             stream << ' ';
         }
 
@@ -27,7 +29,8 @@ Log::Type Log::typeValue(const std::string &string)
     // TODO: make it case-insensitive
     const auto it = std::find(typeStrings.cbegin(), typeStrings.cend(), string);
 
-    if (it == typeStrings.cend()) {
+    if (it == typeStrings.cend())
+    {
         return Type::Information;
     }
 
@@ -44,30 +47,31 @@ bool Log::isWithinLogLevel(const Type type)
     return static_cast<int>(type) <= static_cast<int>(RuntimeLogLevel);
 }
 
-namespace {
-    constexpr auto Verbose = "V:";
-    constexpr auto Debug = "D:";
-    constexpr auto Information = "I:";
-    constexpr auto Warning = "W:";
-    constexpr auto Error = "E:";
-}
+namespace
+{
+constexpr auto Verbose = "V:";
+constexpr auto Debug = "D:";
+constexpr auto Information = "I:";
+constexpr auto Warning = "W:";
+constexpr auto Error = "E:";
+} // namespace
 
 std::string Log::type(const Type type)
 {
     switch (type)
     {
-        case Type::Verbose:
-            return Verbose;
-        case Type::Debug:
-            return Debug;
-        case Type::Information:
-            return Information;
-        case Type::Warning:
-            return Warning;
-        case Type::Error:
-            return Error;
-        case Type::Silent:
-            return {};
+    case Type::Verbose:
+        return Verbose;
+    case Type::Debug:
+        return Debug;
+    case Type::Information:
+        return Information;
+    case Type::Warning:
+        return Warning;
+    case Type::Error:
+        return Error;
+    case Type::Silent:
+        return {};
     }
 
     return {};

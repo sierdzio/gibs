@@ -1,8 +1,8 @@
 #pragma once
 
+#include "commandcomponents.h"
 #include "parsing/syntax.h"
 #include "targetid.h"
-#include "commandcomponents.h"
 
 #include <string>
 #include <vector>
@@ -12,7 +12,7 @@ using CommandId = uint;
 struct Command
 {
     Command();
-    //Command(const Command& other);
+    // Command(const Command& other);
 
     CommandId id() const;
 
@@ -50,7 +50,7 @@ struct Command
     std::vector<std::string> modifiers;
     bool isReadyToExe = false;
 
-private:
+  private:
     bool isValidCommand(const std::string &command) const;
     bool supportsModifiers(const Syntax::Command command) const;
 

@@ -11,7 +11,8 @@ Syntax::Command Syntax::commandValue(const std::string &string)
 {
     const auto it = std::find(commandStrings.cbegin(), commandStrings.cend(), string);
 
-    if (it == commandStrings.cend()) {
+    if (it == commandStrings.cend())
+    {
         return Command::Invalid;
     }
 

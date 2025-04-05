@@ -1,9 +1,9 @@
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
 #include "exceptions/commandnotfound.h"
-#include "tools/commandline.h"
 #include "parsing/parser.h"
+#include "tools/commandline.h"
 #include "tools/log.h"
 
 int main(int argc, char *argv[])
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
             return static_cast<int>(parser.status());
         }
     }
-    catch (const CommandNotFound& e)
+    catch (const CommandNotFound &e)
     {
         Log::error(e.what());
     }
@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
     }
 
     const auto end = std::chrono::steady_clock::now();
-    const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+    const auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 
     Log::information("gibs took:", duration, "ms of your time");
 

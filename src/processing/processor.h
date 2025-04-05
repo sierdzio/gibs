@@ -4,8 +4,8 @@
 
 class Processor
 {
-public:
+  public:
     Processor();
 
-    void schedule(const Command& command);
+    void schedule(const Command &command);
 };

@@ -11,8 +11,8 @@ struct Project
 {
     bool addCommand(const Command &command);
 
-    CommandId linkCommandIdFor(const TargetId& id) const;
-    Command& commandRef(const CommandId id);
+    CommandId linkCommandIdFor(const TargetId &id) const;
+    Command &commandRef(const CommandId id);
 
     void logCommandTree() const;
 

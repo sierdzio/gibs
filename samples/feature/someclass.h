@@ -4,6 +4,6 @@
 
 class SomeClass
 {
-public:
+  public:
     QString text() const;
 };

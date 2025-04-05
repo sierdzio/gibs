@@ -1,11 +1,12 @@
-//i executable name MultipleFiles
+// i executable name MultipleFiles
 
-#include "someclass.h"
 #include "anotherclass.h"
+#include "someclass.h"
 
 #include <stdio>
 
-int main() {
+int main()
+{
     SomeClass sc;
     std::cout << sc.text() << AnotherClass().text() << std::endl;
     return 0;

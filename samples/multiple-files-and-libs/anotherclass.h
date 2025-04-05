@@ -4,6 +4,6 @@
 
 class AnotherClass
 {
-public:
+  public:
     std::string text() const;
 };
