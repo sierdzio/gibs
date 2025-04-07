@@ -520,11 +520,12 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
         _project.addCommand(command);
     }
 
-    Log::verbose("Command:", command.whole(), "should parse:", shouldParse,
-                 "has mods:", (not command.modifiers.empty()),
-                 "type:", Syntax::commandString(command.type));
+    const bool hasModifiers = not command.modifiers.empty();
 
-    if (shouldParse and not command.modifiers.empty())
+    Log::verbose("Command:", command.whole(), "should parse:", shouldParse,
+                 "has mods:", hasModifiers, "type:", Syntax::commandString(command.type));
+
+    if (shouldParse and hasModifiers)
     {
         const auto pathOptional = findFile(command.modifiers.front());
 
@@ -612,6 +613,36 @@ void Parser::handleCommand(const Command &command, const TargetId &id)
             {
                 _includePaths.push_back(path);
             }
+        }
+    }
+    else if (not shouldParse and hasModifiers)
+    {
+        if (command.type == Syntax::Command::Library)
+        {
+            Log::verbose("Preparing library target:", command.library.name);
+
+            // Update or add new link/ target command
+
+            // TODO:
+            // // Prepare link command if not already present:
+            // auto linkId = _project.linkCommandIdFor(id);
+            // if (linkId == 0)
+            // {
+
+            // TODO: this needs to be done when parsing cpp file, not when handling the
+            // command
+
+            // Command link;
+            // link.type = Syntax::Command::Library;
+            // link.targetId = TargetId(command.library.name, TargetId::Type::Library);
+            // link.append(std::filesystem::relative(link.targetId.name(), root()));
+            // link.finalize();
+            // _project.addCommand(link);
+
+            // command.targetId = link.targetId;
+            // command.parentId = link.id();
+
+            //
         }
     }
 

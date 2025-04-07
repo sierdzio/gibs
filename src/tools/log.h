@@ -5,15 +5,16 @@
 #include <string>
 #include <vector>
 
-#define LOG_TYPES                                                                                  \
-    X(Silent, "silent")                                                                            \
-    X(Error, "error")                                                                              \
-    X(Warning, "warning")                                                                          \
-    X(Information, "information")                                                                  \
-    X(Debug, "debug")                                                                              \
+#define LOG_TYPES                                                                        \
+    X(Silent, "silent")                                                                  \
+    X(Error, "error")                                                                    \
+    X(Warning, "warning")                                                                \
+    X(Information, "information")                                                        \
+    X(Debug, "debug")                                                                    \
     X(Verbose, "verbose")
 
-std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &stringList);
+std::ostream &operator<<(std::ostream &stream,
+                         const std::vector<std::string> &stringList);
 
 // TODO: add colors to logs
 
@@ -38,32 +39,32 @@ bool isWithinLogLevel(const Type type);
 
 std::string type(const Type type);
 
-template <typename... Types> void verbose(Types &&...args)
+template <typename... Types> void verbose(const Types &...args)
 {
     log(Type::Verbose, args...);
 }
 
-template <typename... Types> void debug(Types &&...args)
+template <typename... Types> void debug(const Types &...args)
 {
     log(Type::Debug, args...);
 }
 
-template <typename... Types> void information(Types &&...args)
+template <typename... Types> void information(const Types &...args)
 {
     log(Type::Information, args...);
 }
 
-template <typename... Types> void warning(Types &&...args)
+template <typename... Types> void warning(const Types &...args)
 {
     log(Type::Warning, args...);
 }
 
-template <typename... Types> void error(Types &&...args)
+template <typename... Types> void error(const Types &...args)
 {
     log(Type::Error, args...);
 }
 
-template <typename... Types> void log(const Type type, Types &&...args)
+template <typename... Types> void log(const Type type, const Types &...args)
 {
     if (not isWithinLogLevel(type))
     {
