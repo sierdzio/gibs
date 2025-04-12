@@ -22,7 +22,7 @@ struct Project
   private:
     void generateDepths();
     int depth(const Command &command) const;
-    std::string logSubTree(const int depth, const Command &command,
+    std::string logCommand(const int depth, const Command &command,
                            std::string &&string) const;
 
     std::unordered_map<CommandId, int> _commandDepths;

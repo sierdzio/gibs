@@ -9,8 +9,10 @@
 
 namespace
 {
-constexpr auto EntryMark = "|- ";
-constexpr auto Vertical = '|';
+constexpr std::string Branch = "|--";
+constexpr std::string Vertical = "|";
+constexpr std::string Space = " ";
+constexpr std::string Nl = "\n";
 } //namespace
 
 bool Project::addCommand(const Command &command)
@@ -54,11 +56,12 @@ void Project::logCommandTree() const
 
     std::string result;
 
-    result.append("All project commands:\n");
+    result.append("All project commands:");
+    result.append(Nl);
 
     for (const auto &command : commands)
     {
-        result = logSubTree(depth(command), command, std::move(result));
+        result = logCommand(depth(command), command, std::move(result));
     }
 
     Log::information(result);
@@ -92,20 +95,20 @@ int Project::depth(const Command &command) const
     return _commandDepths.at(command.id());
 }
 
-std::string Project::logSubTree(const int depth, const Command &command,
+std::string Project::logCommand(const int depth, const Command &command,
                                 std::string &&string) const
 {
     if (depth > 0)
     {
-        string.push_back(Vertical);
+        string.append(Vertical);
     }
 
     for (int i = 0; i < depth; ++i)
     {
-        string.push_back(' ');
+        string.append(Space + Space);
     }
 
-    string.append(EntryMark + command.whole() + '\n');
+    string.append(Branch + command.whole() + Nl);
 
     return string;
 }
