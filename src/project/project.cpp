@@ -80,6 +80,10 @@ void Project::generateDepths()
         {
             _commandDepths.insert({current.id(), it->second + 1});
         }
+        else
+        {
+            Log::error("Unhandled case! TODO! TODO!");
+        }
     }
 }
 
@@ -102,20 +106,6 @@ std::string Project::logSubTree(const int depth, const Command &command,
     }
 
     string.append(EntryMark + command.whole() + '\n');
-
-    // TODO: make this recursive to support deep trees
-    for (const auto &sub : commands)
-    {
-        if (sub.id() == command.id())
-        {
-            continue;
-        }
-
-        if (sub.parentId == command.id())
-        {
-            string.append("  |- " + sub.whole() + '\n');
-        }
-    }
 
     return string;
 }
