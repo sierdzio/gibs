@@ -1,6 +1,6 @@
 #pragma once
 
-//i library some_library type static
+//i library name some_library type static
 
 #include <string>
 

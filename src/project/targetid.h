@@ -1,17 +1,29 @@
 #pragma once
 
-#include <algorithm>
+#include <array>
+#include <ostream>
 #include <string>
-#include <utility>
+
+#define TYPES                                                                            \
+    X(Unknown, "unknown")                                                                \
+    X(Executable, "executable")                                                          \
+    X(Library, "library")
 
 struct TargetId
 {
+#define X(key, name) key,
     enum class Type
     {
-        Unknown,
-        Executable,
-        Library,
+        TYPES
     };
+#undef X
+
+#define X(key, name) name,
+    constexpr static std::array typeStrings = {TYPES};
+#undef X
+
+    static const std::string typeString(const Type type);
+    static Type typeValue(const std::string &string);
 
     TargetId();
     TargetId(std::string &&name, const Type type);
@@ -29,3 +41,5 @@ struct TargetId
     Type _type = Type::Unknown;
     uint _id = 0;
 };
+
+std::ostream &operator<<(std::ostream &stream, const TargetId &id);

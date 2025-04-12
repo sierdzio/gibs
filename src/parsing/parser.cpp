@@ -207,15 +207,15 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     if (type == Syntax::FileType::Cpp)
     {
         // Prepare link command if not already present:
-        auto linkId = _project.linkCommandIdFor(id);
+        auto linkId = _project.linkCommandIdFor(state.id);
         if (linkId == 0)
         {
             Command link;
-            link.type = id.type() == TargetId::Type::Executable
+            link.type = state.id.type() == TargetId::Type::Executable
                             ? Syntax::Command::Executable
                             : Syntax::Command::Library;
             link.targetId = id;
-            link.append(std::filesystem::relative(id.name(), root()));
+            link.append(std::filesystem::relative(state.id.name(), root()));
             link.finalize();
             _project.addCommand(link);
         }
@@ -226,7 +226,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         Command compile;
         compile.type = Syntax::Command::Source;
         compile.append(std::filesystem::relative(path, root()));
-        compile.targetId = id;
+        compile.targetId = state.id;
         compile.parentId = linkCommand->id();
         compile.finalize();
 
@@ -262,8 +262,9 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             const auto &cppPath = cppPathOptional.value();
             if (fileType(cppPath) == Syntax::FileType::Cpp)
             {
-                Log::information("Parsing cpp file for header:", path.filename());
-                parseCppFile(cppPath, id);
+                Log::information("Parsing cpp file for header:", path.filename(),
+                                 "under target ID:", state.id);
+                parseCppFile(cppPath, state.id);
             }
         }
     }
@@ -308,7 +309,9 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
         }
     }
 
-    handleCommand(command, id);
+    CppState state;
+    state.id = id;
+    handleCommand(command, &state);
 }
 
 void Parser::parseCppLine(std::string &&line, CppState *state)
@@ -452,7 +455,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             return;
         }
 
-        handleCommand(command, state->id);
+        handleCommand(command, state);
     }
     else
     {
@@ -462,7 +465,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     }
 }
 
-void Parser::handleCommand(Command command, const TargetId &id)
+void Parser::handleCommand(Command command, CppState *state)
 {
     if (not command.isValid())
     {
@@ -484,10 +487,11 @@ void Parser::handleCommand(Command command, const TargetId &id)
     {
         //if this is first Target command, and/ or it is issued in main.cpp, assume
         //it is naming the whole project and executable
-        if (id == _project.id)
+        if (not _projectIdAlreadySet and state->id == _project.id)
         {
-            const auto &commandId = _project.linkCommandIdFor(id);
+            const auto &commandId = _project.linkCommandIdFor(state->id);
             _project.commandRef(commandId).executable.name = command.executable.name;
+            _projectIdAlreadySet = true;
         }
         else
         {
@@ -499,29 +503,18 @@ void Parser::handleCommand(Command command, const TargetId &id)
                 auto name = command.library.name;
                 Log::verbose("Preparing library target:", name);
 
-                // Update or add new link/ target command
-
-                // TODO:
-                // // Prepare link command if not already present:
-                // auto linkId = _project.linkCommandIdFor(id);
-                // if (linkId == 0)
-                // {
-
-                // TODO: this needs to be done when parsing cpp file, not when handling
-                // the command
-
                 // Command link;
                 command.type = Syntax::Command::Library;
+                command.parentId = _project.linkCommandIdFor(state->id);
                 command.targetId = TargetId(std::move(name), TargetId::Type::Library);
                 command.append(
                     std::filesystem::relative(command.targetId.name(), root()));
                 command.finalize();
-                // _project.addCommand(link);
 
-                // command.targetId = link.targetId;
-                // command.parentId = link.id();
-
-                //
+                // Ensure subsequent files are registered for compilation under this
+                // library
+                // TODO: go back to previous target when we go "out of scope"
+                state->id = command.targetId;
             }
             else
             {
@@ -579,11 +572,11 @@ void Parser::handleCommand(Command command, const TargetId &id)
 
         if (std::filesystem::path(path).extension() == Syntax::Extension::ProjectFile)
         {
-            parseProjectFile(path, id);
+            parseProjectFile(path, state->id);
         }
         else if (command.type == Syntax::Command::Source)
         {
-            parseCppFile(path, id);
+            parseCppFile(path, state->id);
         }
         else if (command.type == Syntax::Command::Include)
         {
@@ -629,14 +622,14 @@ void Parser::handleCommand(Command command, const TargetId &id)
                 // Log::verbose("is header?", Tools::isHeaderFile(path), "file:", path);
                 if (Tools::isHeaderFile(path))
                 {
-                    parseCppFile(path, id);
+                    parseCppFile(path, state->id);
                 }
                 else
                 {
                     const auto pathOptional = findCppFile(path);
                     if (pathOptional.has_value())
                     {
-                        parseCppFile(pathOptional.value(), id);
+                        parseCppFile(pathOptional.value(), state->id);
                     }
                     else
                     {

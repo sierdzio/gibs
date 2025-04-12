@@ -31,7 +31,8 @@ class Parser
     void parseProjectLine(std::string &&line, const TargetId &id);
     void parseCppLine(std::string &&line, CppState *state);
 
-    void handleCommand(Command command, const TargetId &id);
+    // TODO: move command instead of copying
+    void handleCommand(Command command, CppState *state);
 
     Syntax::FileType fileType(const std::filesystem::path &path) const;
 
@@ -63,4 +64,5 @@ class Parser
     const CommandLine *_cmd = nullptr;
 
     AppError _status = AppError::NoError;
+    bool _projectIdAlreadySet = false;
 };

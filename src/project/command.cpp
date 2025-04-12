@@ -116,10 +116,15 @@ void Command::finalize()
                         previous.clear();
                         continue;
                     }
-                    else
+                    else if (previous == Syntax::Modifier::Name)
                     {
                         library.name = current;
                         previous.clear();
+                        continue;
+                    }
+                    else
+                    {
+                        Log::warning("Unknown library modifier:", previous, current);
                         continue;
                     }
                 }
