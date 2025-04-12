@@ -3,9 +3,9 @@
 #include "project/command.h"
 #include "targetid.h"
 
+#include <string>
+#include <unordered_map>
 #include <vector>
-
-struct Command;
 
 struct Project
 {
@@ -18,4 +18,12 @@ struct Project
 
     std::vector<Command> commands;
     TargetId id;
+
+  private:
+    void generateDepths();
+    int depth(const Command &command) const;
+    std::string logSubTree(const int depth, const Command &command,
+                           std::string &&string) const;
+
+    std::unordered_map<CommandId, int> _commandDepths;
 };
