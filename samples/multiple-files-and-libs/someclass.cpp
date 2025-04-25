@@ -1,4 +1,3 @@
-
 #include "someclass.h"
 
 std::string SomeClass::text() const
