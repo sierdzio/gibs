@@ -28,6 +28,9 @@ constexpr auto HeaderFile2 = ".hpp";
 constexpr auto HeaderFile3 = ".hxx";
 constexpr auto ObjectFile1 = ".o";
 constexpr auto ObjectFile2 = ".obj";
+// TODO: make it platform-dependent!
+constexpr auto LibraryStatic = ".a";
+constexpr auto LibraryDynamic = ".so";
 constexpr auto Main = "main";
 }; // namespace Extension
 

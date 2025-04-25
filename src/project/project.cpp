@@ -1,5 +1,6 @@
 #include "project.h"
 #include "command.h"
+#include "exceptions/commanddepthexception.h"
 #include "exceptions/commandnotfound.h"
 #include "tools/log.h"
 
@@ -85,7 +86,7 @@ void Project::generateDepths()
         }
         else
         {
-            Log::error("Unhandled case! TODO! TODO!");
+            throw CommandDepthException(current);
         }
     }
 }

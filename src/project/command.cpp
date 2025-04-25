@@ -1,8 +1,9 @@
 #include "command.h"
-
+#include "exceptions/emptylinkobject.h"
 #include "parsing/syntax.h"
 #include "tools/log.h"
 #include "tools/tools.h"
+
 #include <filesystem>
 
 namespace
@@ -172,6 +173,23 @@ void Command::finalize()
 
             previous = current;
         }
+
+        // All modifiers parsed. Final adjustments:
+        if (type == Syntax::Command::Library)
+        {
+            std::filesystem::path filePath = library.name;
+            if (library.type == Syntax::LibraryType::Static)
+            {
+                filePath.replace_extension(Syntax::Extension::LibraryStatic);
+            }
+            else if (library.type == Syntax::LibraryType::Dynamic)
+            {
+                filePath.replace_extension(Syntax::Extension::LibraryDynamic);
+            }
+            // TODO: use different extension per platform!
+            Log::verbose("Appending library file:", filePath.string());
+            object.name = filePath.string();
+        }
     }
     else
     {
@@ -252,6 +270,32 @@ std::string Command::value() const
     }
 
     return modifiers.back();
+}
+
+bool Command::addLinkObject(const std::string &name)
+{
+    if (name.empty())
+    {
+        throw EmptyLinkObject(*this);
+    }
+
+    if (type == Syntax::Command::Executable)
+    {
+        executable.objects.push_back(name);
+    }
+    else if (type == Syntax::Command::Library)
+    {
+        library.objects.push_back(name);
+    }
+    else
+    {
+        Log::verbose(
+            "Tried to add link object", name,
+            "to a command which is neither a library nor an executable:", whole());
+        return false;
+    }
+
+    return true;
 }
 
 bool Command::isValidCommand(const std::string &command) const

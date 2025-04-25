@@ -1,7 +1,9 @@
 #include <chrono>
 #include <iostream>
 
+#include "exceptions/commanddepthexception.h"
 #include "exceptions/commandnotfound.h"
+#include "exceptions/emptylinkobject.h"
 #include "parsing/parser.h"
 #include "tools/commandline.h"
 #include "tools/log.h"
@@ -45,6 +47,15 @@ int main(int argc, char *argv[])
         }
     }
     catch (const CommandNotFound &e)
+    {
+        Log::error(e.what());
+    }
+    catch (const CommandDepthException &e)
+    {
+        // Warning because it is a missing functionality but not crucial
+        Log::warning(e.what());
+    }
+    catch (const EmptyLinkObject &e)
     {
         Log::error(e.what());
     }

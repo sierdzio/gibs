@@ -1,9 +1,9 @@
 #include "commandnotfound.h"
-
 #include "tools/log.h"
-#include <string>
 
-CommandNotFound::CommandNotFound(const CommandId &id, const std::vector<Command> &commands)
+CommandNotFound::CommandNotFound(const CommandId &id,
+                                 const std::vector<Command> &commands)
+    : std::exception()
 {
     message = "Command " + std::to_string(id) + " has not been found. ";
 

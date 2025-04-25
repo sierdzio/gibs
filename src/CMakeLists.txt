@@ -11,7 +11,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wconversion -Wsig
 
 set(gibs_srcs
     main.cpp
-    exceptions/commandnotfound.cpp exceptions/commandnotfound.cpp
+    exceptions/commandnotfound.cpp exceptions/commandnotfound.h
+    exceptions/commanddepthexception.cpp exceptions/commanddepthexception.h
+    exceptions/emptylinkobject.cpp exceptions/emptylinkobject.h
     tools/log.cpp tools/log.h
     tools/commandline.cpp tools/commandline.h
     tools/tools.cpp tools/tools.h

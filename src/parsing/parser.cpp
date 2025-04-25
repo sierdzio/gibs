@@ -232,14 +232,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
         Log::debug("Adding object file to linker command:", compile.object.name);
 
-        if (linkCommand->type == Syntax::Command::Executable)
-        {
-            linkCommand->executable.objects.push_back(compile.object.name);
-        }
-        else if (linkCommand->type == Syntax::Command::Library)
-        {
-            linkCommand->library.objects.push_back(compile.object.name);
-        }
+        linkCommand->addLinkObject(compile.object.name);
 
         Log::information("Compiling cpp file:", path.filename());
         _project.addCommand(compile);
@@ -510,6 +503,10 @@ void Parser::handleCommand(Command command, CppState *state)
                 command.append(
                     std::filesystem::relative(command.targetId.name(), root()));
                 command.finalize();
+
+                // Link this library together with parent target
+                auto linkCommand = &_project.commandRef(command.parentId);
+                linkCommand->addLinkObject(command.object.name);
 
                 // Ensure subsequent files are registered for compilation under this
                 // library

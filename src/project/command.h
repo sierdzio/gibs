@@ -36,6 +36,8 @@ struct Command
     std::string whole() const;
     std::string value() const;
 
+    bool addLinkObject(const std::string &name);
+
     // Composition: additional members used by some command types
     ExecutableComponent executable;
     LibraryComponent library;
