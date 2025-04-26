@@ -12,7 +12,6 @@ using CommandId = uint;
 struct Command
 {
     Command();
-    // Command(const Command& other);
 
     CommandId id() const;
 

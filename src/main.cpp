@@ -1,5 +1,8 @@
+//i executable name gibs
+
 #include <chrono>
 #include <iostream>
+#include <stdexcept>
 
 #include "exceptions/commanddepthexception.h"
 #include "exceptions/commandnotfound.h"
@@ -58,6 +61,10 @@ int main(int argc, char *argv[])
     catch (const EmptyLinkObject &e)
     {
         Log::error(e.what());
+    }
+    catch (const std::runtime_error &e)
+    {
+        Log::error("Unknown error:", e.what());
     }
     catch (...)
     {

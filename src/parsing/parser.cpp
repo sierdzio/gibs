@@ -9,6 +9,7 @@
 #include "project/command.h"
 #include "project/targetid.h"
 
+#include <algorithm>
 #include <cassert>
 #include <filesystem>
 #include <fstream>
@@ -68,7 +69,7 @@ Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
         scanProjectDirectoryForEntryPoints();
     }
 
-    _includePaths.push_back(_projectDirectory);
+    addIncludePath(_projectDirectory);
 }
 
 AppError Parser::status() const
@@ -170,6 +171,8 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         Log::verbose("Skipping, already parsed:", path);
         return;
     }
+
+    addIncludePath(path);
 
     std::ifstream file(path, std::iostream::in);
 
@@ -528,10 +531,9 @@ void Parser::handleCommand(Command command, CppState *state)
         // TODO: only parse if: not parsed already and it is a local library (part of the
         // same project)
 
-        if (not command.include.path.empty() and
-            not Tools::isPathToFile(command.include.path))
+        if (not command.include.path.empty())
         {
-            _includePaths.push_back(command.include.dirPath());
+            addIncludePath(command.include.path);
         }
     }
     else if (command.type == Syntax::Command::Feature or
@@ -636,8 +638,7 @@ void Parser::handleCommand(Command command, CppState *state)
             }
             else if (not path.empty())
             {
-                Log::information("Adding to include paths:", path);
-                _includePaths.push_back(path);
+                addIncludePath(path);
             }
         }
     }
@@ -692,8 +693,9 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
             continue;
         }
 
-        //const auto relativeDir = std::filesystem::relative(dir, root());
-        for (auto const &it : std::filesystem::directory_iterator(dir))
+        const auto current = root() / dir;
+
+        for (auto const &it : std::filesystem::directory_iterator(current))
         {
             if (it.exists() && it.path().filename() == name)
             {
@@ -733,6 +735,33 @@ std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name
     }
 
     return {};
+}
+
+void Parser::addIncludePath(const std::filesystem::path &path)
+{
+    auto result = std::filesystem::relative(path, root());
+
+    // TODO: more concrete detection of files: is it really a file or just a file-like dir
+    // name?
+    if (result.has_filename() && result.has_extension())
+    {
+        result = result.parent_path();
+    }
+
+    if (result.empty())
+    {
+        return;
+    }
+
+    const auto findResult =
+        std::find(_includePaths.cbegin(), _includePaths.cend(), result);
+    if (findResult != _includePaths.cend())
+    {
+        return;
+    }
+
+    Log::information("Adding to include paths:", result);
+    _includePaths.push_back(result);
 }
 
 const std::filesystem::path &Parser::root() const

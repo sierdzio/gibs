@@ -38,6 +38,7 @@ class Parser
 
     std::optional<std::filesystem::path> findFile(const std::string &name) const;
     std::optional<std::filesystem::path> findCppFile(const std::string &name) const;
+    void addIncludePath(const std::filesystem::path &path);
     const std::filesystem::path &root() const;
 
     std::filesystem::path _input;
