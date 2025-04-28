@@ -6,6 +6,8 @@
 
 namespace
 {
+constexpr auto Space = ' ';
+constexpr auto Tab = '\t';
 constexpr auto Quote = '"';
 constexpr auto ListSep = ", ";
 constexpr auto True = "true";
@@ -100,4 +102,9 @@ bool Tools::isHeaderFile(const std::string &path)
     return path.ends_with(Syntax::Extension::HeaderFile1) or
            path.ends_with(Syntax::Extension::HeaderFile2) or
            path.ends_with(Syntax::Extension::HeaderFile3);
+}
+
+bool Tools::isWhitespace(const char character)
+{
+    return character == Space or character == Tab;
 }

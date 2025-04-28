@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -16,8 +15,6 @@
 std::ostream &operator<<(std::ostream &stream,
                          const std::vector<std::string> &stringList);
 
-// TODO: add colors to logs
-
 namespace Log
 {
 #define X(key, name) key,
@@ -27,10 +24,6 @@ enum class Type
 };
 #undef X
 
-#define X(key, name) name,
-constexpr std::array typeStrings = {LOG_TYPES};
-#undef X
-
 const std::string typeString(const Type type);
 Type typeValue(const std::string &string);
 
@@ -38,6 +31,10 @@ void setLogLevel(const Type type);
 bool isWithinLogLevel(const Type type);
 
 std::string type(const Type type);
+std::string typeColor(const Type type);
+
+std::string beginning(const Type type);
+std::string ending(const Type type);
 
 template <typename... Types> void verbose(const Types &...args)
 {
@@ -71,13 +68,11 @@ template <typename... Types> void log(const Type type, const Types &...args)
         return;
     }
 
-    constexpr auto Space = ' ';
-
-    std::cout << Log::type(type) << Space;
+    std::cout << beginning(type);
 
     // This is a "loop" lambda
-    ([&] { std::cout << args << Space; }(), ...);
+    ([&] { std::cout << args << ' '; }(), ...);
 
-    std::cout << std::endl;
+    std::cout << ending(type);
 }
 }; // namespace Log

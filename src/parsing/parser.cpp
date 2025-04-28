@@ -30,7 +30,7 @@ Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
         _input = std::filesystem::current_path();
     }
 
-    if (std::filesystem::exists(_input) == false)
+    if (not std::filesystem::exists(_input))
     {
         Log::error("Input path does not exist, cannot continue:", _input);
         _status = AppError::WrongInputPath;
@@ -132,7 +132,7 @@ bool Parser::scanProjectDirectoryForEntryPoints()
         }
     }
 
-    if (std::filesystem::directory_entry(_projectFile).exists() ||
+    if (std::filesystem::directory_entry(_projectFile).exists() or
         std::filesystem::directory_entry(_projectEntryPoint).exists())
     {
         return true;
@@ -162,7 +162,7 @@ void Parser::parseProjectFile(const std::filesystem::path &path, const TargetId 
     // parse on the fly
     while (std::getline(file, line))
     {
-        // Log::verbose("Read:", line);
+        Log::verbose("Read:", path.filename(), ":", line);
         parseProjectLine(std::move(line), id);
     }
 
@@ -181,7 +181,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     std::ifstream file(path, std::iostream::in);
 
-    if (file.is_open() == false)
+    if (not file.is_open())
     {
         Log::error("Could not open file for reading:", path);
         return;
@@ -216,7 +216,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     {
         // Prepare link command if not already present:
         auto linkId = _project.linkCommandIdFor(state.id);
-        if (linkId == 0)
+        if (linkId == 0) [[unlikely]]
         {
             Command link;
             link.type = state.id.type() == TargetId::Type::Executable
@@ -258,7 +258,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         // }
         const auto cppPathOptional = findCppFile(path.filename());
 
-        if (cppPathOptional.has_value())
+        if (cppPathOptional.has_value()) [[likely]]
         {
             const auto &cppPath = cppPathOptional.value();
             if (fileType(cppPath) == Syntax::FileType::Cpp)
@@ -268,7 +268,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                 parseCppFile(cppPath, state.id);
             }
         }
-        else
+        else [[unlikely]]
         {
             Log::debug("Not found!");
         }
@@ -282,7 +282,7 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
         return;
     }
 
-    if (line.size() > 0 && line.at(0) == Syntax::Comment::Project)
+    if (line.at(0) == Syntax::Comment::Project)
     {
         Log::debug("Found a comment, ignoring...");
         return;
@@ -293,7 +293,7 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
 
     for (const auto &character : std::as_const(line))
     {
-        if (character == ' ' || character == '\t')
+        if (Tools::isWhitespace(character))
         {
             if (word.empty() == true)
             {
@@ -304,7 +304,7 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
             // Make sure word gets cleaned up even if we exit early
             const auto guard = Tools::ScopeGuard([&word] { word.clear(); });
 
-            if (word.size() == 1 && word.at(0) == Syntax::Comment::Project)
+            if (word.size() == 1 and word.at(0) == Syntax::Comment::Project) [[unlikely]]
             {
                 // Skip comment line
                 continue;
@@ -343,7 +343,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         // Make sure word gets cleaned up even if we exit early
         const auto guard = Tools::ScopeGuard([&word] { word.clear(); });
 
-        if (word == Syntax::Comment::MultilineEnd)
+        if (word == Syntax::Comment::MultilineEnd) [[unlikely]]
         {
             state->isCommentBlock = false;
             state->isProjectCommentBlock = false;
@@ -364,7 +364,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         {
             return Action::Continue;
         }
-        else if (word == Syntax::Comment::MultilineBegin)
+        else if (word == Syntax::Comment::MultilineBegin) [[unlikely]]
         {
             // Recognize C++ comments and comment blocks:
             state->isCommentBlock = true;
@@ -424,7 +424,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
     for (const auto &character : std::as_const(line))
     {
-        if (character == ' ' || character == '\t')
+        if (Tools::isWhitespace(character)) [[unlikely]]
         {
             if (word.empty())
             {
@@ -439,7 +439,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
                 break;
             }
         }
-        else
+        else [[likely]]
         {
             word.push_back(character);
         }
@@ -565,15 +565,15 @@ void Parser::handleCommand(Command command, CppState *state)
     {
         const auto pathOptional = findFile(command.modifiers.front());
 
-        if (not pathOptional.has_value())
+        if (pathOptional.has_value()) [[likely]]
+        {
+            Log::verbose("Found:", pathOptional.value());
+        }
+        else [[unlikely]]
         {
             Log::warning("Could not find file:", command.modifiers.front());
             _compiledFiles.push_back(command.modifiers.front());
             return;
-        }
-        else
-        {
-            Log::verbose("Found:", pathOptional.value());
         }
 
         const auto &path = pathOptional.value();
@@ -697,7 +697,7 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 
     for (const auto &dir : _includePaths)
     {
-        if (dir.empty())
+        if (dir.empty()) [[unlikely]]
         {
             continue;
         }
@@ -764,6 +764,7 @@ void Parser::addIncludePath(const std::filesystem::path &path)
 
     const auto findResult =
         std::find(_includePaths.cbegin(), _includePaths.cend(), result);
+
     if (findResult != _includePaths.cend())
     {
         return;
