@@ -18,6 +18,11 @@
 #include <utility>
 #include <vector>
 
+namespace
+{
+constexpr auto Dot = ".";
+}
+
 Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
 {
     if (_input.empty())
@@ -251,7 +256,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         // TODO: handle case where source file is in a different directory... maybe cache
         // the dir structure ?
         // }
-        const auto cppPathOptional = findCppFile(path);
+        const auto cppPathOptional = findCppFile(path.filename());
 
         if (cppPathOptional.has_value())
         {
@@ -262,6 +267,10 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                                  "under target ID:", state.id);
                 parseCppFile(cppPath, state.id);
             }
+        }
+        else
+        {
+            Log::debug("Not found!");
         }
     }
 }
@@ -748,7 +757,7 @@ void Parser::addIncludePath(const std::filesystem::path &path)
         result = result.parent_path();
     }
 
-    if (result.empty())
+    if (result.empty() or result == Dot)
     {
         return;
     }
