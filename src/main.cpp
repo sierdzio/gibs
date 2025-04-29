@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    Log::setUseColorfulLogs(cmd.colorfulLogs());
     Log::information("Setting log level to:", Log::typeString(cmd.logLevel()));
     Log::setLogLevel(cmd.logLevel());
     Log::debug(cmd.parsedFlagsText());

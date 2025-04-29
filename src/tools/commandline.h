@@ -25,6 +25,7 @@ class CommandLine
     bool runImmediately() const;
     bool isDebug() const;
     bool isQuickMode() const;
+    bool colorfulLogs() const;
 
   private:
     bool parse();
@@ -42,4 +43,5 @@ class CommandLine
     bool _runImmediately = false;
     bool _isDebug = false;
     bool _isQuick = false;
+    bool _colorfulLogs = true;
 };

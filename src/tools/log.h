@@ -30,6 +30,8 @@ Type typeValue(const std::string &string);
 void setLogLevel(const Type type);
 bool isWithinLogLevel(const Type type);
 
+void setUseColorfulLogs(const bool enableColor);
+
 std::string type(const Type type);
 std::string typeColor(const Type type);
 

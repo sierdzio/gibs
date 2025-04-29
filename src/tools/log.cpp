@@ -68,6 +68,11 @@ bool Log::isWithinLogLevel(const Type type)
     return static_cast<int>(type) <= static_cast<int>(RuntimeLogLevel);
 }
 
+void Log::setUseColorfulLogs(const bool enableColor)
+{
+    UseColors = enableColor;
+}
+
 std::string Log::type(const Type type)
 {
     switch (type)
