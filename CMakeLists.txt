@@ -6,3 +6,12 @@ project(gibs VERSION 0.0.1
 
 include(config.cmake)
 add_subdirectory(src)
+
+option(BUILD_TESTS "Build gibs test suite" ON) # TODO: make it OFF by default
+
+if (BUILD_TESTS)
+    message("Building gibs test suite")
+    add_subdirectory(tests)
+else()
+    message("gibs test suite will not be built")
+endif()
