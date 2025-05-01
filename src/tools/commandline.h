@@ -8,7 +8,9 @@
 class CommandLine
 {
   public:
-    CommandLine(int argc, char *argv[]);
+    static std::vector<std::string> toStringList(int argc, char *argv[]);
+
+    CommandLine(const std::vector<std::string> &args);
 
     std::string parsedFlagsText() const;
 

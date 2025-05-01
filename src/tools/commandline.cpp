@@ -50,16 +50,22 @@ constexpr auto NoColorExplanation = "Disables color in log messages.";
 constexpr auto DoubleSpace = "  ";
 }; // namespace
 
-CommandLine::CommandLine(int argc, char *argv[])
+std::vector<std::string> CommandLine::toStringList(int argc, char *argv[])
 {
     Log::verbose("Arg. count:", argc, "args:", std::string(*argv));
 
+    std::vector<std::string> result;
+
     for (int i = 0; i < argc; ++i)
     {
-        const auto current = std::string(argv[i]);
-        _args.push_back(current);
+        result.push_back(argv[i]);
     }
 
+    return result;
+}
+
+CommandLine::CommandLine(const std::vector<std::string> &args) : _args(args)
+{
     _isValid = parse();
 }
 

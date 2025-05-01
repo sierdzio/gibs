@@ -1,6 +1,7 @@
 add_executable(unit_tests
     test_tools.cpp
     test_log.cpp
+    test_commandline.cpp
 )
 
 # TODO: investigate, should not be needed
