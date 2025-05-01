@@ -2,12 +2,11 @@
 #include "parsing/syntax.h"
 
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 
 namespace
 {
-constexpr auto Space = ' ';
-constexpr auto Tab = '\t';
 constexpr auto Quote = '"';
 constexpr auto ListSep = ", ";
 constexpr auto True = "true";
@@ -106,5 +105,6 @@ bool Tools::isHeaderFile(const std::string &path)
 
 bool Tools::isWhitespace(const char character)
 {
-    return character == Space or character == Tab;
+    // TODO: also consider narrow space, non-breaking space etc.
+    return std::isspace(static_cast<unsigned char>(character));
 }

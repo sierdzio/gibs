@@ -95,12 +95,43 @@ TEST(test_tools, test_boolToString)
 
 TEST(test_tools, test_isPathToFile)
 {
-    //EXPECT_TRUE(Tools::isPathToFile("/a/b/c.exe"));
     // TODO: this is platform-specific! Make separate tests for macOS and Windows.
     // Also, maybe just check the test executable path here?
+    //EXPECT_TRUE(Tools::isPathToFile("/a/b/c.exe"));
     EXPECT_TRUE(Tools::isPathToFile("/usr/bin/sh"));
     EXPECT_FALSE(Tools::isPathToFile("/usr/bin/"));
     EXPECT_FALSE(Tools::isPathToFile("/usr/bin"));
     EXPECT_FALSE(Tools::isPathToFile("/a/b/"));
     EXPECT_FALSE(Tools::isPathToFile("/a/b"));
+}
+
+TEST(test_tools, test_isHeaderFile)
+{
+    EXPECT_TRUE(Tools::isHeaderFile("string.h"));
+    EXPECT_TRUE(Tools::isHeaderFile("a.h"));
+    EXPECT_TRUE(Tools::isHeaderFile("a.hpp"));
+    EXPECT_TRUE(Tools::isHeaderFile("a.hxx"));
+    EXPECT_TRUE(Tools::isHeaderFile("some/folder/a.h"));
+    EXPECT_TRUE(Tools::isHeaderFile("some/folder/a.hpp"));
+    EXPECT_TRUE(Tools::isHeaderFile("some/folder/a.hxx"));
+
+    EXPECT_FALSE(Tools::isHeaderFile("a.c"));
+    EXPECT_FALSE(Tools::isHeaderFile("a.cpp"));
+    EXPECT_FALSE(Tools::isHeaderFile("a.cxx"));
+    EXPECT_FALSE(Tools::isHeaderFile("some/folder/a.c"));
+    EXPECT_FALSE(Tools::isHeaderFile("some/folder/a.cpp"));
+    EXPECT_FALSE(Tools::isHeaderFile("some/folder/a.cxx"));
+}
+
+TEST(test_tools, test_isWhitespace)
+{
+    EXPECT_TRUE(Tools::isWhitespace(' '));
+    EXPECT_TRUE(Tools::isWhitespace('\t'));
+    EXPECT_TRUE(Tools::isWhitespace('\v'));
+    EXPECT_FALSE(Tools::isWhitespace('a'));
+    EXPECT_FALSE(Tools::isWhitespace('z'));
+    EXPECT_FALSE(Tools::isWhitespace(','));
+    EXPECT_FALSE(Tools::isWhitespace(0));
+    EXPECT_FALSE(Tools::isWhitespace(-1));
+    EXPECT_FALSE(Tools::isWhitespace(-127));
 }
