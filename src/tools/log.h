@@ -24,6 +24,7 @@ enum class Type
 };
 #undef X
 
+// TODO: add catches for exceptions in places where these throwers are used!
 const std::string typeString(const Type type);
 Type typeValue(const std::string &string);
 
