@@ -1,7 +1,9 @@
 #include "log.h"
+#include "exceptions/loglevelexception.h"
 
 #include <algorithm>
 #include <array>
+#include <iosfwd>
 
 static Log::Type RuntimeLogLevel = Log::Type::Information;
 static bool UseColors = true;
@@ -23,6 +25,81 @@ constexpr auto Error = "E:";
 #define X(key, name) name,
 constexpr std::array TypeStrings = {LOG_TYPES};
 #undef X
+
+void checkBounds(const Log::Type type)
+{
+    const auto raw = static_cast<size_t>(type);
+
+    if (raw < 0 or raw >= TypeStrings.size())
+    {
+        throw LogLevelException(raw);
+    }
+}
+
+std::string typeToPrint(const Log::Type type)
+{
+    checkBounds(type);
+
+    switch (type)
+    {
+    case Log::Type::Verbose:
+        return Verbose;
+    case Log::Type::Debug:
+        return Debug;
+    case Log::Type::Information:
+        return Information;
+    case Log::Type::Warning:
+        return Warning;
+    case Log::Type::Error:
+        return Error;
+    case Log::Type::Silent:
+        return {};
+    }
+
+    return {};
+}
+
+std::string typeColor(const Log::Type type)
+{
+    checkBounds(type);
+
+    switch (type)
+    {
+    case Log::Type::Error:
+        return Red;
+    case Log::Type::Warning:
+        return Yellow;
+    case Log::Type::Information:
+        return Blue;
+    case Log::Type::Debug:
+    case Log::Type::Verbose:
+    case Log::Type::Silent:
+        return {};
+    }
+}
+
+bool isLoggingThisColor(const Log::Type type)
+{
+    checkBounds(type);
+
+    if (not UseColors) [[unlikely]]
+    {
+        return false;
+    }
+
+    switch (type)
+    {
+    case Log::Type::Error:
+    case Log::Type::Warning:
+    case Log::Type::Information:
+        return true;
+    case Log::Type::Debug:
+    case Log::Type::Verbose:
+    case Log::Type::Silent:
+        return {};
+    }
+}
+
 } //namespace
 
 std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &stringList)
@@ -42,7 +119,10 @@ std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &s
 
 const std::string Log::typeString(const Log::Type type)
 {
-    return TypeStrings.at(static_cast<size_t>(type));
+    checkBounds(type);
+
+    const auto raw = static_cast<size_t>(type);
+    return TypeStrings.at(raw);
 }
 
 Log::Type Log::typeValue(const std::string &string)
@@ -60,11 +140,29 @@ Log::Type Log::typeValue(const std::string &string)
 
 void Log::setLogLevel(const Type type)
 {
+    const auto raw = static_cast<size_t>(type);
+
+    if (raw < 0 or raw >= TypeStrings.size())
+    {
+        throw LogLevelException(raw);
+    }
+
     RuntimeLogLevel = type;
+}
+
+Log::Type Log::logLevel()
+{
+    return RuntimeLogLevel;
+}
+
+size_t Log::logLevelsCount()
+{
+    return TypeStrings.size();
 }
 
 bool Log::isWithinLogLevel(const Type type)
 {
+    checkBounds(type);
     return static_cast<int>(type) <= static_cast<int>(RuntimeLogLevel);
 }
 
@@ -73,68 +171,15 @@ void Log::setUseColorfulLogs(const bool enableColor)
     UseColors = enableColor;
 }
 
-std::string Log::type(const Type type)
+bool Log::usingColorfulLogs()
 {
-    switch (type)
-    {
-    case Type::Verbose:
-        return Verbose;
-    case Type::Debug:
-        return Debug;
-    case Type::Information:
-        return Information;
-    case Type::Warning:
-        return Warning;
-    case Type::Error:
-        return Error;
-    case Type::Silent:
-        return {};
-    }
-
-    return {};
-}
-
-std::string Log::typeColor(const Type type)
-{
-    switch (type)
-    {
-    case Type::Error:
-        return Red;
-    case Type::Warning:
-        return Yellow;
-    case Type::Information:
-        return Blue;
-    case Type::Debug:
-    case Type::Verbose:
-    case Type::Silent:
-        return {};
-    }
-}
-
-bool isLoggingThisColor(const Log::Type type)
-{
-    if (not UseColors) [[unlikely]]
-    {
-        return false;
-    }
-
-    switch (type)
-    {
-    case Log::Type::Error:
-    case Log::Type::Warning:
-    case Log::Type::Information:
-        return true;
-    case Log::Type::Debug:
-    case Log::Type::Verbose:
-    case Log::Type::Silent:
-        return {};
-    }
+    return UseColors;
 }
 
 std::string Log::beginning(const Type type)
 {
     return (isLoggingThisColor(type) ? typeColor(type) : std::string()) +
-           Log::type(type) + Space;
+           typeToPrint(type) + Space;
 }
 
 std::string Log::ending(const Type type)

@@ -13,6 +13,7 @@ set(gibs_srcs
     exceptions/commandnotfound.cpp exceptions/commandnotfound.h
     exceptions/commanddepthexception.cpp exceptions/commanddepthexception.h
     exceptions/emptylinkobject.cpp exceptions/emptylinkobject.h
+    exceptions/loglevelexception.cpp exceptions/loglevelexception.h
     tools/log.cpp tools/log.h
     tools/commandline.cpp tools/commandline.h
     tools/tools.cpp tools/tools.h

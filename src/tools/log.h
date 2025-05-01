@@ -28,12 +28,12 @@ const std::string typeString(const Type type);
 Type typeValue(const std::string &string);
 
 void setLogLevel(const Type type);
+Log::Type logLevel();
+size_t logLevelsCount();
 bool isWithinLogLevel(const Type type);
 
 void setUseColorfulLogs(const bool enableColor);
-
-std::string type(const Type type);
-std::string typeColor(const Type type);
+bool usingColorfulLogs();
 
 std::string beginning(const Type type);
 std::string ending(const Type type);
