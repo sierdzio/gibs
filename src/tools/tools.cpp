@@ -67,7 +67,7 @@ std::string Tools::listToString(const std::vector<std::string> &list)
 
     for (const auto &current : list)
     {
-        if (not result.empty())
+        if (not result.empty() and not current.empty())
         {
             result.append(ListSep);
         }
