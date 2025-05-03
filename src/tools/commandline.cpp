@@ -1,7 +1,9 @@
 #include "commandline.h"
 #include "log.h"
+#include "tools/tools.h"
 #include "versioninfo.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <string>
@@ -20,34 +22,39 @@ constexpr auto Run = "--run";
 constexpr auto RunExplanation = "Run the executable immediately after building.";
 constexpr auto D = "-d";
 constexpr auto Debug = "--debug";
-constexpr auto DebugExplanation = "Compile in debug mode. By default, gibs "
-                                  "compiles release binaries.";
+constexpr auto DebugExplanation =
+    "Compile in debug mode. By default, gibs compiles release binaries.";
 constexpr auto Q = "-q";
 constexpr auto Quick = "--quick";
-constexpr auto QuickExplanation = "'Convention over configuration' mode - parse "
-                                  "files only up to first line of 'concrete code'. Do "
-                                  "not check file checksums when doing "
-                                  "incremental builds.";
+constexpr auto QuickExplanation =
+    "'Convention over configuration' mode - parse files only up to first line of "
+    "'concrete code'. Do not check file checksums when doing incremental builds.";
 constexpr auto Verbose = "--verbose";
-constexpr auto VerboseExplanation = "Sets log level to 'Verbose'";
+constexpr auto VerboseExplanation =
+    "Sets log level to 'Verbose'. "
+    "If more than one log level is specified, or log level "
+    "is combined with --verbose, only the last flag is "
+    "taken nto account";
 
 constexpr auto L = "-l";
 constexpr auto LogLevel = "--log-level";
 // TODO: use the X macro to list all log levels automatically
-constexpr auto LogLevelExplanation = "Sets log level to one of: Silent, Error, Warning, "
-                                     "Information, Debug, Verbose. Logs are "
-                                     "printed for selected level and all levels above "
-                                     "it. For example, when Information is set, all "
-                                     "Error, Warning and Information logs will be "
-                                     "printed, but no Debug or Verbose ones. 'Silent' "
-                                     "setting will not print any logs at all. Log level "
-                                     "parser is case-sentitive, please make sure "
-                                     "to provide log levels in lower case.";
+constexpr auto LogLevelExplanation =
+    "Sets log level to one of: silent, error, warning, information, debug, verbose. "
+    "Logs are printed for selected level and all levels above it. For example, "
+    "when information is set, all error, warning and information logs will be "
+    "printed, but no debug or verbose ones. 'silent' setting will not print any "
+    "logs at all. Log level parser is case-sentitive, please make sure to provide "
+    "log levels in lower case. "
+    "If more than one log level is specified, or log level "
+    "is combined with --verbose, only the last flag is "
+    "taken nto account";
 
 constexpr auto NoColor = "--no-color";
 constexpr auto NoColorExplanation = "Disables color in log messages.";
 
 constexpr auto DoubleSpace = "  ";
+constexpr auto Quote = "\"";
 }; // namespace
 
 std::vector<std::string> CommandLine::toStringList(int argc, char *argv[])
@@ -56,9 +63,43 @@ std::vector<std::string> CommandLine::toStringList(int argc, char *argv[])
 
     std::vector<std::string> result;
 
+    std::string multipart;
+
     for (int i = 0; i < argc; ++i)
     {
-        result.push_back(argv[i]);
+        std::string current(argv[i]);
+
+        const auto quoteIndex = current.find(Quote);
+
+        if (not multipart.empty() or quoteIndex != std::string::npos)
+        {
+            if (not multipart.empty())
+            {
+                multipart.push_back(' ');
+            }
+
+            if (quoteIndex != std::string::npos)
+            {
+                current.erase(quoteIndex, 1);
+            }
+
+            multipart.append(current);
+
+            if (current.ends_with(Quote))
+            {
+                result.push_back(multipart);
+                multipart.clear();
+            }
+        }
+        else
+        {
+            result.push_back(argv[i]);
+        }
+    }
+
+    if (not multipart.empty())
+    {
+        result.push_back(multipart);
     }
 
     return result;
@@ -178,6 +219,7 @@ bool CommandLine::parse()
 
     const auto size = _args.size();
 
+    bool logLevelAlreadySet = false;
     std::string holdOverArgument;
 
     // Check if version or health flag is present
@@ -189,8 +231,18 @@ bool CommandLine::parse()
 
         if (holdOverArgument == LogLevel)
         {
+            const auto value = Log::typeValue(current);
+
+            if (logLevelAlreadySet)
+            {
+                Log::warning(
+                    "Log level has already been set:", Log::typeString(_logLevel),
+                    "overwriting with:", Log::typeString(value));
+            }
+
             holdOverArgument.clear();
-            _logLevel = Log::typeValue(current);
+            logLevelAlreadySet = true;
+            _logLevel = value;
             continue;
         }
 
@@ -228,6 +280,14 @@ bool CommandLine::parse()
 
         if (current == Verbose)
         {
+            if (logLevelAlreadySet)
+            {
+                Log::warning(
+                    "Log level has already been set:", Log::typeString(_logLevel),
+                    "overwriting with:", Log::typeString(Log::Type::Verbose));
+            }
+
+            logLevelAlreadySet = true;
             _logLevel = Log::Type::Verbose;
             continue;
         }
