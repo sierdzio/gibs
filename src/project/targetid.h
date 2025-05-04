@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <ostream>
 #include <string>
 
@@ -18,12 +17,9 @@ struct TargetId
     };
 #undef X
 
-#define X(key, name) name,
-    constexpr static std::array typeStrings = {TYPES};
-#undef X
-
     static const std::string typeString(const Type type);
     static Type typeValue(const std::string &string);
+    static size_t typesCount();
 
     TargetId();
     TargetId(std::string &&name, const Type type);

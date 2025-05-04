@@ -1,19 +1,9 @@
-cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# Find includes in corresponding build directories
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic-errors -fPIC")
-
 set(gibs_srcs
     exceptions/commandnotfound.cpp exceptions/commandnotfound.h
     exceptions/commanddepthexception.cpp exceptions/commanddepthexception.h
     exceptions/emptylinkobject.cpp exceptions/emptylinkobject.h
     exceptions/loglevelexception.cpp exceptions/loglevelexception.h
+    exceptions/targetidtypeexception.cpp exceptions/targetidtypeexception.h
     tools/log.cpp tools/log.h
     tools/commandline.cpp tools/commandline.h
     tools/tools.cpp tools/tools.h

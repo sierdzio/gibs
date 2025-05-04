@@ -1,7 +1,9 @@
 #include "targetid.h"
+#include "exceptions/targetidtypeexception.h"
 #include "tools/log.h"
 
 #include <algorithm>
+#include <array>
 
 namespace
 {
@@ -11,23 +13,43 @@ static uint nextId()
 {
     return uniqueId++;
 }
+
+#define X(key, name) name,
+constexpr static std::array TypeStrings = {TYPES};
+#undef X
+
+void checkBounds(const TargetId::Type type)
+{
+    const auto raw = static_cast<size_t>(type);
+
+    if (raw < 0 or raw >= TypeStrings.size())
+    {
+        throw TargetIdTypeException(raw);
+    }
+}
 } // namespace
 
 const std::string TargetId::typeString(const Type type)
 {
-    return typeStrings.at(static_cast<size_t>(type));
+    checkBounds(type);
+    return TypeStrings.at(static_cast<size_t>(type));
 }
 
 TargetId::Type TargetId::typeValue(const std::string &string)
 {
-    const auto it = std::find(typeStrings.cbegin(), typeStrings.cend(), string);
+    const auto it = std::find(TypeStrings.cbegin(), TypeStrings.cend(), string);
 
-    if (it == typeStrings.cend())
+    if (it == TypeStrings.cend())
     {
         return Type::Unknown;
     }
 
-    return static_cast<Type>(std::distance(typeStrings.cbegin(), it));
+    return static_cast<Type>(std::distance(TypeStrings.cbegin(), it));
+}
+
+size_t TargetId::typesCount()
+{
+    return TypeStrings.size();
 }
 
 TargetId::TargetId()

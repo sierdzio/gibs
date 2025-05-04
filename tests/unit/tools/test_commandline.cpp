@@ -53,6 +53,10 @@ TEST(test_commandline, test_toStringList)
     }
 
     // TODO: test a case where there are too many quotes
+
+    // TODO: test cases where file or folder name does contain a quote
+
+    // TODO: test single quotes
 }
 
 TEST(test_commandline, test_CommandLine)
