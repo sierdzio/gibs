@@ -49,7 +49,6 @@ struct Command
     CommandId parentId;
     Syntax::Command type = Syntax::Command::Invalid;
     std::vector<std::string> modifiers;
-    bool isReadyToExe = false;
 
   private:
     bool isValidCommand(const std::string &command) const;
@@ -58,4 +57,5 @@ struct Command
     const CommandId _id = 0;
 
     bool parsingFailed = false;
+    bool isReadyToExe = false;
 };

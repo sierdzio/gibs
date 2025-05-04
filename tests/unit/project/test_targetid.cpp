@@ -22,3 +22,32 @@ TEST(test_targetid, test_typeValue)
     EXPECT_EQ(TargetId::typeValue("LIBRARY"), TargetId::Type::Unknown);
     EXPECT_EQ(TargetId::typeValue("Library"), TargetId::Type::Unknown);
 }
+
+TEST(test_targetid, test_TargetId)
+{
+    const TargetId t1;
+    const TargetId t2;
+
+    EXPECT_EQ(t1, t2);
+    EXPECT_TRUE(t1.isNull());
+    EXPECT_TRUE(t2.isNull());
+    EXPECT_EQ(t1.name(), "");
+    EXPECT_EQ(t1.type(), TargetId::Type::Unknown);
+
+    const TargetId t3("abc", TargetId::Type::Library);
+
+    EXPECT_NE(t3, t1);
+    EXPECT_NE(t3, t2);
+    EXPECT_FALSE(t3.isNull());
+    EXPECT_EQ(t3.name(), "abc");
+    EXPECT_EQ(t3.type(), TargetId::Type::Library);
+
+    const TargetId t4("abc", TargetId::Type::Library);
+
+    EXPECT_NE(t4, t3);
+    EXPECT_NE(t4, t2);
+    EXPECT_NE(t4, t1);
+    EXPECT_FALSE(t4.isNull());
+    EXPECT_EQ(t4.name(), "abc");
+    EXPECT_EQ(t4.type(), TargetId::Type::Library);
+}
