@@ -1,3 +1,5 @@
+include(GoogleTest)
+
 add_executable(unit_tests
     tools/test_tools.cpp
     tools/test_log.cpp
@@ -15,8 +17,7 @@ target_include_directories(unit_tests
 target_link_libraries(unit_tests
     PRIVATE
     gibs-lib
-    gtest
-    gtest_main
+    GTest::gtest_main
 )
 
 gtest_discover_tests(unit_tests)

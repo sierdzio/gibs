@@ -98,7 +98,16 @@ TEST(test_tools, test_isPathToFile)
     // TODO: this is platform-specific! Make separate tests for macOS and Windows.
     // Also, maybe just check the test executable path here?
     //EXPECT_TRUE(Tools::isPathToFile("/a/b/c.exe"));
+#ifdef GTEST_OS_MAC
+    EXPECT_TRUE(Tools::isPathToFile("/bin/sh"));
+#elif defined(GTEST_OS_LINUX)
     EXPECT_TRUE(Tools::isPathToFile("/usr/bin/sh"));
+#elif defined(GTEST_OS_WIN)
+    // sth...
+#else
+    ASSERT_TRUE(false);
+#endif
+
     EXPECT_FALSE(Tools::isPathToFile("/usr/bin/"));
     EXPECT_FALSE(Tools::isPathToFile("/usr/bin"));
     EXPECT_FALSE(Tools::isPathToFile("/a/b/"));
