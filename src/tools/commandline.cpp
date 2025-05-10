@@ -1,9 +1,7 @@
 #include "commandline.h"
 #include "log.h"
-#include "tools/tools.h"
 #include "versioninfo.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <string>
