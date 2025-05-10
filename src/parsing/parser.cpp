@@ -102,7 +102,7 @@ void Parser::parse()
         link.targetId = _project.id;
         // TODO: executable or library or just target - decide
         link.type = Syntax::Command::Executable;
-        link.modifiers.push_back(_project.id.name());
+        link.append(_project.id.name());
         link.finalize();
         _project.addCommand(link);
         parseCppFile(_projectEntryPoint, _project.id);
@@ -313,6 +313,8 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
             command.append(word);
         }
     }
+
+    command.finalize();
 
     CppState state;
     state.id = id;
@@ -556,14 +558,16 @@ void Parser::handleCommand(Command command, CppState *state)
         _project.addCommand(command);
     }
 
-    const bool hasModifiers = not command.modifiers.empty();
+    const bool hasModifiers = command.hasModifiers();
 
     Log::verbose("Command:", command.whole(), "should parse:", shouldParse,
-                 "has mods:", hasModifiers, "type:", Syntax::commandString(command.type));
+                 "has mods:", hasModifiers, "type:", Syntax::commandString(command.type),
+                 "path:", command.path());
 
     if (shouldParse and hasModifiers)
     {
-        const auto pathOptional = findFile(command.modifiers.front());
+        const auto toFind = command.path();
+        const auto pathOptional = findFile(toFind);
 
         if (pathOptional.has_value()) [[likely]]
         {
@@ -571,8 +575,8 @@ void Parser::handleCommand(Command command, CppState *state)
         }
         else [[unlikely]]
         {
-            Log::warning("Could not find file:", command.modifiers.front());
-            _compiledFiles.push_back(command.modifiers.front());
+            Log::warning("Could not find file:", toFind);
+            _compiledFiles.push_back(toFind);
             return;
         }
 
@@ -689,6 +693,8 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 {
     // TODO: add known files cache to speed things up
 
+    Log::verbose("Looking for:", name);
+
     if (const std::filesystem::path current(root() / name);
         std::filesystem::exists(current))
     {
@@ -718,6 +724,8 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 
 std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name) const
 {
+    Log::verbose("Cpp looking for:", name);
+
     if (Tools::isHeaderFile(name))
     {
         // Replace extension with cpp extension and then proceed with search

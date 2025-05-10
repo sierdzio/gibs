@@ -17,6 +17,7 @@ struct Command
 
     bool isValid() const;
     bool append(const std::string &part);
+    bool hasModifiers() const;
 
     /*!
      * After calling append() to add data to the command, call this method
@@ -35,6 +36,12 @@ struct Command
     std::string whole() const;
     std::string value() const;
 
+    /*!
+     If this command contains any file paths, first one will be returned here.
+     Otherwise, an empty string is returned.
+    */
+    std::string path() const;
+
     bool addLinkObject(const std::string &name);
 
     // Composition: additional members used by some command types
@@ -48,13 +55,14 @@ struct Command
     TargetId targetId;
     CommandId parentId;
     Syntax::Command type = Syntax::Command::Invalid;
-    std::vector<std::string> modifiers;
 
   private:
     bool isValidCommand(const std::string &command) const;
     bool supportsModifiers(const Syntax::Command command) const;
 
     const CommandId _id = 0;
+
+    std::vector<std::string> modifiers;
 
     bool parsingFailed = false;
     bool isReadyToExe = false;

@@ -4,6 +4,7 @@
 #include "tools/log.h"
 #include "tools/tools.h"
 
+#include <coroutine>
 #include <filesystem>
 
 namespace
@@ -74,6 +75,11 @@ bool Command::append(const std::string &part)
 
     parsingFailed = true;
     return false;
+}
+
+bool Command::hasModifiers() const
+{
+    return not modifiers.empty();
 }
 
 void Command::finalize()
@@ -270,6 +276,31 @@ std::string Command::value() const
     }
 
     return modifiers.back();
+}
+
+std::string Command::path() const
+{
+    // TODO: this should return prepared path, as commented out below:
+    return modifiers.front();
+
+    // if (type == Syntax::Command::Include)
+    // {
+    //     return include.path;
+    // }
+    // else if (type == Syntax::Command::Source)
+    // {
+    //     return object.name;
+    // }
+    // else if (type == Syntax::Command::Executable)
+    // {
+    //     return executable.name;
+    // }
+    // else if (type == Syntax::Command::Library)
+    // {
+    //     return library.name;
+    // }
+
+    // return {};
 }
 
 bool Command::addLinkObject(const std::string &name)
