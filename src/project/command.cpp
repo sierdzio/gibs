@@ -69,7 +69,7 @@ bool Command::append(const std::string &part)
             return false;
         }
 
-        modifiers.push_back(Tools::prepareIncludePath(std::move(part)));
+        modifiers.emplace_back(Tools::prepareIncludePath(std::move(part)));
         return true;
     }
 
@@ -94,87 +94,82 @@ void Command::finalize()
         std::string previous;
         for (const auto &current : modifiers)
         {
-            if (not previous.empty())
+            if (type == Syntax::Command::Executable && previous == Syntax::Modifier::Name)
             {
-                if (type == Syntax::Command::Executable &&
-                    previous == Syntax::Modifier::Name)
+                executable.name = current;
+                previous.clear();
+                continue;
+            }
+            else if (type == Syntax::Command::Library)
+            {
+                if (previous == Syntax::Modifier::Type)
                 {
-                    executable.name = current;
-                    previous.clear();
-                    continue;
-                }
-                else if (type == Syntax::Command::Library)
-                {
-                    if (previous == Syntax::Modifier::Type)
+                    if (current == Syntax::Modifier::Dynamic)
                     {
-                        if (current == Syntax::Modifier::Dynamic)
-                        {
-                            library.type = Syntax::LibraryType::Dynamic;
-                        }
-                        else if (current == Syntax::Modifier::Static)
-                        {
-                            library.type = Syntax::LibraryType::Static;
-                        }
-                        else
-                        {
-                            Log::warning("Unknown library type:", current);
-                        }
-
-                        previous.clear();
-                        continue;
+                        library.type = Syntax::LibraryType::Dynamic;
                     }
-                    else if (previous == Syntax::Modifier::Name)
+                    else if (current == Syntax::Modifier::Static)
                     {
-                        library.name = current;
-                        previous.clear();
-                        continue;
+                        library.type = Syntax::LibraryType::Static;
                     }
                     else
                     {
-                        Log::warning("Unknown library modifier:", previous, current);
-                        continue;
+                        Log::warning("Unknown library type:", current);
                     }
-                }
-                else if (type == Syntax::Command::Include)
-                {
-                    if (previous == Syntax::Modifier::Library)
-                    {
-                        include.isLibrary = true;
-                        include.path = current;
-                        previous.clear();
-                        continue;
-                    }
-
-                    include.path = Tools::prepareIncludePath(current);
-                }
-                else if (type == Syntax::Command::Feature or
-                         type == Syntax::Command::Option)
-                {
-                    if (previous == Syntax::Modifier::Default)
-                    {
-                        if (current == Syntax::Modifier::On)
-                        {
-                            option.defaultValue = true;
-                        }
-                        else if (current == Syntax::Modifier::Off)
-                        {
-                            option.defaultValue = false;
-                        }
-                        else
-                        {
-                            Log::warning("Unrecognised default value:", current,
-                                         "for option:", Syntax::commandString(type));
-                        }
-
-                        previous.clear();
-                        continue;
-                    }
-
-                    option.name = current;
 
                     previous.clear();
                     continue;
                 }
+                else if (previous == Syntax::Modifier::Name)
+                {
+                    library.name = current;
+                    previous.clear();
+                    continue;
+                }
+                else
+                {
+                    Log::warning("Unknown library modifier:", previous, current);
+                    continue;
+                }
+            }
+            else if (type == Syntax::Command::Include)
+            {
+                if (previous == Syntax::Modifier::Library)
+                {
+                    include.isLibrary = true;
+                    include.path = current;
+                    previous.clear();
+                    continue;
+                }
+
+                include.path = Tools::prepareIncludePath(current);
+            }
+            else if (type == Syntax::Command::Feature or type == Syntax::Command::Option)
+            {
+                if (previous == Syntax::Modifier::Default)
+                {
+                    if (current == Syntax::Modifier::On)
+                    {
+                        option.defaultValue = true;
+                    }
+                    else if (current == Syntax::Modifier::Off)
+                    {
+                        option.defaultValue = false;
+                    }
+                    else
+                    {
+                        Log::warning("Unrecognised default value:", current,
+                                     "for option:", Syntax::commandString(type));
+                    }
+
+                    previous.clear();
+                    continue;
+                }
+
+                option.name = current;
+
+                previous.clear();
+                continue;
             }
 
             previous = current;
@@ -280,27 +275,47 @@ std::string Command::value() const
 
 std::string Command::path() const
 {
-    // TODO: this should return prepared path, as commented out below:
-    return modifiers.front();
+    if (type == Syntax::Command::Include)
+    {
+        return include.path;
+    }
+    else if (type == Syntax::Command::Source)
+    {
+        return object.name;
+    }
+    else if (type == Syntax::Command::Executable)
+    {
+        return executable.name;
+    }
+    else if (type == Syntax::Command::Library)
+    {
+        return library.name;
+    }
 
-    // if (type == Syntax::Command::Include)
-    // {
-    //     return include.path;
-    // }
-    // else if (type == Syntax::Command::Source)
-    // {
-    //     return object.name;
-    // }
-    // else if (type == Syntax::Command::Executable)
-    // {
-    //     return executable.name;
-    // }
-    // else if (type == Syntax::Command::Library)
-    // {
-    //     return library.name;
-    // }
+    switch (type)
+    {
+    case Syntax::Command::Include:
+        return include.path;
+    case Syntax::Command::Source:
+        return object.name;
+    case Syntax::Command::Executable:
+        return executable.name;
+    case Syntax::Command::Library:
+        return library.name;
+    case Syntax::Command::Define:
+    case Syntax::Command::Feature:
+    case Syntax::Command::Option:
+    case Syntax::Command::Qt:
+    case Syntax::Command::Subproject:
+    case Syntax::Command::Tool:
+    case Syntax::Command::Invalid:
+        break;
+    }
 
-    // return {};
+    Log::error("Path requested from command which does not support it:",
+               Syntax::commandString(type), "available modifiers are:", modifiers);
+
+    return {};
 }
 
 bool Command::addLinkObject(const std::string &name)
