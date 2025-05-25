@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "exceptions/commanddepthexception.h"
+#include "exceptions/commandexception.h"
 #include "exceptions/commandnotfound.h"
 #include "exceptions/emptylinkobject.h"
 #include "parsing/parser.h"
@@ -58,6 +59,14 @@ int main(int argc, char *argv[])
     {
         // Warning because it is a missing functionality but not crucial
         Log::warning(e.what());
+    }
+    catch (const CommandException &e)
+    {
+        Log::error(e.what());
+    }
+    catch (const CommandStringException &e)
+    {
+        Log::error(e.what());
     }
     catch (const EmptyLinkObject &e)
     {

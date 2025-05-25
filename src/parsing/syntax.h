@@ -67,6 +67,7 @@ constexpr std::array commandStrings = {COMMANDS};
 
 const std::string commandString(const Command command);
 Command commandValue(const std::string &string);
+size_t commandCount();
 
 namespace Modifier
 {

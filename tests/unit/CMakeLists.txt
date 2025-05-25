@@ -4,6 +4,7 @@ add_executable(unit_tests
     tools/test_tools.cpp
     tools/test_log.cpp
     tools/test_commandline.cpp
+    parsing/test_syntax.cpp
     project/test_targetid.cpp
     project/test_command.cpp
 )

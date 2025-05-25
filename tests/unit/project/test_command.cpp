@@ -1,6 +1,6 @@
-#include "parsing/syntax.h"
 #include <gtest/gtest.h>
 
+#include <parsing/syntax.h>
 #include <project/command.h>
 
 TEST(test_command, test_Command)
