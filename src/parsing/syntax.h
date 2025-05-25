@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <string>
 
 #define COMMANDS                                                                         \
@@ -59,10 +58,6 @@ enum class Command
 {
     COMMANDS
 };
-#undef X
-
-#define X(key, name) name,
-constexpr std::array commandStrings = {COMMANDS};
 #undef X
 
 const std::string commandString(const Command command);

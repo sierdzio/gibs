@@ -2,6 +2,14 @@
 #include "exceptions/commandexception.h"
 
 #include <algorithm>
+#include <array>
+
+namespace
+{
+#define X(key, name) name,
+constexpr std::array commandStrings = {COMMANDS};
+#undef X
+} //namespace
 
 const std::string Syntax::commandString(const Syntax::Command command)
 {

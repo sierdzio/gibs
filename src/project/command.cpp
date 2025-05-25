@@ -1,4 +1,5 @@
 #include "command.h"
+#include "exceptions/commandexception.h"
 #include "exceptions/emptylinkobject.h"
 #include "parsing/syntax.h"
 #include "tools/log.h"
@@ -346,15 +347,16 @@ bool Command::addLinkObject(const std::string &name)
 
 bool Command::isValidCommand(const std::string &command) const
 {
-    for (const auto &current : Syntax::commandStrings)
+    try
     {
-        if (command == current)
-        {
-            return true;
-        }
+        Syntax::commandValue(command);
+        return true;
     }
-
-    return false;
+    catch (const CommandStringException &e)
+    {
+        Log::verbose(e.what());
+        return false;
+    }
 }
 
 bool Command::supportsModifiers(const Syntax::Command command) const
