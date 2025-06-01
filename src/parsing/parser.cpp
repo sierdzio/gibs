@@ -238,9 +238,9 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         compile.parentId = linkCommand->id();
         compile.finalize();
 
-        Log::debug("Adding object file to linker command:", compile.object.name);
+        Log::debug("Adding object file to linker command:", compile.object().name);
 
-        linkCommand->addLinkObject(compile.object.name);
+        linkCommand->addLinkObject(compile.object().name);
 
         Log::information("Compiling cpp file:", path.filename());
         _project.addCommand(compile);
@@ -456,7 +456,8 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     {
         command.finalize();
 
-        if (command.type == Syntax::Command::Include and not command.include.isLibrary and
+        if (command.type == Syntax::Command::Include and
+            not command.include().isLibrary and
             Tools::contains(_compiledFiles, command.value()))
         {
             return;
@@ -496,8 +497,10 @@ void Parser::handleCommand(Command command, CppState *state)
         //it is naming the whole project and executable
         if (not _projectIdAlreadySet and state->id == _project.id)
         {
+            Log::information("Autop-setting project name and executable name to:",
+                             command.executable().name);
             const auto &commandId = _project.linkCommandIdFor(state->id);
-            _project.commandRef(commandId).executable.name = command.executable.name;
+            _project.commandRef(commandId).setExecutableName(command.executable().name);
             _projectIdAlreadySet = true;
         }
         else
@@ -507,7 +510,7 @@ void Parser::handleCommand(Command command, CppState *state)
             if (command.type == Syntax::Command::Library)
             {
                 // TODO: wrong library name is parsed
-                auto name = command.library.name;
+                auto name = command.library().name;
                 Log::verbose("Preparing library target:", name);
 
                 // Command link;
@@ -520,7 +523,7 @@ void Parser::handleCommand(Command command, CppState *state)
 
                 // Link this library together with parent target
                 auto linkCommand = &_project.commandRef(command.parentId);
-                linkCommand->addLinkObject(command.object.name);
+                linkCommand->addLinkObject(command.object().name);
 
                 // Ensure subsequent files are registered for compilation under this
                 // library
@@ -542,9 +545,9 @@ void Parser::handleCommand(Command command, CppState *state)
         // TODO: only parse if: not parsed already and it is a local library (part of the
         // same project)
 
-        if (not command.include.path.empty())
+        if (not command.include().path.empty())
         {
-            addIncludePath(command.include.path);
+            addIncludePath(command.include().path);
         }
     }
     else if (command.type == Syntax::Command::Feature or
@@ -595,20 +598,20 @@ void Parser::handleCommand(Command command, CppState *state)
             // Log::verbose("is library:", command.include.isLibrary, "is path to file:",
             // path);
 
-            if (command.include.isLibrary)
+            if (command.include().isLibrary)
             {
                 // Note: this is temporary library name based on folder. A real name
                 // needs to be used once it becomes known (when some library file is
                 // parsed and contains the name)
                 // TODO: make sure IDs don't get duplicated for this library, check if
                 // this library and folder is already known
-                TargetId libraryId(command.include.libraryName(),
+                TargetId libraryId(command.include().libraryName(),
                                    TargetId::Type::Library);
 
                 if (Tools::isPathToFile(path))
                 {
                     Log::verbose("Parsing", path, "as entry point of of library:",
-                                 command.include.libraryName());
+                                 command.include().libraryName());
                     parseCppFile(path, libraryId);
                 }
                 else
@@ -623,7 +626,7 @@ void Parser::handleCommand(Command command, CppState *state)
                         {
                             Log::verbose("Parsing", it.path(),
                                          "to see if it is part of library:",
-                                         command.include.libraryName());
+                                         command.include().libraryName());
                             parseCppFile(it.path(), libraryId);
                         }
                     }

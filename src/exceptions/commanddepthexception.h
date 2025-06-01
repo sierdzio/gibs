@@ -3,7 +3,7 @@
 #include <exception>
 #include <string>
 
-struct Command;
+class Command;
 
 class CommandDepthException : public std::exception
 {

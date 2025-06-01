@@ -41,3 +41,8 @@ TEST(test_syntax, test_commandValue)
     EXPECT_THROW(Syntax::commandValue(" qt"), CommandStringException);
     EXPECT_THROW(Syntax::commandValue("qt "), CommandStringException);
 }
+
+TEST(test_syntax, test_commandCount)
+{
+    EXPECT_EQ(Syntax::commandCount(), 11);
+}

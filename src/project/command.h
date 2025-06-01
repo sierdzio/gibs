@@ -9,8 +9,9 @@
 
 using CommandId = uint;
 
-struct Command
+class Command
 {
+  public:
     Command();
 
     CommandId id() const;
@@ -44,12 +45,17 @@ struct Command
 
     bool addLinkObject(const std::string &name);
 
-    // Composition: additional members used by some command types
-    ExecutableComponent executable;
-    LibraryComponent library;
-    ObjectComponent object;
-    IncludeComponent include;
-    OptionComponent option;
+    const ExecutableComponent &executable() const;
+    void setExecutableName(const std::string &name);
+    const LibraryComponent &library() const;
+    const ObjectComponent &object() const;
+    const IncludeComponent &include() const;
+    const OptionComponent &option() const;
+
+    // General members
+    // const TargetId &targetId() const;
+    // const CommandId &parentId() const;
+    // const Syntax::Command &type() const;
 
     // General members
     TargetId targetId;
@@ -62,8 +68,15 @@ struct Command
 
     const CommandId _id = 0;
 
-    std::vector<std::string> modifiers;
+    std::vector<std::string> _modifiers;
 
-    bool parsingFailed = false;
-    bool isReadyToExe = false;
+    // Composition: additional members used by some command types
+    ExecutableComponent _executable;
+    LibraryComponent _library;
+    ObjectComponent _object;
+    IncludeComponent _include;
+    OptionComponent _option;
+
+    bool _parsingFailed = false;
+    bool _isReadyToExe = false;
 };

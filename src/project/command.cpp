@@ -31,7 +31,7 @@ uint Command::id() const
 
 bool Command::isValid() const
 {
-    if (parsingFailed or type == Syntax::Command::Invalid)
+    if (_parsingFailed or type == Syntax::Command::Invalid)
     {
         return false;
     }
@@ -56,36 +56,36 @@ bool Command::append(const std::string &part)
         else
         {
             Log::warning("Invalid project command:", part);
-            parsingFailed = true;
+            _parsingFailed = true;
             return false;
         }
     }
     else
     {
-        if (not supportsModifiers(type) and not modifiers.empty())
+        if (not supportsModifiers(type) and not _modifiers.empty())
         {
             Log::warning("Got another command value:", part,
                          "but a previous one already exists:", value());
-            parsingFailed = true;
+            _parsingFailed = true;
             return false;
         }
 
-        modifiers.emplace_back(Tools::prepareIncludePath(std::move(part)));
+        _modifiers.emplace_back(Tools::prepareIncludePath(std::move(part)));
         return true;
     }
 
-    parsingFailed = true;
+    _parsingFailed = true;
     return false;
 }
 
 bool Command::hasModifiers() const
 {
-    return not modifiers.empty();
+    return not _modifiers.empty();
 }
 
 void Command::finalize()
 {
-    if (modifiers.empty())
+    if (_modifiers.empty())
     {
         return;
     }
@@ -93,11 +93,11 @@ void Command::finalize()
     if (supportsModifiers(type))
     {
         std::string previous;
-        for (const auto &current : modifiers)
+        for (const auto &current : _modifiers)
         {
             if (type == Syntax::Command::Executable && previous == Syntax::Modifier::Name)
             {
-                executable.name = current;
+                _executable.name = current;
                 previous.clear();
                 continue;
             }
@@ -107,11 +107,11 @@ void Command::finalize()
                 {
                     if (current == Syntax::Modifier::Dynamic)
                     {
-                        library.type = Syntax::LibraryType::Dynamic;
+                        _library.type = Syntax::LibraryType::Dynamic;
                     }
                     else if (current == Syntax::Modifier::Static)
                     {
-                        library.type = Syntax::LibraryType::Static;
+                        _library.type = Syntax::LibraryType::Static;
                     }
                     else
                     {
@@ -123,7 +123,7 @@ void Command::finalize()
                 }
                 else if (previous == Syntax::Modifier::Name)
                 {
-                    library.name = current;
+                    _library.name = current;
                     previous.clear();
                     continue;
                 }
@@ -137,13 +137,13 @@ void Command::finalize()
             {
                 if (previous == Syntax::Modifier::Library)
                 {
-                    include.isLibrary = true;
-                    include.path = current;
+                    _include.isLibrary = true;
+                    _include.path = current;
                     previous.clear();
                     continue;
                 }
 
-                include.path = Tools::prepareIncludePath(current);
+                _include.path = Tools::prepareIncludePath(current);
             }
             else if (type == Syntax::Command::Feature or type == Syntax::Command::Option)
             {
@@ -151,11 +151,11 @@ void Command::finalize()
                 {
                     if (current == Syntax::Modifier::On)
                     {
-                        option.defaultValue = true;
+                        _option.defaultValue = true;
                     }
                     else if (current == Syntax::Modifier::Off)
                     {
-                        option.defaultValue = false;
+                        _option.defaultValue = false;
                     }
                     else
                     {
@@ -167,7 +167,7 @@ void Command::finalize()
                     continue;
                 }
 
-                option.name = current;
+                _option.name = current;
 
                 previous.clear();
                 continue;
@@ -179,48 +179,48 @@ void Command::finalize()
         // All modifiers parsed. Final adjustments:
         if (type == Syntax::Command::Library)
         {
-            std::filesystem::path filePath = library.name;
-            if (library.type == Syntax::LibraryType::Static)
+            std::filesystem::path filePath = _library.name;
+            if (_library.type == Syntax::LibraryType::Static)
             {
                 filePath.replace_extension(Syntax::Extension::LibraryStatic);
             }
-            else if (library.type == Syntax::LibraryType::Dynamic)
+            else if (_library.type == Syntax::LibraryType::Dynamic)
             {
                 filePath.replace_extension(Syntax::Extension::LibraryDynamic);
             }
             // TODO: use different extension per platform!
             Log::verbose("Appending library file:", filePath.string());
-            object.name = filePath.string();
+            _object.name = filePath.string();
         }
     }
     else
     {
         if (type == Syntax::Command::Source)
         {
-            std::filesystem::path filePath = modifiers.back();
+            std::filesystem::path filePath = _modifiers.back();
             filePath.replace_extension(Syntax::Extension::ObjectFile1);
             // TODO: use different extension per platform!
             Log::verbose("Appending object file:", filePath.string());
-            object.name = filePath.string();
+            _object.name = filePath.string();
         }
     }
 }
 
 bool Command::isReadyToExecute() const
 {
-    return isReadyToExe;
+    return _isReadyToExe;
 }
 
 void Command::setIsReadyToExecute(const bool ready)
 {
-    isReadyToExe = ready;
+    _isReadyToExe = ready;
 }
 
 std::string Command::whole() const
 {
     std::string mods;
 
-    for (const auto &current : modifiers)
+    for (const auto &current : _modifiers)
     {
         mods.append(Space);
         mods.append(current);
@@ -233,16 +233,16 @@ std::string Command::whole() const
         switch (type)
         {
         case Syntax::Command::Executable:
-            extra = Space + Tools::inBrackets(Tools::listToString(executable.objects));
+            extra = Space + Tools::inBrackets(Tools::listToString(_executable.objects));
             break;
         case Syntax::Command::Library:
-            extra = Space + Tools::inBrackets(Tools::listToString(library.objects));
+            extra = Space + Tools::inBrackets(Tools::listToString(_library.objects));
             break;
         case Syntax::Command::Source:
-            extra = Space + Tools::inBrackets(object.name);
+            extra = Space + Tools::inBrackets(_object.name);
             break;
         case Syntax::Command::Include:
-            if (include.isLibrary)
+            if (_include.isLibrary)
                 extra = Space + Tools::inBrackets(
                                     Syntax::commandString(Syntax::Command::Library));
             break;
@@ -250,7 +250,7 @@ std::string Command::whole() const
         case Syntax::Command::Option:
             extra =
                 Space + Tools::inBrackets(std::string(Syntax::Modifier::Default) + Space +
-                                          Tools::boolToString(option.defaultValue));
+                                          Tools::boolToString(_option.defaultValue));
             break;
         case Syntax::Command::Define:
         case Syntax::Command::Subproject:
@@ -266,43 +266,43 @@ std::string Command::whole() const
 
 std::string Command::value() const
 {
-    if (modifiers.empty())
+    if (_modifiers.empty())
     {
         return {};
     }
 
-    return modifiers.back();
+    return _modifiers.back();
 }
 
 std::string Command::path() const
 {
     if (type == Syntax::Command::Include)
     {
-        return include.path;
+        return _include.path;
     }
     else if (type == Syntax::Command::Source)
     {
-        return object.name;
+        return _object.name;
     }
     else if (type == Syntax::Command::Executable)
     {
-        return executable.name;
+        return _executable.name;
     }
     else if (type == Syntax::Command::Library)
     {
-        return library.name;
+        return _library.name;
     }
 
     switch (type)
     {
     case Syntax::Command::Include:
-        return include.path;
+        return _include.path;
     case Syntax::Command::Source:
-        return object.name;
+        return _object.name;
     case Syntax::Command::Executable:
-        return executable.name;
+        return _executable.name;
     case Syntax::Command::Library:
-        return library.name;
+        return _library.name;
     case Syntax::Command::Define:
     case Syntax::Command::Feature:
     case Syntax::Command::Option:
@@ -314,7 +314,7 @@ std::string Command::path() const
     }
 
     Log::error("Path requested from command which does not support it:",
-               Syntax::commandString(type), "available modifiers are:", modifiers);
+               Syntax::commandString(type), "available modifiers are:", _modifiers);
 
     return {};
 }
@@ -328,11 +328,11 @@ bool Command::addLinkObject(const std::string &name)
 
     if (type == Syntax::Command::Executable)
     {
-        executable.objects.push_back(name);
+        _executable.objects.push_back(name);
     }
     else if (type == Syntax::Command::Library)
     {
-        library.objects.push_back(name);
+        _library.objects.push_back(name);
     }
     else
     {
@@ -344,6 +344,52 @@ bool Command::addLinkObject(const std::string &name)
 
     return true;
 }
+
+const ExecutableComponent &Command::executable() const
+{
+    return _executable;
+}
+
+void Command::setExecutableName(const std::string &name)
+{
+    _executable.name = name;
+}
+
+const LibraryComponent &Command::library() const
+{
+    return _library;
+}
+
+const ObjectComponent &Command::object() const
+{
+    return _object;
+}
+
+const IncludeComponent &Command::include() const
+{
+    return _include;
+}
+
+const OptionComponent &Command::option() const
+{
+    return _option;
+}
+
+// General members
+// const TargetId &Command::targetId() const
+// {
+//     return _targetId;
+// }
+
+// const CommandId &Command::parentId() const
+// {
+//     return _parentId;
+// }
+
+// const Syntax::Command &Command::type() const
+// {
+//     return _type;
+// }
 
 bool Command::isValidCommand(const std::string &command) const
 {
