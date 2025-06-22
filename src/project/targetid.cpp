@@ -22,7 +22,7 @@ void checkBounds(const TargetId::Type type)
 {
     const auto raw = static_cast<size_t>(type);
 
-    if (raw < 0 or raw >= TypeStrings.size())
+    if (raw >= TypeStrings.size())
     {
         throw TargetIdTypeException(raw);
     }

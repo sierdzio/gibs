@@ -30,7 +30,7 @@ void checkBounds(const Log::Type type)
 {
     const auto raw = static_cast<size_t>(type);
 
-    if (raw < 0 or raw >= TypeStrings.size())
+    if (raw >= TypeStrings.size())
     {
         throw LogLevelException(raw);
     }
@@ -76,6 +76,8 @@ std::string typeColor(const Log::Type type)
     case Log::Type::Silent:
         return {};
     }
+
+    return  {};
 }
 
 bool isLoggingThisColor(const Log::Type type)
@@ -98,6 +100,8 @@ bool isLoggingThisColor(const Log::Type type)
     case Log::Type::Silent:
         return {};
     }
+
+    return {};
 }
 
 } //namespace
@@ -142,7 +146,7 @@ void Log::setLogLevel(const Type type)
 {
     const auto raw = static_cast<size_t>(type);
 
-    if (raw < 0 or raw >= TypeStrings.size())
+    if (raw >= TypeStrings.size())
     {
         throw LogLevelException(raw);
     }

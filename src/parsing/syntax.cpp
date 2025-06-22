@@ -15,7 +15,7 @@ const std::string Syntax::commandString(const Syntax::Command command)
 {
     const auto index = static_cast<size_t>(command);
 
-    if (index < 0 or index >= commandStrings.size())
+    if (index >= commandStrings.size())
     {
         throw CommandException(index);
     }
