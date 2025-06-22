@@ -22,3 +22,5 @@ target_link_libraries(unit_tests
 )
 
 gtest_discover_tests(unit_tests)
+
+add_test(NAME unit_tests COMMAND $<TARGET_FILE:unit_tests>)

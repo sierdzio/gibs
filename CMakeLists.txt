@@ -21,6 +21,7 @@ option(BUILD_TESTS "Build gibs test suite" ON) # TODO: make it OFF by default
 
 if (BUILD_TESTS)
     message("Building gibs test suite")
+    enable_testing()
     add_subdirectory(tests)
 else()
     message("gibs test suite will not be built")

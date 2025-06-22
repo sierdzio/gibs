@@ -1,3 +1,4 @@
+#include "tools/log.h"
 #include <gtest/gtest.h>
 
 #include <parsing/syntax.h>
@@ -30,4 +31,46 @@ TEST(test_command, test_Command)
     EXPECT_FALSE(c1.object().isValid(Syntax::Command::Executable));
     EXPECT_FALSE(c1.include().isValid(Syntax::Command::Executable));
     EXPECT_FALSE(c1.option().isValid(Syntax::Command::Executable));
+}
+
+TEST(test_command, test_isValid)
+{
+    Log::setLogLevel(Log::Type::Verbose);
+
+    {
+        Command c;
+        EXPECT_FALSE(c.isValid());
+        EXPECT_FALSE(c.append("random string"));
+        EXPECT_FALSE(c.isValid());
+    }
+
+    {
+        Command c;
+        EXPECT_FALSE(c.isValid());
+        EXPECT_FALSE(c.append("incorrect"));
+        EXPECT_FALSE(c.isValid());
+    }
+
+    {
+        Command c;
+        EXPECT_FALSE(c.isValid());
+        EXPECT_TRUE(c.append("include"));
+        EXPECT_FALSE(c.isValid());
+    }
+
+    {
+        Command c;
+        EXPECT_FALSE(c.isValid());
+        EXPECT_TRUE(c.append("include"));
+        EXPECT_TRUE(c.append("random.h"));
+        EXPECT_TRUE(c.isValid());
+    }
+
+    {
+        Command c;
+        EXPECT_FALSE(c.isValid());
+        EXPECT_TRUE(c.append("source"));
+        EXPECT_TRUE(c.append("random.cpp"));
+        EXPECT_TRUE(c.isValid());
+    }
 }

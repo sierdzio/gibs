@@ -18,6 +18,7 @@ static CommandId nextId()
 }
 
 constexpr auto Space = " ";
+constexpr auto CommandNotValid = "Command is not valid:";
 } // namespace
 
 Command::Command() : _id(nextId())
@@ -33,6 +34,21 @@ bool Command::isValid() const
 {
     if (_parsingFailed or type == Syntax::Command::Invalid)
     {
+        Log::warning(CommandNotValid, "parsing has failed");
+        return false;
+    }
+
+    if (type == Syntax::Command::Invalid)
+    {
+        Log::warning(CommandNotValid, "command type is not valid");
+        return false;
+    }
+
+    if (_modifiers.empty())
+    {
+        Log::warning(
+            CommandNotValid,
+            "command requires a value and/ or modifiers but none have been provided");
         return false;
     }
 
