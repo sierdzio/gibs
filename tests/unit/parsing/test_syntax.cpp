@@ -6,7 +6,8 @@
 // TODO: MetaEnum? EnumClass? Come up with some clever thingy
 TEST(test_syntax, test_commandString)
 {
-    EXPECT_EQ(Syntax::commandString(Syntax::Command::Invalid), "");
+    EXPECT_EQ(Syntax::commandString(Syntax::Command::Unknown), "unknown");
+    EXPECT_EQ(Syntax::commandString(Syntax::Command::Invalid), "invalid");
     EXPECT_EQ(Syntax::commandString(Syntax::Command::Source), "source");
     EXPECT_EQ(Syntax::commandString(Syntax::Command::Library), "library");
     EXPECT_EQ(Syntax::commandString(Syntax::Command::Define), "define");
