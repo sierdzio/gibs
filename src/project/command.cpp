@@ -57,31 +57,40 @@ bool Command::isValid() const
 
 bool Command::append(const std::string &part)
 {
-    if (type == Syntax::Command::Invalid)
+    if (type == Syntax::Command::Unknown)
     {
         if (part == Syntax::CppKeywords::Include)
         {
             type = Syntax::Command::Include;
             return true;
         }
-        else if (isValidCommand(part))
+        else if (const auto result = getCommand(part); result.has_value())
         {
-            type = Syntax::commandValue(part);
+            type = result.value();
             return true;
         }
         else
         {
             Log::warning("Invalid project command:", part);
+            type = Syntax::Command::Invalid;
             _parsingFailed = true;
             return false;
         }
+    }
+    else if (type == Syntax::Command::Invalid)
+    {
+        Log::error("Command has not been recognized, so adding further modifiers to it "
+                   "will have no effect. Modifier:",
+                   part);
+        _parsingFailed = true;
+        return false;
     }
     else
     {
         if (not supportsModifiers(type) and not _modifiers.empty())
         {
-            Log::warning("Got another command value:", part,
-                         "but a previous one already exists:", value());
+            Log::error("Got another command value:", part,
+                       "but a previous one already exists:", value());
             _parsingFailed = true;
             return false;
         }
@@ -273,6 +282,7 @@ std::string Command::whole() const
         case Syntax::Command::Tool:
         case Syntax::Command::Qt:
         case Syntax::Command::Invalid:
+        case Syntax::Command::Unknown:
             break;
         }
     }
@@ -326,6 +336,7 @@ std::string Command::path() const
     case Syntax::Command::Subproject:
     case Syntax::Command::Tool:
     case Syntax::Command::Invalid:
+    case Syntax::Command::Unknown:
         break;
     }
 
@@ -407,17 +418,17 @@ const OptionComponent &Command::option() const
 //     return _type;
 // }
 
-bool Command::isValidCommand(const std::string &command) const
+std::optional<Syntax::Command> Command::getCommand(const std::string &command) const
 {
     try
     {
-        Syntax::commandValue(command);
-        return true;
+        const auto result = Syntax::commandValue(command);
+        return result;
     }
     catch (const CommandStringException &e)
     {
         Log::verbose(e.what());
-        return false;
+        return {};
     }
 }
 
@@ -431,6 +442,7 @@ bool Command::supportsModifiers(const Syntax::Command command) const
     case Syntax::Command::Feature:
     case Syntax::Command::Option:
         return true;
+    case Syntax::Command::Unknown:
     case Syntax::Command::Invalid:
     case Syntax::Command::Define:
     case Syntax::Command::Source:

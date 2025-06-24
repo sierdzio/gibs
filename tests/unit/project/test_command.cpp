@@ -73,4 +73,13 @@ TEST(test_command, test_isValid)
         EXPECT_TRUE(c.append("random.cpp"));
         EXPECT_TRUE(c.isValid());
     }
+
+    {
+        Command c;
+        EXPECT_FALSE(c.isValid());
+        EXPECT_TRUE(c.append("source"));
+        EXPECT_FALSE(c.append(Syntax::Modifier::Dynamic));
+        EXPECT_FALSE(c.append("random.cpp"));
+        EXPECT_FALSE(c.isValid());
+    }
 }

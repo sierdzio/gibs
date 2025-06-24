@@ -4,6 +4,7 @@
 #include "parsing/syntax.h"
 #include "targetid.h"
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -60,10 +61,10 @@ class Command
     // General members
     TargetId targetId;
     CommandId parentId;
-    Syntax::Command type = Syntax::Command::Invalid;
+    Syntax::Command type = Syntax::Command::Unknown;
 
   private:
-    bool isValidCommand(const std::string &command) const;
+    std::optional<Syntax::Command> getCommand(const std::string &command) const;
     bool supportsModifiers(const Syntax::Command command) const;
 
     const CommandId _id = 0;

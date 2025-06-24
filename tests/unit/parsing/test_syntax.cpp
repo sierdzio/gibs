@@ -23,7 +23,8 @@ TEST(test_syntax, test_commandString)
 
 TEST(test_syntax, test_commandValue)
 {
-    EXPECT_EQ(Syntax::commandValue(""), Syntax::Command::Invalid);
+    EXPECT_EQ(Syntax::commandValue("unknown"), Syntax::Command::Unknown);
+    EXPECT_EQ(Syntax::commandValue("invalid"), Syntax::Command::Invalid);
     EXPECT_EQ(Syntax::commandValue("source"), Syntax::Command::Source);
     EXPECT_EQ(Syntax::commandValue("library"), Syntax::Command::Library);
     EXPECT_EQ(Syntax::commandValue("define"), Syntax::Command::Define);
@@ -44,5 +45,5 @@ TEST(test_syntax, test_commandValue)
 
 TEST(test_syntax, test_commandCount)
 {
-    EXPECT_EQ(Syntax::commandCount(), 11);
+    EXPECT_EQ(Syntax::commandCount(), 12);
 }

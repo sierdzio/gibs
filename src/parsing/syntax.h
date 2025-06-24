@@ -3,7 +3,8 @@
 #include <string>
 
 #define COMMANDS                                                                         \
-    X(Invalid, "")                                                                       \
+    X(Unknown, "unknown")                                                                \
+    X(Invalid, "invalid")                                                                \
     X(Source, "source")                                                                  \
     X(Library, "library")                                                                \
     X(Define, "define")                                                                  \
