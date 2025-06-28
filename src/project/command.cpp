@@ -96,6 +96,9 @@ bool Command::append(const std::string &part)
         }
 
         _modifiers.emplace_back(Tools::prepareIncludePath(std::move(part)));
+
+        // TODO: check isValid() for given command type
+
         return true;
     }
 

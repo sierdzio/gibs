@@ -40,27 +40,40 @@ TEST(test_command, test_isValid)
     {
         Command c;
         EXPECT_FALSE(c.isValid());
+    }
+
+    {
+        Command c;
+        EXPECT_TRUE(c.append("invalid"));
+        EXPECT_FALSE(c.isValid());
+    }
+
+    {
+        Command c;
+        EXPECT_TRUE(c.append("unknown"));
+        EXPECT_FALSE(c.isValid());
+    }
+
+    {
+        Command c;
         EXPECT_FALSE(c.append("random string"));
         EXPECT_FALSE(c.isValid());
     }
 
     {
         Command c;
-        EXPECT_FALSE(c.isValid());
         EXPECT_FALSE(c.append("incorrect"));
         EXPECT_FALSE(c.isValid());
     }
 
     {
         Command c;
-        EXPECT_FALSE(c.isValid());
         EXPECT_TRUE(c.append("include"));
         EXPECT_FALSE(c.isValid());
     }
 
     {
         Command c;
-        EXPECT_FALSE(c.isValid());
         EXPECT_TRUE(c.append("include"));
         EXPECT_TRUE(c.append("random.h"));
         EXPECT_TRUE(c.isValid());
@@ -68,7 +81,6 @@ TEST(test_command, test_isValid)
 
     {
         Command c;
-        EXPECT_FALSE(c.isValid());
         EXPECT_TRUE(c.append("source"));
         EXPECT_TRUE(c.append("random.cpp"));
         EXPECT_TRUE(c.isValid());
@@ -76,7 +88,6 @@ TEST(test_command, test_isValid)
 
     {
         Command c;
-        EXPECT_FALSE(c.isValid());
         EXPECT_TRUE(c.append("source"));
         // TODO: make it fail?
         EXPECT_TRUE(c.append(Syntax::Modifier::Dynamic));
