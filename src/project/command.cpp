@@ -46,9 +46,10 @@ bool Command::isValid() const
 
     if (_modifiers.empty())
     {
-        Log::warning(
-            CommandNotValid,
-            "command requires a value and/ or modifiers but none have been provided");
+        Log::warning(CommandNotValid,
+                     "command requires a value and/ or modifiers but none have been "
+                     "provided. All parsed elements:",
+                     whole());
         return false;
     }
 

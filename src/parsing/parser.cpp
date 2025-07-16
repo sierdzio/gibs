@@ -438,7 +438,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
             if (action == Action::Break)
             {
-                break;
+                return;
             }
         }
         else [[likely]]
@@ -450,6 +450,13 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     if (not word.empty())
     {
         processWord(word, state);
+    }
+
+    Log::verbose("Line is:", line);
+
+    if (command.type == Syntax::Command::Unknown)
+    {
+        return;
     }
 
     if (command.isValid())
@@ -475,6 +482,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
 void Parser::handleCommand(Command command, CppState *state)
 {
+    Log::verbose("Handling command", command.whole());
     if (not command.isValid())
     {
         return;
