@@ -14,8 +14,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic-errors -fPIC")
 
 include(config.cmake)
-add_subdirectory(src)
 add_subdirectory(libraries/process)
+add_subdirectory(src)
 
 option(BUILD_TESTS "Build gibs test suite" ON) # TODO: make it OFF by default
 

@@ -8,9 +8,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find includes in corresponding build directories
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic-errors -fPIC")
 
 set(srcs
@@ -22,6 +19,8 @@ add_library(${PROJECT_NAME}
     STATIC
     ${srcs}
 )
+
+target_include_directories(${PROJECT_NAME} PUBLIC ../)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION "${LINK_TIME_OPTIMIZATION}"

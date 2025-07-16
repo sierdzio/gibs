@@ -1,8 +1,12 @@
 #include "stupidprocess.h"
 
+#include <chrono>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <vector>
+
+using namespace std::chrono_literals;
 
 std::string argsToString(const std::vector<std::string> &args)
 {
@@ -35,4 +39,8 @@ void StupidProcess::execute()
 {
     std::cout << "Executing process: " << filePath << " with args: " << argsToString(args)
               << std::endl;
+
+    std::this_thread::sleep_for(5s);
+
+    std::cout << "Done! Process has finished: " << filePath;
 }

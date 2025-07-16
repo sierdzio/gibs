@@ -27,6 +27,10 @@ add_library(${PROJECT_NAME}-lib
     "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.h"
 )
 
+target_link_libraries(${PROJECT_NAME}-lib PRIVATE
+    process
+)
+
 set_target_properties(${PROJECT_NAME}-lib PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION "${LINK_TIME_OPTIMIZATION}"
     UNITY_BUILD "${UNITY_BUILD_VALUE}"
