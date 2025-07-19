@@ -4,6 +4,8 @@
 
 #include <process/stupidprocess.h>
 
+#include <thread>
+
 Processor::Processor()
 {
 }
@@ -14,6 +16,8 @@ void Processor::schedule(const Command &command)
 
     const auto typeString = Syntax::commandString(command.type);
 
+    Process *process = nullptr;
+
     switch (command.type)
     {
     case Syntax::Command::Executable:
@@ -23,6 +27,16 @@ void Processor::schedule(const Command &command)
     case Syntax::Command::Source:
     case Syntax::Command::Tool:
         Log::debug("Processing:", typeString);
+        // TODO: actual threading or future, or async, or something
+        //std::thread thread;
+        //thread.detach();
+
+        process = new StupidProcess;
+        // TODO: get real data from command:
+        process->setExecutable("g++");
+        process->setArguments({command.object().name});
+        process->execute();
+
         break;
     case Syntax::Command::Include:
     case Syntax::Command::Feature:
@@ -32,5 +46,10 @@ void Processor::schedule(const Command &command)
     case Syntax::Command::Unknown:
         Log::warning("This command type:", typeString, "does not need to be processed");
         return;
+    }
+
+    if (process)
+    {
+        processes.insert({command.id(), process});
     }
 }
