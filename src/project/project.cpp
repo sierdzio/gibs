@@ -62,7 +62,7 @@ void Project::logCommandTree() const
 
     for (const auto &command : commands)
     {
-        result = logCommand(depth(command), command, std::move(result));
+        logCommand(depth(command), command, &result);
     }
 
     Log::information(result);
@@ -80,6 +80,8 @@ void Project::generateDepths()
 
         const auto it = _commandDepths.find(current.parentId);
 
+        // TODO: this gets trown for some reason. Investigate
+
         if (it != _commandDepths.cend())
         {
             _commandDepths.insert({current.id(), it->second + 1});
@@ -96,20 +98,18 @@ int Project::depth(const Command &command) const
     return _commandDepths.at(command.id());
 }
 
-std::string Project::logCommand(const int depth, const Command &command,
-                                std::string &&string) const
+void Project::logCommand(const int depth, const Command &command,
+                         std::string *string) const
 {
     if (depth > 0)
     {
-        string.append(Vertical);
+        string->append(Vertical);
     }
 
     for (int i = 0; i < depth; ++i)
     {
-        string.append(Space + Space);
+        string->append(Space + Space);
     }
 
-    string.append(Branch + command.whole() + Nl);
-
-    return string;
+    string->append(Branch + command.whole() + Nl);
 }

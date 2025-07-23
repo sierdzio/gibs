@@ -27,7 +27,7 @@ add_library(${PROJECT_NAME}-lib
     "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.h"
 )
 
-target_link_libraries(${PROJECT_NAME}-lib PRIVATE
+target_link_libraries(${PROJECT_NAME}-lib PUBLIC
     process
 )
 

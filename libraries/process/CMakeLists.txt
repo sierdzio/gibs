@@ -11,8 +11,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wconversion -Wsign-conversion -pedantic-errors -fPIC")
 
 set(srcs
-    process.h
-    stupidprocess.cpp stupidprocess.h
+    process/process.h
+    process/stupidprocess.cpp process/stupidprocess.h
 )
 
 add_library(${PROJECT_NAME}
@@ -20,7 +20,11 @@ add_library(${PROJECT_NAME}
     ${srcs}
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC ../)
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    $<INSTALL_INTERFACE:process>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/>
+)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION "${LINK_TIME_OPTIMIZATION}"
