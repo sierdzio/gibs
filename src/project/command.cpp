@@ -234,7 +234,7 @@ void Command::finalize()
         }
     }
 
-    Log::error("Finalized:", id(), parentId, "whole command:", whole());
+    //Log::verbose("Finalized:", id(), parentId, "whole command:", whole());
 }
 
 bool Command::isReadyToExecute() const

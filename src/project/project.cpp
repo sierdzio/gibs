@@ -78,17 +78,14 @@ void Project::generateDepths()
             continue;
         }
 
-        const auto it = _commandDepths.find(current.parentId);
-
-        // TODO: this gets trown for some reason. Investigate
-
-        if (it == _commandDepths.cend())
+        if (const auto parentIt = _commandDepths.find(current.parentId);
+            parentIt == _commandDepths.cend())
         {
             throw CommandDepthException(current);
         }
         else
         {
-            _commandDepths.insert({current.id(), it->second + 1});
+            _commandDepths.insert({current.id(), parentIt->second + 1});
         }
     }
 }

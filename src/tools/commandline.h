@@ -28,6 +28,7 @@ class CommandLine
     bool isDebug() const;
     bool isQuickMode() const;
     bool colorfulLogs() const;
+    bool isDryRun() const;
 
   private:
     bool parse();
@@ -46,4 +47,5 @@ class CommandLine
     bool _isDebug = false;
     bool _isQuick = false;
     bool _colorfulLogs = true;
+    bool _dryRun = false;
 };

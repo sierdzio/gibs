@@ -26,16 +26,23 @@ void Processor::schedule(const Command &command)
     case Syntax::Command::Qt:
     case Syntax::Command::Source:
     case Syntax::Command::Tool:
-        Log::debug("Processing:", typeString);
-        // TODO: actual threading or future, or async, or something
-        //std::thread thread;
-        //thread.detach();
+        if (_dryRun)
+        {
+            Log::information("Simulating:", typeString, "command:", command.whole());
+        }
+        else
+        {
+            Log::debug("Processing:", typeString, "command:", command.whole());
+            // TODO: actual threading or future, or async, or something
+            //std::thread thread;
+            //thread.detach();
 
-        process = new StupidProcess;
-        // TODO: get real data from command:
-        process->setExecutable("g++");
-        process->setArguments({command.object().name});
-        process->execute();
+            process = new StupidProcess;
+            // TODO: get real data from command:
+            process->setExecutable("g++");
+            process->setArguments({command.object().name});
+            process->execute();
+        }
 
         break;
     case Syntax::Command::Include:
@@ -52,4 +59,9 @@ void Processor::schedule(const Command &command)
     {
         processes.insert({command.id(), process});
     }
+}
+
+void Processor::setDryRun(const bool dryRun)
+{
+    _dryRun = dryRun;
 }

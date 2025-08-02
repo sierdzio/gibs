@@ -42,14 +42,19 @@ constexpr auto LogLevelExplanation =
     "Logs are printed for selected level and all levels above it. For example, "
     "when information is set, all error, warning and information logs will be "
     "printed, but no debug or verbose ones. 'silent' setting will not print any "
-    "logs at all. Log level parser is case-sentitive, please make sure to provide "
+    "logs at all. Log level parser is case-sensitive, please make sure to provide "
     "log levels in lower case. "
     "If more than one log level is specified, or log level "
     "is combined with --verbose, only the last flag is "
-    "taken nto account";
+    "taken into account.";
 
 constexpr auto NoColor = "--no-color";
 constexpr auto NoColorExplanation = "Disables color in log messages.";
+
+constexpr auto DryRun = "--dry-run";
+constexpr auto DryRunExplanation =
+    "Does not actually run any compilation or linking commands. Commands are only "
+    "printed out but not executed.";
 
 constexpr auto DoubleSpace = "  ";
 constexpr auto Quote = "\"";
@@ -135,6 +140,7 @@ std::string CommandLine::parsedFlagsText() const
     appendIf(&result, isQuickMode(), Quick);
     appendIf(&result, true, LogLevel, Log::typeString(_logLevel));
     appendIf(&result, not colorfulLogs(), NoColor);
+    appendIf(&result, isDryRun(), DryRun);
 
     return result;
 }
@@ -156,6 +162,7 @@ std::string CommandLine::helpText() const
     result = helpAppend(std::move(result), {Verbose}, VerboseExplanation);
     result = helpAppend(std::move(result), {L, LogLevel}, LogLevelExplanation);
     result = helpAppend(std::move(result), {NoColor}, NoColorExplanation);
+    result = helpAppend(std::move(result), {DryRun}, DryRunExplanation);
 
     return result;
 }
@@ -208,6 +215,11 @@ bool CommandLine::isQuickMode() const
 bool CommandLine::colorfulLogs() const
 {
     return _colorfulLogs;
+}
+
+bool CommandLine::isDryRun() const
+{
+    return _dryRun;
 }
 
 bool CommandLine::parse()
@@ -293,6 +305,12 @@ bool CommandLine::parse()
         if (current == NoColor)
         {
             _colorfulLogs = false;
+            continue;
+        }
+
+        if (current == DryRun)
+        {
+            _dryRun = true;
             continue;
         }
 

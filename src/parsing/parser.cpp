@@ -25,6 +25,8 @@ constexpr auto Dot = ".";
 
 Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
 {
+    _processor.setDryRun(cmd->isDryRun());
+
     if (_input.empty())
     {
         _input = std::filesystem::current_path();
