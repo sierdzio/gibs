@@ -25,7 +25,7 @@ Command::Command() : _id(nextId())
 {
 }
 
-uint Command::id() const
+CommandId Command::id() const
 {
     return _id;
 }
@@ -233,6 +233,8 @@ void Command::finalize()
             _object.name = filePath.string();
         }
     }
+
+    Log::error("Finalized:", id(), parentId, "whole command:", whole());
 }
 
 bool Command::isReadyToExecute() const

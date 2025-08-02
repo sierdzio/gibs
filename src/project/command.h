@@ -9,6 +9,7 @@
 #include <vector>
 
 using CommandId = uint;
+constexpr CommandId NullCommandId = 0;
 
 class Command
 {
@@ -60,14 +61,14 @@ class Command
 
     // General members
     TargetId targetId;
-    CommandId parentId;
+    CommandId parentId = NullCommandId;
     Syntax::Command type = Syntax::Command::Unknown;
 
   private:
     std::optional<Syntax::Command> getCommand(const std::string &command) const;
     bool supportsModifiers(const Syntax::Command command) const;
 
-    const CommandId _id = 0;
+    const CommandId _id = NullCommandId;
 
     std::vector<std::string> _modifiers;
 

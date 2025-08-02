@@ -72,7 +72,7 @@ void Project::generateDepths()
 {
     for (const auto &current : commands)
     {
-        if (current.parentId == 0)
+        if (current.parentId == NullCommandId)
         {
             _commandDepths.insert({current.id(), 0});
             continue;
@@ -82,13 +82,13 @@ void Project::generateDepths()
 
         // TODO: this gets trown for some reason. Investigate
 
-        if (it != _commandDepths.cend())
+        if (it == _commandDepths.cend())
         {
-            _commandDepths.insert({current.id(), it->second + 1});
+            throw CommandDepthException(current);
         }
         else
         {
-            throw CommandDepthException(current);
+            _commandDepths.insert({current.id(), it->second + 1});
         }
     }
 }

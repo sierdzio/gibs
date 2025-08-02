@@ -40,7 +40,7 @@ void StupidProcess::execute()
     std::cout << "Executing process: " << filePath << " with args: " << argsToString(args)
               << std::endl;
 
-    std::this_thread::sleep_for(5s);
+    std::this_thread::sleep_for(1ms); //5s);
 
     std::cout << "Done! Process has finished: " << filePath;
 }
