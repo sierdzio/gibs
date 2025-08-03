@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <ranges>
 #include <string>
 #include <thread>
 #include <vector>
@@ -40,7 +41,11 @@ void StupidProcess::execute()
     std::cout << "Executing process: " << filePath << " with args: " << argsToString(args)
               << std::endl;
 
-    std::this_thread::sleep_for(5s);
+    for (const auto i : std::views::iota(1, 6))
+    {
+        std::cout << "  -> Process: " << filePath << " iteration: " << i << std::endl;
+        std::this_thread::sleep_for(1s);
+    }
 
     std::cout << "Done! Process has finished: " << filePath << std::endl;
 }

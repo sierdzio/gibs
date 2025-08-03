@@ -112,6 +112,29 @@ bool Command::hasModifiers() const
     return not _modifiers.empty();
 }
 
+bool Command::canBeProcessed() const
+{
+    switch (type)
+    {
+    case Syntax::Command::Executable:
+    case Syntax::Command::Library:
+    case Syntax::Command::Option:
+    case Syntax::Command::Qt:
+    case Syntax::Command::Source:
+    case Syntax::Command::Tool:
+        return true;
+    case Syntax::Command::Include:
+    case Syntax::Command::Feature:
+    case Syntax::Command::Subproject:
+    case Syntax::Command::Define:
+    case Syntax::Command::Invalid:
+    case Syntax::Command::Unknown:
+        return false;
+    }
+
+    return false;
+}
+
 void Command::finalize()
 {
     if (_modifiers.empty())

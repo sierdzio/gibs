@@ -21,6 +21,7 @@ class Command
     bool isValid() const;
     bool append(const std::string &part);
     bool hasModifiers() const;
+    bool canBeProcessed() const;
 
     /*!
      * After calling append() to add data to the command, call this method
