@@ -108,7 +108,7 @@ void Processor::schedule(const Command &command)
 
             tool.setInputs(command.executable().name, command.executable().objects);
 
-            if (not _dryRun)
+            if (not isDryRun())
             {
                 process = new StupidProcess;
                 // TODO: get real data from command:
@@ -133,7 +133,7 @@ void Processor::schedule(const Command &command)
 
             tool.setInputs(command.object().name);
 
-            if (not _dryRun)
+            if (not isDryRun())
             {
                 process = new StupidProcess;
                 process->setExecutable(tool.command());
@@ -155,7 +155,7 @@ void Processor::schedule(const Command &command)
         return;
     }
 
-    if (process)
+    if (process and not isDryRun())
     {
         processes.insert({command.id(), process});
         process->execute();
@@ -165,4 +165,9 @@ void Processor::schedule(const Command &command)
 void Processor::setDryRun(const bool dryRun)
 {
     _dryRun = dryRun;
+}
+
+bool Processor::isDryRun() const
+{
+    return _dryRun;
 }

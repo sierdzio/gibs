@@ -9,43 +9,20 @@
 
 using namespace std::chrono_literals;
 
-std::string argsToString(const std::vector<std::string> &args)
+Exit StupidProcess::performAction()
 {
-    std::string result;
+    Exit result;
 
-    for (const auto &arg : args)
-    {
-        if (not result.empty())
-        {
-            result.append(" ");
-        }
-
-        result.append(arg);
-    }
-
-    return result;
-}
-
-void StupidProcess::setExecutable(const std::string &filePath)
-{
-    this->filePath = filePath;
-}
-
-void StupidProcess::setArguments(const std::vector<std::string> &args)
-{
-    this->args = args;
-}
-
-void StupidProcess::execute()
-{
-    std::cout << "Executing process: " << filePath << " with args: " << argsToString(args)
-              << std::endl;
+    std::cout << "Executing process: " << executable()
+              << " with args: " << argsToString(arguments()) << std::endl;
 
     for (const auto i : std::views::iota(1, 6))
     {
-        std::cout << "  -> Process: " << filePath << " iteration: " << i << std::endl;
+        std::cout << "  -> Process: " << executable() << " iteration: " << i << std::endl;
         std::this_thread::sleep_for(1s);
     }
 
-    std::cout << "Done! Process has finished: " << filePath << std::endl;
+    std::cout << "Done! Process has finished: " << executable() << std::endl;
+
+    return result;
 }

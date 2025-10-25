@@ -12,6 +12,7 @@ class Processor
 
     void schedule(const Command &command);
     void setDryRun(const bool dryRun);
+    bool isDryRun() const;
 
   private:
     std::unordered_map<CommandId, Process *> processes;
