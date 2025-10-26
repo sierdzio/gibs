@@ -6,12 +6,6 @@ add_executable(unit_tests_logger
     test_log.cpp
 )
 
-# TODO: investigate, should not be needed
-# target_include_directories(unit_tests_logger
-#     PRIVATE
-#     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/
-# )
-
 target_link_libraries(unit_tests_logger
     PRIVATE
     gibs-lib

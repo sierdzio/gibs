@@ -1,6 +1,6 @@
 #include "process.h"
 
-//#include "tools/log.h"
+#include <logger/log.h>
 
 namespace
 {
@@ -31,7 +31,7 @@ Exit Process::execute()
 {
     Exit result;
 
-    //Log::debug("Running process:");
+    Log::debug("Running process:");
 
     return result;
 }
