@@ -10,7 +10,8 @@
 #include "exceptions/emptylinkobject.h"
 #include "parsing/parser.h"
 #include "tools/commandline.h"
-#include "tools/log.h"
+
+#include <logger/log.h>
 
 int main(int argc, char *argv[])
 {

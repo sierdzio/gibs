@@ -24,7 +24,8 @@ enum class Type
 };
 #undef X
 
-// TODO: add catches for exceptions in places where these throwers are used!
+// TODO: add catches for exceptions in places where these throwers are used,
+// or catch and handle the errors in-place. No need to propagate the problem perhaps?
 const std::string typeString(const Type type);
 Type typeValue(const std::string &string);
 

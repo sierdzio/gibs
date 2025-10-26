@@ -1,11 +1,10 @@
 #include "processor.h"
 #include "parsing/syntax.h"
-#include "tools/log.h"
 
+#include <logger/log.h>
 #include <process/stupidprocess.h>
 
 #include <string>
-#include <thread>
 #include <vector>
 
 struct Tool

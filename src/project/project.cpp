@@ -2,11 +2,11 @@
 #include "command.h"
 #include "exceptions/commanddepthexception.h"
 #include "exceptions/commandnotfound.h"
-#include "tools/log.h"
+
+#include <logger/log.h>
 
 #include <algorithm>
 #include <cassert>
-#include <utility>
 
 namespace
 {

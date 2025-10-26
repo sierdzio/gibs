@@ -3,11 +3,12 @@
 
 #include "parsing/syntax.h"
 #include "tools/commandline.h"
-#include "tools/log.h"
 #include "tools/tools.h"
 
 #include "project/command.h"
 #include "project/targetid.h"
+
+#include <logger/log.h>
 
 #include <algorithm>
 #include <cassert>

@@ -1,6 +1,7 @@
 #include "targetid.h"
 #include "exceptions/targetidtypeexception.h"
-#include "tools/log.h"
+
+#include <logger/log.h>
 
 #include <algorithm>
 #include <array>

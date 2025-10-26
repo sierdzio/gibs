@@ -1,5 +1,6 @@
 #include "commandnotfound.h"
-#include "tools/log.h"
+
+#include <logger/log.h>
 
 CommandNotFound::CommandNotFound(const CommandId &id,
                                  const std::vector<Command> &commands)

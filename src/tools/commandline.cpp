@@ -1,6 +1,7 @@
 #include "commandline.h"
-#include "log.h"
 #include "versioninfo.h"
+
+#include <logger/log.h>
 
 #include <cassert>
 #include <cstddef>

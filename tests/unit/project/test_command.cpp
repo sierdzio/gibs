@@ -1,6 +1,6 @@
-#include "tools/log.h"
 #include <gtest/gtest.h>
 
+#include <logger/log.h>
 #include <parsing/syntax.h>
 #include <project/command.h>
 

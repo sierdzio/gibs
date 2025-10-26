@@ -3,9 +3,7 @@ set(gibs_srcs
     exceptions/commandexception.cpp exceptions/commandexception.h
     exceptions/commanddepthexception.cpp exceptions/commanddepthexception.h
     exceptions/emptylinkobject.cpp exceptions/emptylinkobject.h
-    exceptions/loglevelexception.cpp exceptions/loglevelexception.h
     exceptions/targetidtypeexception.cpp exceptions/targetidtypeexception.h
-    tools/log.cpp tools/log.h
     tools/commandline.cpp tools/commandline.h
     tools/tools.cpp tools/tools.h
     parsing/syntax.cpp parsing/syntax.h
@@ -28,6 +26,7 @@ add_library(${PROJECT_NAME}-lib
 )
 
 target_link_libraries(${PROJECT_NAME}-lib PUBLIC
+    logger
     process
 )
 

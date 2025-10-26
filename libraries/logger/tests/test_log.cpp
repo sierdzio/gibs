@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
-#include <exceptions/loglevelexception.h>
-#include <tools/log.h>
+// TODO: move to logger library
+#include <logger/exceptions/loglevelexception.h>
+#include <logger/log.h>
 
 TEST(test_log, test_typeString)
 {
