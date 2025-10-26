@@ -2,10 +2,24 @@
 
 #include <logger/log.h>
 
+#include <thread>
+#include <unistd.h>
+
 namespace
 {
 constexpr auto Space = " ";
+
+std::thread thread;
+
 } // namespace
+
+Process::~Process()
+{
+    if (thread.joinable())
+    {
+        thread.join();
+    }
+}
 
 void Process::setExecutable(const std::string &filePath)
 {
@@ -27,13 +41,21 @@ Arguments Process::arguments() const
     return _arguments;
 }
 
-Exit Process::execute()
+bool Process::execute()
 {
-    Exit result;
+    Log::debug("Running process:", executable());
 
-    Log::debug("Running process:");
+    thread = std::thread(&Process::start, this);
+    thread.detach();
 
-    return result;
+    Log::debug("Process", executable(), "started");
+
+    return true;
+}
+
+Exit Process::result() const
+{
+    return _result;
 }
 
 std::string Process::argsToString(const Arguments &args) const

@@ -7,14 +7,16 @@ struct Exit
 {
     enum class Status
     {
+        NotExecuted,
+        InProgress,
         Success,
         FailedToExecute,
         FailedDuringExecution,
-        UndefinedFailure
+        UndefinedFailure,
     };
 
-    int rawCode = 0;
-    Status status = Status::Success;
+    int rawCode = -1;
+    Status status = Status::NotExecuted;
 };
 
 using Arguments = std::vector<std::string>;
@@ -22,7 +24,7 @@ using Arguments = std::vector<std::string>;
 class Process
 {
   public:
-    virtual ~Process() = default;
+    virtual ~Process();
 
     void setExecutable(const std::string &filePath);
     std::string executable() const;
@@ -30,11 +32,15 @@ class Process
     void setArguments(const Arguments &args);
     Arguments arguments() const;
 
-    Exit execute();
+    bool execute();
+
+    Exit result() const;
 
   protected:
-    virtual Exit performAction() = 0;
+    virtual void start() = 0;
     std::string argsToString(const Arguments &args) const;
+
+    Exit _result;
 
   private:
     std::string _executablePath;

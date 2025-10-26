@@ -1,16 +1,16 @@
 #include "stupidprocess.h"
+#include "process/process.h"
 
 #include <logger/log.h>
 
-#include <iostream>
 #include <ranges>
 #include <thread>
 
 using namespace std::chrono_literals;
 
-Exit StupidProcess::performAction()
+void StupidProcess::start()
 {
-    Exit result;
+    _result.status = Exit::Status::InProgress;
 
     Log::information("Executing process:", executable(),
                      "with args:", argsToString(arguments()));
@@ -23,5 +23,6 @@ Exit StupidProcess::performAction()
 
     Log::information("Done! Process has finished:", executable());
 
-    return result;
+    _result.rawCode = 0;
+    _result.status = Exit::Status::Success;
 }
