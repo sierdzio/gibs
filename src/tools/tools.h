@@ -44,3 +44,5 @@ bool isHeaderFile(const std::string &path);
 
 bool isWhitespace(const char character);
 }; // namespace Tools
+
+#define forever while (true)

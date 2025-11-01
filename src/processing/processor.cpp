@@ -1,11 +1,15 @@
 #include "processor.h"
 #include "parsing/syntax.h"
+#include "tools/tools.h"
 
 #include <logger/log.h>
+#include <memory>
 #include <process/stupidprocess.h>
 
 #include <string>
-#include <vector>
+#include <thread>
+
+using namespace std::chrono_literals;
 
 struct Tool
 {
@@ -90,11 +94,7 @@ void Processor::schedule(const Command &command)
 
     const auto typeString = Syntax::commandString(command.type);
 
-    Process *process = nullptr;
-
-    // TODO: actual threading or future, or async, or something
-    //std::thread thread;
-    //thread.detach();
+    std::unique_ptr<Process> process = nullptr;
 
     switch (command.type)
     {
@@ -109,7 +109,7 @@ void Processor::schedule(const Command &command)
 
             if (not isDryRun())
             {
-                process = new StupidProcess;
+                process = std::make_unique<StupidProcess>();
                 // TODO: get real data from command:
                 process->setExecutable(tool.command());
                 process->setArguments(tool.arguments());
@@ -134,7 +134,7 @@ void Processor::schedule(const Command &command)
 
             if (not isDryRun())
             {
-                process = new StupidProcess;
+                process = std::make_unique<StupidProcess>();
                 process->setExecutable(tool.command());
                 process->setArguments(tool.arguments());
             }
@@ -156,8 +156,28 @@ void Processor::schedule(const Command &command)
 
     if (process and not isDryRun())
     {
-        processes.insert({command.id(), process});
-        process->execute();
+        _processes.push_back({command.id(), std::move(process)});
+        _processes.back().process->start();
+    }
+}
+
+void Processor::waitForFinished()
+{
+    forever
+    {
+        Log::debug("Checking processes, count:", _processes.size());
+
+        checkProcessStates();
+
+        if (_processes.empty())
+        {
+            Log::debug("Waiting finished");
+            break;
+        }
+        else
+        {
+            std::this_thread::sleep_for(100ms);
+        }
     }
 }
 
@@ -169,4 +189,23 @@ void Processor::setDryRun(const bool dryRun)
 bool Processor::isDryRun() const
 {
     return _dryRun;
+}
+
+void Processor::checkProcessStates()
+{
+    for (size_t index = 0; index < _processes.size(); /* nothing */)
+    {
+        auto &current = _processes.at(index);
+
+        if (current.process->isFinished())
+        {
+            Log::information("Process finished:", current.process->executable(),
+                             "command ID:", current.commandId);
+            _processes.erase(_processes.begin() + static_cast<long>(index));
+        }
+        else
+        {
+            ++index;
+        }
+    }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <thread>
 #include <vector>
 
 struct Exit
@@ -32,12 +33,14 @@ class Process
     void setArguments(const Arguments &args);
     Arguments arguments() const;
 
-    bool execute();
+    bool start();
+    bool isFinished() const;
 
     Exit result() const;
 
   protected:
-    virtual void start() = 0;
+    virtual void performWork() = 0;
+    void finish(const int code, const Exit::Status status);
     std::string argsToString(const Arguments &args) const;
 
     Exit _result;
@@ -45,4 +48,5 @@ class Process
   private:
     std::string _executablePath;
     Arguments _arguments;
+    std::thread _thread;
 };

@@ -2,22 +2,18 @@
 
 #include <logger/log.h>
 
-#include <thread>
 #include <unistd.h>
 
 namespace
 {
 constexpr auto Space = " ";
-
-std::thread thread;
-
 } // namespace
 
 Process::~Process()
 {
-    if (thread.joinable())
+    if (_thread.joinable())
     {
-        thread.join();
+        _thread.join();
     }
 }
 
@@ -41,21 +37,38 @@ Arguments Process::arguments() const
     return _arguments;
 }
 
-bool Process::execute()
+bool Process::start()
 {
     Log::debug("Running process:", executable());
 
-    thread = std::thread(&Process::start, this);
-    thread.detach();
+    _thread = std::thread(&Process::performWork, this);
+    _thread.detach();
 
     Log::debug("Process", executable(), "started");
 
     return true;
 }
 
+bool Process::isFinished() const
+{
+    return _result.status != Exit::Status::InProgress and
+           _result.status != Exit::Status::NotExecuted;
+}
+
 Exit Process::result() const
 {
     return _result;
+}
+
+void Process::finish(const int code, const Exit::Status status)
+{
+    _result.rawCode = code;
+    _result.status = status;
+
+    if (_thread.joinable())
+    {
+        _thread.join();
+    }
 }
 
 std::string Process::argsToString(const Arguments &args) const

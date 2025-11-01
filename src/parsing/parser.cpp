@@ -24,9 +24,10 @@ namespace
 constexpr auto Dot = ".";
 }
 
-Parser::Parser(const CommandLine *cmd) : _input(cmd->input()), _cmd(cmd)
+Parser::Parser(const CommandLine *cmd, Processor *processor)
+    : _input(cmd->input()), _processor(processor), _cmd(cmd)
 {
-    _processor.setDryRun(cmd->isDryRun());
+    _processor->setDryRun(cmd->isDryRun());
 
     if (_input.empty())
     {
@@ -247,10 +248,10 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
         Log::information("Compiling cpp file:", path.filename());
         _project.addCommand(compile);
-        _processor.schedule(compile);
+        _processor->schedule(compile);
 
         // TODO: only execute this command after all children have finished processing!
-        //_processor.schedule(link);
+        //_processor->schedule(link);
     }
     else if (type == Syntax::FileType::H)
     {

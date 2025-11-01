@@ -8,11 +8,11 @@
 
 using namespace std::chrono_literals;
 
-void StupidProcess::start()
+void StupidProcess::performWork()
 {
     _result.status = Exit::Status::InProgress;
 
-    Log::information("Executing process:", executable(),
+    Log::information("  -> Executing process:", executable(),
                      "with args:", argsToString(arguments()));
 
     for (const auto i : std::views::iota(1, 6))
@@ -21,8 +21,7 @@ void StupidProcess::start()
         std::this_thread::sleep_for(1s);
     }
 
-    Log::information("Done! Process has finished:", executable());
+    Log::information("  -> Done! Process has finished:", executable());
 
-    _result.rawCode = 0;
-    _result.status = Exit::Status::Success;
+    finish(0, Exit::Status::Success);
 }

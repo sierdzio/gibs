@@ -16,7 +16,7 @@ struct TargetId;
 class Parser
 {
   public:
-    Parser(const CommandLine *cmd);
+    Parser(const CommandLine *cmd, Processor *processor);
 
     AppError status() const;
 
@@ -51,7 +51,7 @@ class Parser
     std::vector<std::filesystem::path> _includePaths;
 
     Project _project;
-    Processor _processor;
+    Processor *_processor = nullptr;
 
     // TODO: move to project?
     // TODO: separate list per-target and project; optimize lookup

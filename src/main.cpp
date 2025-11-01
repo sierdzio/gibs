@@ -9,6 +9,7 @@
 #include "exceptions/commandnotfound.h"
 #include "exceptions/emptylinkobject.h"
 #include "parsing/parser.h"
+#include "processing/processor.h"
 #include "tools/commandline.h"
 
 #include <logger/log.h>
@@ -36,7 +37,9 @@ int main(int argc, char *argv[])
     Log::setLogLevel(cmd.logLevel());
     Log::debug(cmd.parsedFlagsText());
 
-    Parser parser(&cmd);
+    Processor processor;
+
+    Parser parser(&cmd, &processor);
 
     if (parser.status() != AppError::NoError)
     {
@@ -81,6 +84,8 @@ int main(int argc, char *argv[])
     {
         Log::error("Unhandled exception");
     }
+
+    processor.waitForFinished();
 
     const auto end = std::chrono::steady_clock::now();
     const auto duration =

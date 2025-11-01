@@ -12,6 +12,7 @@ set(gibs_srcs
     project/commandcomponents.cpp project/commandcomponents.h
     project/command.cpp project/command.h
     project/targetid.cpp project/targetid.h
+    processing/eventloop.cpp processing/eventloop.cpp
     processing/processor.cpp processing/processor.h
     )
 

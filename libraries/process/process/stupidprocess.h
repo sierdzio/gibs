@@ -8,5 +8,5 @@ class StupidProcess : public Process
     virtual ~StupidProcess() = default;
 
   protected:
-    void start() override;
+    void performWork() override;
 };

@@ -2,8 +2,15 @@
 
 #include "project/command.h"
 
+#include <memory>
 #include <process/process.h>
-#include <unordered_map>
+#include <vector>
+
+struct RunningProcess
+{
+    CommandId commandId;
+    std::unique_ptr<Process> process;
+};
 
 class Processor
 {
@@ -11,10 +18,14 @@ class Processor
     Processor();
 
     void schedule(const Command &command);
+    void waitForFinished();
+
     void setDryRun(const bool dryRun);
     bool isDryRun() const;
 
   private:
-    std::unordered_map<CommandId, Process *> processes;
+    void checkProcessStates();
+
+    std::vector<RunningProcess> _processes;
     bool _dryRun = false;
 };
