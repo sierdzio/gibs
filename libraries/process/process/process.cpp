@@ -2,8 +2,6 @@
 
 #include <logger/log.h>
 
-#include <unistd.h>
-
 namespace
 {
 constexpr auto Space = " ";
