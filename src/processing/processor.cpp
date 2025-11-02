@@ -1,92 +1,103 @@
 #include "processor.h"
 #include "parsing/syntax.h"
+#include "tools/stringlist.h"
 #include "tools/tools.h"
 
 #include <logger/log.h>
-#include <memory>
 #include <process/stupidprocess.h>
 
-#include <string>
+#include <memory>
 #include <thread>
 
 using namespace std::chrono_literals;
 
 struct Tool
 {
+    virtual bool setup(const Command &command) = 0;
     virtual std::string command() const = 0;
-    virtual std::vector<std::string> arguments() const = 0;
+    virtual StringList arguments() const = 0;
 };
 
 struct Compiler : public Tool
 {
+    bool setup(const Command &command) override
+    {
+        if (command.object().name.empty())
+        {
+            Log::error("Cannot compile: no source file path!");
+            return false;
+        }
+
+        for (const auto &current : command.object().includePaths)
+        {
+            if (current.empty())
+            {
+                continue;
+            }
+
+            _arguments.push_back("-I");
+            _arguments.push_back(current);
+        }
+
+        _arguments.push_back(command.object().name);
+
+        return true;
+    }
+
     std::string command() const override
     {
         return "g++";
     }
 
-    void setInputs(const std::string &filePath)
+    StringList arguments() const override
     {
-        _filePath = filePath;
-    }
-
-    std::vector<std::string> arguments() const override
-    {
-        if (_filePath.empty())
-        {
-            Log::error("Cannot compile: no source file path!");
-            return {};
-        }
-
-        std::vector<std::string> result;
-
-        result.push_back("-c");
-        result.push_back(_filePath);
-
-        return result;
+        return _arguments;
     }
 
   private:
-    std::string _filePath;
+    StringList _arguments;
 };
 
 struct Linker : public Tool
 {
+    bool setup(const Command &command) override
+    {
+        const bool isExe = command.type == Syntax::Command::Executable;
+
+        const auto &objects =
+            isExe ? command.executable().objects : command.library().objects;
+
+        for (const auto &current : objects)
+        {
+            _arguments.push_back(current);
+        }
+
+        if (not isExe)
+        {
+            _arguments.push_back(command.library().type == Syntax::LibraryType::Dynamic
+                                     ? "-shared"
+                                     : "-static");
+        }
+
+        _arguments.push_back("-o");
+        _arguments.push_back(isExe ? command.executable().name : command.library().name);
+
+        return true;
+    }
+
     std::string command() const override
     {
         return "g++";
     }
 
-    void setInputs(const std::string &outputFilePath,
-                   const std::vector<std::string> &objectFilePaths)
+    StringList arguments() const override
     {
-        _outputFilePath = outputFilePath;
-        _objectFilePaths = objectFilePaths;
-    }
-
-    std::vector<std::string> arguments() const override
-    {
-        std::vector<std::string> result;
-
-        result.push_back("-S"); // TODO: static vs. dynamic
-        result.push_back("-o");
-        result.push_back(_outputFilePath);
-
-        for (const auto &path : _objectFilePaths)
-        {
-            result.push_back(path);
-        }
-
-        return result;
+        return _arguments;
     }
 
   private:
-    std::string _outputFilePath;
-    std::vector<std::string> _objectFilePaths;
+    StringList _arguments;
 };
-
-Processor::Processor()
-{
-}
 
 void Processor::schedule(const Command &command)
 {
@@ -104,13 +115,11 @@ void Processor::schedule(const Command &command)
         Log::error("Not implemented yet!");
         {
             Linker tool;
-
-            tool.setInputs(command.executable().name, command.executable().objects);
+            tool.setup(command);
 
             if (not isDryRun())
             {
                 process = std::make_unique<StupidProcess>();
-                // TODO: get real data from command:
                 process->setExecutable(tool.command());
                 process->setArguments(tool.arguments());
             }
@@ -129,8 +138,7 @@ void Processor::schedule(const Command &command)
         Log::error("Not fully functional yet!");
         {
             Compiler tool;
-
-            tool.setInputs(command.object().name);
+            tool.setup(command);
 
             if (not isDryRun())
             {
@@ -171,7 +179,7 @@ void Processor::waitForFinished()
 
         if (_processes.empty())
         {
-            Log::debug("Waiting finished");
+            Log::debug("All processes have finished.");
             break;
         }
         else

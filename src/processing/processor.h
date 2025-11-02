@@ -15,7 +15,7 @@ struct RunningProcess
 class Processor
 {
   public:
-    Processor();
+    Processor() = default;
 
     void schedule(const Command &command);
     void waitForFinished();

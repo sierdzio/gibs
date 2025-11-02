@@ -49,7 +49,7 @@ std::string Tools::prepareIncludePath(const std::string &input)
     return result;
 }
 
-bool Tools::contains(const std::vector<std::string> &list, const std::string &string)
+bool Tools::contains(const StringList &list, const std::string &string)
 {
     return std::find(list.cbegin(), list.cend(), string) != list.cend();
 }
@@ -60,7 +60,7 @@ bool Tools::contains(const std::string &string, const std::string &toFind)
     return string.find(toFind) != std::string::npos;
 }
 
-std::string Tools::listToString(const std::vector<std::string> &list)
+std::string Tools::listToString(const StringList &list)
 {
     std::string result;
 

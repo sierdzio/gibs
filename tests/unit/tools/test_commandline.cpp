@@ -2,11 +2,7 @@
 
 #include <logger/log.h>
 #include <tools/commandline.h>
-
-#include <string>
-#include <vector>
-
-using StringList = std::vector<std::string>;
+#include <tools/stringlist.h>
 
 TEST(test_commandline, test_toStringList)
 {

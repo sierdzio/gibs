@@ -37,7 +37,7 @@ Arguments Process::arguments() const
 
 bool Process::start()
 {
-    Log::debug("Running process:", executable());
+    Log::information("Running process:", executable(), arguments());
 
     _thread = std::thread(&Process::performWork, this);
     _thread.detach();

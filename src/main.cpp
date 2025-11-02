@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
 
     processor.waitForFinished();
 
+    parser.logCommandTree();
+
     const auto end = std::chrono::steady_clock::now();
     const auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();

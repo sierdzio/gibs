@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <tools/stringlist.h>
 #include <tools/tools.h>
 
 TEST(test_tools, test_ScopeGuard)
@@ -50,7 +51,7 @@ TEST(test_tools, test_prepareIncludePath)
 
 TEST(test_tools, test_contains)
 {
-    const std::vector<std::string> vector{"ab", "cd", "ef", ""};
+    const StringList vector{"ab", "cd", "ef", ""};
     EXPECT_TRUE(Tools::contains(vector, "ab"));
     EXPECT_TRUE(Tools::contains(vector, ""));
     EXPECT_FALSE(Tools::contains(vector, "abc"));
@@ -70,7 +71,7 @@ TEST(test_tools, test_contains)
 
 TEST(test_tools, test_listToString)
 {
-    const std::vector<std::string> vector{"ab", "cd", "ef", ""};
+    const StringList vector{"ab", "cd", "ef", ""};
 
     EXPECT_EQ(Tools::listToString(vector), "ab, cd, ef");
     EXPECT_EQ(Tools::listToString({"", "", ""}), "");

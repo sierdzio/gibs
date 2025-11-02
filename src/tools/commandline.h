@@ -1,5 +1,7 @@
 #pragma once
 
+#include "stringlist.h"
+
 #include <logger/log.h>
 
 #include <string>
@@ -8,9 +10,9 @@
 class CommandLine
 {
   public:
-    static std::vector<std::string> toStringList(int argc, char *argv[]);
+    static StringList toStringList(int argc, char *argv[]);
 
-    CommandLine(const std::vector<std::string> &args);
+    CommandLine(const StringList &args);
 
     std::string parsedFlagsText() const;
 
@@ -32,11 +34,10 @@ class CommandLine
 
   private:
     bool parse();
-    [[nodiscard]] std::string helpAppend(std::string &&string,
-                                         const std::vector<std::string> &flags,
+    [[nodiscard]] std::string helpAppend(std::string &&string, const StringList &flags,
                                          const std::string &explanation) const;
 
-    std::vector<std::string> _args;
+    StringList _args;
     std::string _input;
     Log::Type _logLevel = Log::Type::Information;
 

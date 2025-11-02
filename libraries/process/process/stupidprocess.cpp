@@ -12,16 +12,16 @@ void StupidProcess::performWork()
 {
     _result.status = Exit::Status::InProgress;
 
-    Log::information("  -> Executing process:", executable(),
-                     "with args:", argsToString(arguments()));
+    Log::debug("  -> Executing process:", executable(),
+               "with args:", argsToString(arguments()));
 
     for (const auto i : std::views::iota(1, 6))
     {
-        Log::information("  -> Process:", executable(), "iteration:", i);
+        Log::debug("  -> Process:", executable(), "iteration:", i);
         std::this_thread::sleep_for(1s);
     }
 
-    Log::information("  -> Done! Process has finished:", executable());
+    Log::debug("  -> Done! Process has finished:", executable());
 
     finish(0, Exit::Status::Success);
 }

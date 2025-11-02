@@ -4,6 +4,7 @@
 #include "project/project.h"
 #include "syntax.h"
 #include "tools/apperror.h"
+#include "tools/stringlist.h"
 
 #include <filesystem>
 #include <optional>
@@ -21,6 +22,8 @@ class Parser
     AppError status() const;
 
     void parse();
+
+    void logCommandTree() const;
 
   private:
     bool scanProjectDirectoryForEntryPoints();
@@ -60,7 +63,7 @@ class Parser
      * header files for which a corresponding source file has already been found and
      * processed through handleCommand().
      */
-    std::vector<std::string> _compiledFiles;
+    StringList _compiledFiles;
 
     const CommandLine *_cmd = nullptr;
 

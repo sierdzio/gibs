@@ -1,6 +1,7 @@
 #pragma once
 
 #include "parsing/syntax.h"
+#include "tools/stringlist.h"
 
 #include <string>
 #include <vector>
@@ -15,7 +16,7 @@ struct ExecutableComponent : public Component
     bool isValid(const Syntax::Command type) const override;
 
     std::string name;
-    std::vector<std::string> objects;
+    StringList objects;
 };
 
 struct LibraryComponent : public ExecutableComponent
@@ -30,6 +31,7 @@ struct ObjectComponent : public Component
     bool isValid(const Syntax::Command type) const override;
 
     std::string name;
+    StringList includePaths;
 };
 
 struct IncludeComponent : public Component

@@ -111,7 +111,10 @@ void Parser::parse()
         _project.addCommand(link);
         parseCppFile(_projectEntryPoint, _project.id);
     }
+}
 
+void Parser::logCommandTree() const
+{
     _project.logCommandTree();
 }
 

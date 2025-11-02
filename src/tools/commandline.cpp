@@ -61,11 +61,11 @@ constexpr auto DoubleSpace = "  ";
 constexpr auto Quote = "\"";
 }; // namespace
 
-std::vector<std::string> CommandLine::toStringList(int argc, char *argv[])
+StringList CommandLine::toStringList(int argc, char *argv[])
 {
     Log::verbose("Arg. count:", argc, "args:", std::string(*argv));
 
-    std::vector<std::string> result;
+    StringList result;
 
     std::string multipart;
 
@@ -109,7 +109,7 @@ std::vector<std::string> CommandLine::toStringList(int argc, char *argv[])
     return result;
 }
 
-CommandLine::CommandLine(const std::vector<std::string> &args) : _args(args)
+CommandLine::CommandLine(const StringList &args) : _args(args)
 {
     _isValid = parse();
 }
@@ -330,8 +330,7 @@ bool CommandLine::parse()
     return true;
 }
 
-std::string CommandLine::helpAppend(std::string &&string,
-                                    const std::vector<std::string> &flags,
+std::string CommandLine::helpAppend(std::string &&string, const StringList &flags,
                                     const std::string &explanation) const
 {
     assert(flags.size() > 0);

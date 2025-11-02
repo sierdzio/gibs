@@ -3,6 +3,7 @@
 #include "commandcomponents.h"
 #include "parsing/syntax.h"
 #include "targetid.h"
+#include "tools/stringlist.h"
 
 #include <optional>
 #include <string>
@@ -71,7 +72,7 @@ class Command
 
     const CommandId _id = NullCommandId;
 
-    std::vector<std::string> _modifiers;
+    StringList _modifiers;
 
     // Composition: additional members used by some command types
     ExecutableComponent _executable;
