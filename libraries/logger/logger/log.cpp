@@ -11,6 +11,7 @@ static bool UseColors = true;
 namespace
 {
 constexpr auto Space = ' ';
+constexpr auto Nl = '\n';
 constexpr auto Red = "\033[31m";
 constexpr auto Yellow = "\033[33m";
 constexpr auto Blue = "\033[34m";
@@ -77,17 +78,17 @@ std::string typeColor(const Log::Type type)
         return {};
     }
 
-    return  {};
+    return {};
 }
 
-bool isLoggingThisColor(const Log::Type type)
+bool hasColor(const Log::Type type)
 {
-    checkBounds(type);
-
     if (not UseColors) [[unlikely]]
     {
         return false;
     }
+
+    checkBounds(type);
 
     switch (type)
     {
@@ -182,11 +183,10 @@ bool Log::usingColorfulLogs()
 
 std::string Log::beginning(const Type type)
 {
-    return (isLoggingThisColor(type) ? typeColor(type) : std::string()) +
-           typeToPrint(type) + Space;
+    return typeColor(type) + typeToPrint(type) + Space;
 }
 
 std::string Log::ending(const Type type)
 {
-    return (isLoggingThisColor(type) ? ColorEnd : std::string()) + '\n';
+    return (hasColor(type) ? ColorEnd : std::string()) + Nl;
 }
