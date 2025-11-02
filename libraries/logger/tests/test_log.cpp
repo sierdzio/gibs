@@ -75,10 +75,10 @@ TEST(test_log, test_UseColorfulLogs)
 
 TEST(test_log, test_Begining)
 {
-    EXPECT_TRUE(Log::beginning(Log::Type::Information).size() > 0);
+    EXPECT_TRUE(Log::Private::beginning(Log::Type::Information).size() > 0);
 }
 
 TEST(test_log, test_Ending)
 {
-    EXPECT_TRUE(Log::ending(Log::Type::Information).size() > 0);
+    EXPECT_TRUE(Log::Private::ending(Log::Type::Information).size() > 0);
 }

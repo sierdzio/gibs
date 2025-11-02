@@ -181,12 +181,12 @@ bool Log::usingColorfulLogs()
     return UseColors;
 }
 
-std::string Log::beginning(const Type type)
+std::string Log::Private::beginning(const Type type)
 {
     return typeColor(type) + typeToPrint(type) + Space;
 }
 
-std::string Log::ending(const Type type)
+std::string Log::Private::ending(const Type type)
 {
     return (hasColor(type) ? ColorEnd : std::string()) + Nl;
 }

@@ -37,8 +37,26 @@ bool isWithinLogLevel(const Type type);
 void setUseColorfulLogs(const bool enableColor);
 bool usingColorfulLogs();
 
+namespace Private
+{
 std::string beginning(const Type type);
 std::string ending(const Type type);
+} //namespace Private
+
+template <typename... Types> void log(const Type type, const Types &...args)
+{
+    if (not isWithinLogLevel(type))
+    {
+        return;
+    }
+
+    std::cout << Private::beginning(type);
+
+    // This is a "loop" lambda
+    ([&] { std::cout << args << ' '; }(), ...);
+
+    std::cout << Private::ending(type);
+}
 
 template <typename... Types> void verbose(const Types &...args)
 {
@@ -63,20 +81,5 @@ template <typename... Types> void warning(const Types &...args)
 template <typename... Types> void error(const Types &...args)
 {
     log(Type::Error, args...);
-}
-
-template <typename... Types> void log(const Type type, const Types &...args)
-{
-    if (not isWithinLogLevel(type))
-    {
-        return;
-    }
-
-    std::cout << beginning(type);
-
-    // This is a "loop" lambda
-    ([&] { std::cout << args << ' '; }(), ...);
-
-    std::cout << ending(type);
 }
 }; // namespace Log

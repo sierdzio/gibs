@@ -3,9 +3,6 @@
 #include "parsing/syntax.h"
 #include "tools/stringlist.h"
 
-#include <string>
-#include <vector>
-
 struct Component
 {
     virtual bool isValid(const Syntax::Command type) const = 0;

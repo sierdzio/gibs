@@ -1,5 +1,8 @@
 #include "processor.h"
+#include "compiler.h"
+#include "linker.h"
 #include "parsing/syntax.h"
+#include "tool.h"
 #include "tools/stringlist.h"
 #include "tools/tools.h"
 
@@ -10,94 +13,6 @@
 #include <thread>
 
 using namespace std::chrono_literals;
-
-struct Tool
-{
-    virtual bool setup(const Command &command) = 0;
-    virtual std::string command() const = 0;
-    virtual StringList arguments() const = 0;
-};
-
-struct Compiler : public Tool
-{
-    bool setup(const Command &command) override
-    {
-        if (command.object().name.empty())
-        {
-            Log::error("Cannot compile: no source file path!");
-            return false;
-        }
-
-        for (const auto &current : command.object().includePaths)
-        {
-            if (current.empty())
-            {
-                continue;
-            }
-
-            _arguments.push_back("-I");
-            _arguments.push_back(current);
-        }
-
-        _arguments.push_back(command.object().name);
-
-        return true;
-    }
-
-    std::string command() const override
-    {
-        return "g++";
-    }
-
-    StringList arguments() const override
-    {
-        return _arguments;
-    }
-
-  private:
-    StringList _arguments;
-};
-
-struct Linker : public Tool
-{
-    bool setup(const Command &command) override
-    {
-        const bool isExe = command.type == Syntax::Command::Executable;
-
-        const auto &objects =
-            isExe ? command.executable().objects : command.library().objects;
-
-        for (const auto &current : objects)
-        {
-            _arguments.push_back(current);
-        }
-
-        if (not isExe)
-        {
-            _arguments.push_back(command.library().type == Syntax::LibraryType::Dynamic
-                                     ? "-shared"
-                                     : "-static");
-        }
-
-        _arguments.push_back("-o");
-        _arguments.push_back(isExe ? command.executable().name : command.library().name);
-
-        return true;
-    }
-
-    std::string command() const override
-    {
-        return "g++";
-    }
-
-    StringList arguments() const override
-    {
-        return _arguments;
-    }
-
-  private:
-    StringList _arguments;
-};
 
 void Processor::schedule(const Command &command)
 {
