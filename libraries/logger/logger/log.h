@@ -1,5 +1,7 @@
 #pragma once
 
+#include "color.h"
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -41,6 +43,8 @@ namespace Private
 {
 std::string beginning(const Type type);
 std::string ending(const Type type);
+std::string typeToPrint(const Log::Type type);
+std::string typeColor(const Log::Type type);
 } //namespace Private
 
 template <typename... Types> void log(const Type type, const Types &...args)
@@ -51,6 +55,22 @@ template <typename... Types> void log(const Type type, const Types &...args)
     }
 
     std::cout << Private::beginning(type);
+
+    // This is a "loop" lambda
+    ([&] { std::cout << args << ' '; }(), ...);
+
+    std::cout << Private::ending(type);
+}
+
+template <typename... Types>
+void log(const Type type, const Color &color, const Types &...args)
+{
+    if (not isWithinLogLevel(type))
+    {
+        return;
+    }
+
+    std::cout << Private::typeToPrint(type) + color.ansiEscapeCode() + ' ';
 
     // This is a "loop" lambda
     ([&] { std::cout << args << ' '; }(), ...);
@@ -82,4 +102,30 @@ template <typename... Types> void error(const Types &...args)
 {
     log(Type::Error, args...);
 }
+
+template <typename... Types> void verbose(const Color &color, const Types &...args)
+{
+    log(Type::Verbose, color, args...);
+}
+
+template <typename... Types> void debug(const Color &color, const Types &...args)
+{
+    log(Type::Debug, color, args...);
+}
+
+template <typename... Types> void information(const Color &color, const Types &...args)
+{
+    log(Type::Information, color, args...);
+}
+
+template <typename... Types> void warning(const Color &color, const Types &...args)
+{
+    log(Type::Warning, color, args...);
+}
+
+template <typename... Types> void error(const Color &color, const Types &...args)
+{
+    log(Type::Error, color, args...);
+}
+
 }; // namespace Log

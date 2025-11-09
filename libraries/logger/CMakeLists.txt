@@ -12,6 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wconversion -Wsig
 
 set(srcs
     logger/exceptions/loglevelexception.cpp logger/exceptions/loglevelexception.h
+    logger/color.cpp logger/color.h
     logger/log.cpp logger/log.h
 )
 

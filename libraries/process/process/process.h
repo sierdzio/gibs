@@ -28,10 +28,13 @@ class Process
     virtual ~Process();
 
     void setExecutable(const std::string &filePath);
-    std::string executable() const;
+    const std::string &executable() const;
 
     void setArguments(const Arguments &args);
-    Arguments arguments() const;
+    const Arguments &arguments() const;
+
+    void setMetaInformation(const std::string &information);
+    const std::string &metaInformation() const;
 
     bool start();
     bool isFinished() const;
@@ -42,11 +45,14 @@ class Process
     virtual void performWork() = 0;
     void finish(const int code, const Exit::Status status);
     std::string argsToString(const Arguments &args) const;
+    bool hasMeta() const;
+    std::string logMeta() const;
 
     Exit _result;
 
   private:
     std::string _executablePath;
     Arguments _arguments;
+    std::string _metaInformation;
     std::thread _thread;
 };

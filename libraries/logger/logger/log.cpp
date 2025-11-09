@@ -12,9 +12,6 @@ namespace
 {
 constexpr auto Space = ' ';
 constexpr auto Nl = '\n';
-constexpr auto Red = "\033[31m";
-constexpr auto Yellow = "\033[33m";
-constexpr auto Blue = "\033[34m";
 constexpr auto ColorEnd = "\033[0m";
 
 constexpr auto Verbose = "V:";
@@ -35,50 +32,6 @@ void checkBounds(const Log::Type type)
     {
         throw LogLevelException(raw);
     }
-}
-
-std::string typeToPrint(const Log::Type type)
-{
-    checkBounds(type);
-
-    switch (type)
-    {
-    case Log::Type::Verbose:
-        return Verbose;
-    case Log::Type::Debug:
-        return Debug;
-    case Log::Type::Information:
-        return Information;
-    case Log::Type::Warning:
-        return Warning;
-    case Log::Type::Error:
-        return Error;
-    case Log::Type::Silent:
-        return {};
-    }
-
-    return {};
-}
-
-std::string typeColor(const Log::Type type)
-{
-    checkBounds(type);
-
-    switch (type)
-    {
-    case Log::Type::Error:
-        return Red;
-    case Log::Type::Warning:
-        return Yellow;
-    case Log::Type::Information:
-        return Blue;
-    case Log::Type::Debug:
-    case Log::Type::Verbose:
-    case Log::Type::Silent:
-        return {};
-    }
-
-    return {};
 }
 
 bool hasColor(const Log::Type type)
@@ -179,6 +132,51 @@ void Log::setUseColorfulLogs(const bool enableColor)
 bool Log::usingColorfulLogs()
 {
     return UseColors;
+}
+
+std::string Log::Private::typeToPrint(const Log::Type type)
+{
+    checkBounds(type);
+
+    switch (type)
+    {
+    case Log::Type::Verbose:
+        return Verbose;
+    case Log::Type::Debug:
+        return Debug;
+    case Log::Type::Information:
+        return Information;
+    case Log::Type::Warning:
+        return Warning;
+    case Log::Type::Error:
+        return Error;
+    case Log::Type::Silent:
+        return {};
+    }
+
+    return {};
+}
+
+std::string Log::Private::typeColor(const Log::Type type)
+{
+    checkBounds(type);
+
+    switch (type)
+    {
+    case Log::Type::Error:
+        return Log::Color(Log::Standard::Foreground::Red).ansiEscapeCode();
+    case Log::Type::Warning:
+        return Log::Color(Log::Standard::Foreground::Yellow).ansiEscapeCode();
+    case Log::Type::Information:
+        return Log::Color(Log::Standard::Foreground::Blue).ansiEscapeCode();
+    case Log::Type::Debug:
+        return Log::Color(Log::Standard::Foreground::BrightBlack).ansiEscapeCode();
+    case Log::Type::Verbose:
+    case Log::Type::Silent:
+        return {};
+    }
+
+    return {};
 }
 
 std::string Log::Private::beginning(const Type type)

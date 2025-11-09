@@ -8,6 +8,7 @@
 #include "exceptions/commandexception.h"
 #include "exceptions/commandnotfound.h"
 #include "exceptions/emptylinkobject.h"
+#include "logger/color.h"
 #include "parsing/parser.h"
 #include "processing/processor.h"
 #include "tools/commandline.h"
@@ -88,6 +89,9 @@ int main(int argc, char *argv[])
     processor.waitForFinished();
 
     parser.logCommandTree();
+
+    Log::information(Log::Color(Log::Standard::Foreground::Green),
+                     "Oh! Hi there! This is a test of GREEN color log. Did it work?");
 
     const auto end = std::chrono::steady_clock::now();
     const auto duration =

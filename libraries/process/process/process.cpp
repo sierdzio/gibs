@@ -1,6 +1,7 @@
 #include "process.h"
 
 #include <logger/log.h>
+#include <string>
 
 namespace
 {
@@ -20,7 +21,7 @@ void Process::setExecutable(const std::string &filePath)
     _executablePath = filePath;
 }
 
-std::string Process::executable() const
+const std::string &Process::executable() const
 {
     return _executablePath;
 }
@@ -30,14 +31,24 @@ void Process::setArguments(const Arguments &args)
     _arguments = args;
 }
 
-Arguments Process::arguments() const
+const Arguments &Process::arguments() const
 {
     return _arguments;
 }
 
+void Process::setMetaInformation(const std::string &information)
+{
+    _metaInformation = information;
+}
+
+const std::string &Process::metaInformation() const
+{
+    return _metaInformation;
+}
+
 bool Process::start()
 {
-    Log::information("Running process:", executable(), arguments());
+    Log::information("Running process:", executable(), arguments(), logMeta());
 
     _thread = std::thread(&Process::performWork, this);
     _thread.detach();
@@ -84,4 +95,14 @@ std::string Process::argsToString(const Arguments &args) const
     }
 
     return result;
+}
+
+bool Process::hasMeta() const
+{
+    return not _metaInformation.empty();
+}
+
+std::string Process::logMeta() const
+{
+    return hasMeta() ? ("Meta: " + metaInformation()) : std::string();
 }

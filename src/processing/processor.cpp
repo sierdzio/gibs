@@ -10,6 +10,7 @@
 #include <process/stupidprocess.h>
 
 #include <memory>
+#include <string>
 #include <thread>
 
 using namespace std::chrono_literals;
@@ -37,6 +38,8 @@ void Processor::schedule(const Command &command)
                 process = std::make_unique<StupidProcess>();
                 process->setExecutable(tool.command());
                 process->setArguments(tool.arguments());
+                process->setMetaInformation(std::to_string(command.id()) + " " +
+                                            Syntax::commandString(command.type));
             }
         }
         break;
@@ -60,6 +63,8 @@ void Processor::schedule(const Command &command)
                 process = std::make_unique<StupidProcess>();
                 process->setExecutable(tool.command());
                 process->setArguments(tool.arguments());
+                process->setMetaInformation(std::to_string(command.id()) + " " +
+                                            Syntax::commandString(command.type));
             }
         }
 
