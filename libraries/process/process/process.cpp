@@ -3,11 +3,6 @@
 #include <logger/log.h>
 #include <string>
 
-namespace
-{
-constexpr auto Space = " ";
-} // namespace
-
 Process::~Process()
 {
     if (_thread.joinable())
@@ -89,7 +84,7 @@ std::string Process::argsToString(const Arguments &args) const
     {
         if (not result.empty())
         {
-            result.append(Space);
+            result.push_back(' ');
         }
 
         result.append(arg);

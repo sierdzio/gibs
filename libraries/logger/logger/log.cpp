@@ -10,7 +10,6 @@ static bool UseColors = true;
 
 namespace
 {
-constexpr auto Space = ' ';
 constexpr auto Nl = '\n';
 constexpr auto ColorEnd = "\033[0m";
 
@@ -121,7 +120,7 @@ std::ostream &operator<<(std::ostream &stream, const std::vector<std::string> &s
     {
         if (i != 0) [[likely]]
         {
-            stream << Space;
+            stream << ' ';
         }
 
         stream << stringList.at(i);
@@ -191,7 +190,7 @@ bool Log::usingColorfulLogs()
 
 std::string Log::Private::beginning(const Type type, const Color &color)
 {
-    return typeColor(type, color) + typeToPrint(type) + Space;
+    return typeColor(type, color) + typeToPrint(type) + ' ';
 }
 
 std::string Log::Private::ending(const Type type, const Color &color)
