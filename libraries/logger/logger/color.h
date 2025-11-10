@@ -68,11 +68,14 @@ struct Rgb
 class Color
 {
   public:
+    Color() = default;
+
     Color(const Standard::Foreground foreground,
           const Standard::Background background = Standard::Background::Default);
     Color(const Rgb &foreground, const Rgb &background = {});
 
     const std::string &ansiEscapeCode() const;
+    bool isDefault() const;
 
   private:
     std::string _ansiEscapeCode;

@@ -34,11 +34,16 @@ void checkBounds(const Log::Type type)
     }
 }
 
-bool hasColor(const Log::Type type)
+bool hasColor(const Log::Type type, const Log::Color &color)
 {
     if (not UseColors) [[unlikely]]
     {
         return false;
+    }
+
+    if (not color.isDefault())
+    {
+        return true;
     }
 
     checkBounds(type);
@@ -50,6 +55,56 @@ bool hasColor(const Log::Type type)
     case Log::Type::Information:
         return true;
     case Log::Type::Debug:
+    case Log::Type::Verbose:
+    case Log::Type::Silent:
+        return {};
+    }
+
+    return {};
+}
+
+std::string typeToPrint(const Log::Type type)
+{
+    checkBounds(type);
+
+    switch (type)
+    {
+    case Log::Type::Verbose:
+        return Verbose;
+    case Log::Type::Debug:
+        return Debug;
+    case Log::Type::Information:
+        return Information;
+    case Log::Type::Warning:
+        return Warning;
+    case Log::Type::Error:
+        return Error;
+    case Log::Type::Silent:
+        return {};
+    }
+
+    return {};
+}
+
+std::string typeColor(const Log::Type type, const Log::Color &color)
+{
+    if (not color.isDefault())
+    {
+        return color.ansiEscapeCode();
+    }
+
+    checkBounds(type);
+
+    switch (type)
+    {
+    case Log::Type::Error:
+        return Log::Color(Log::Standard::Foreground::Red).ansiEscapeCode();
+    case Log::Type::Warning:
+        return Log::Color(Log::Standard::Foreground::Yellow).ansiEscapeCode();
+    case Log::Type::Information:
+        return Log::Color(Log::Standard::Foreground::Blue).ansiEscapeCode();
+    case Log::Type::Debug:
+        return Log::Color(Log::Standard::Foreground::BrightBlack).ansiEscapeCode();
     case Log::Type::Verbose:
     case Log::Type::Silent:
         return {};
@@ -134,57 +189,12 @@ bool Log::usingColorfulLogs()
     return UseColors;
 }
 
-std::string Log::Private::typeToPrint(const Log::Type type)
+std::string Log::Private::beginning(const Type type, const Color &color)
 {
-    checkBounds(type);
-
-    switch (type)
-    {
-    case Log::Type::Verbose:
-        return Verbose;
-    case Log::Type::Debug:
-        return Debug;
-    case Log::Type::Information:
-        return Information;
-    case Log::Type::Warning:
-        return Warning;
-    case Log::Type::Error:
-        return Error;
-    case Log::Type::Silent:
-        return {};
-    }
-
-    return {};
+    return typeColor(type, color) + typeToPrint(type) + Space;
 }
 
-std::string Log::Private::typeColor(const Log::Type type)
+std::string Log::Private::ending(const Type type, const Color &color)
 {
-    checkBounds(type);
-
-    switch (type)
-    {
-    case Log::Type::Error:
-        return Log::Color(Log::Standard::Foreground::Red).ansiEscapeCode();
-    case Log::Type::Warning:
-        return Log::Color(Log::Standard::Foreground::Yellow).ansiEscapeCode();
-    case Log::Type::Information:
-        return Log::Color(Log::Standard::Foreground::Blue).ansiEscapeCode();
-    case Log::Type::Debug:
-        return Log::Color(Log::Standard::Foreground::BrightBlack).ansiEscapeCode();
-    case Log::Type::Verbose:
-    case Log::Type::Silent:
-        return {};
-    }
-
-    return {};
-}
-
-std::string Log::Private::beginning(const Type type)
-{
-    return typeColor(type) + typeToPrint(type) + Space;
-}
-
-std::string Log::Private::ending(const Type type)
-{
-    return (hasColor(type) ? ColorEnd : std::string()) + Nl;
+    return (hasColor(type, color) ? ColorEnd : std::string()) + Nl;
 }

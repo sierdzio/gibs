@@ -90,9 +90,6 @@ int main(int argc, char *argv[])
 
     parser.logCommandTree();
 
-    Log::information(Log::Color(Log::Standard::Foreground::Green),
-                     "Oh! Hi there! This is a test of GREEN color log. Did it work?");
-
     const auto end = std::chrono::steady_clock::now();
     const auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();

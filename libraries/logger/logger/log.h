@@ -41,25 +41,13 @@ bool usingColorfulLogs();
 
 namespace Private
 {
-std::string beginning(const Type type);
-std::string ending(const Type type);
-std::string typeToPrint(const Log::Type type);
-std::string typeColor(const Log::Type type);
+std::string beginning(const Type type, const Color &color = {});
+std::string ending(const Type type, const Color &color = {});
 } //namespace Private
 
 template <typename... Types> void log(const Type type, const Types &...args)
 {
-    if (not isWithinLogLevel(type))
-    {
-        return;
-    }
-
-    std::cout << Private::beginning(type);
-
-    // This is a "loop" lambda
-    ([&] { std::cout << args << ' '; }(), ...);
-
-    std::cout << Private::ending(type);
+    log(type, Color(), args...);
 }
 
 template <typename... Types>
@@ -70,12 +58,12 @@ void log(const Type type, const Color &color, const Types &...args)
         return;
     }
 
-    std::cout << Private::typeToPrint(type) + color.ansiEscapeCode() + ' ';
+    std::cout << Private::beginning(type, color);
 
     // This is a "loop" lambda
     ([&] { std::cout << args << ' '; }(), ...);
 
-    std::cout << Private::ending(type);
+    std::cout << Private::ending(type, color);
 }
 
 template <typename... Types> void verbose(const Types &...args)

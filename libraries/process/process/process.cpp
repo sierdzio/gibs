@@ -48,7 +48,8 @@ const std::string &Process::metaInformation() const
 
 bool Process::start()
 {
-    Log::information("Running process:", executable(), arguments(), logMeta());
+    Log::information(Log::Color(Log::Standard::Foreground::Green),
+                     "Running process:", executable(), arguments(), logMeta());
 
     _thread = std::thread(&Process::performWork, this);
     _thread.detach();

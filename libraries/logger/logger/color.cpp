@@ -70,4 +70,9 @@ const std::string &Color::ansiEscapeCode() const
     return _ansiEscapeCode;
 }
 
+bool Color::isDefault() const
+{
+    return _ansiEscapeCode.empty();
+}
+
 } //namespace Log

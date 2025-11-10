@@ -65,7 +65,7 @@ void Project::logCommandTree() const
         logCommand(depth(command), command, &result);
     }
 
-    Log::information(result);
+    Log::information(Log::Color(Log::Standard::Foreground::Green), result);
 }
 
 void Project::generateDepths()
