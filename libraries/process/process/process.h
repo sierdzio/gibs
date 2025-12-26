@@ -22,6 +22,10 @@ struct Exit
 
 using Arguments = std::vector<std::string>;
 
+/*!
+ * Abstract base class for running processes. Contains basic API for setting up
+ * the process, running it and getting results.
+ */
 class Process
 {
   public:
@@ -45,6 +49,7 @@ class Process
     virtual void performWork() = 0;
     void finish(const int code, const Exit::Status status);
     std::string argsToString(const Arguments &args) const;
+    std::string fullCommandLineCall() const;
     bool hasMeta() const;
     std::string logMeta() const;
 

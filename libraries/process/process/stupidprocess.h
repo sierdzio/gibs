@@ -7,7 +7,10 @@
 using namespace std::chrono_literals;
 
 /*!
-  A simple process "simulator" - prints a message every second and exits after 5 seconds.
+  A simple process "simulator" - prints a message every second and exits after
+  waiting for 5 times duration().
+
+  Objects of this class will never actually run any real processes.
 */
 class StupidProcess : public Process
 {

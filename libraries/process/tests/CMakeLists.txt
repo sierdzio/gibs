@@ -5,7 +5,8 @@ include(GoogleTest)
 set(NAME unit_tests_process)
 
 add_executable(${NAME}
-    test_process.cpp
+    test_stupidprocess.cpp
+    test_systemprocess.cpp
 )
 
 target_link_libraries(${NAME}

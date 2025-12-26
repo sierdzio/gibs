@@ -43,6 +43,13 @@ const std::string &Process::metaInformation() const
 
 bool Process::start()
 {
+    if (executable().empty())
+    {
+        Log::error("Cannot run process when executable name is empty!");
+        finish(1, Exit::Status::FailedToExecute);
+        return false;
+    }
+
     Log::information(Log::Color(Log::Standard::Foreground::Green),
                      "Running process:", executable(), arguments(), logMeta());
 
@@ -91,6 +98,11 @@ std::string Process::argsToString(const Arguments &args) const
     }
 
     return result;
+}
+
+std::string Process::fullCommandLineCall() const
+{
+    return executable() + ' ' + argsToString(arguments());
 }
 
 bool Process::hasMeta() const

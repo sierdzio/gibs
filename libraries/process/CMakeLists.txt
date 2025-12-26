@@ -13,12 +13,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wconversion -Wsig
 set(srcs
     process/process.cpp process/process.h
     process/stupidprocess.cpp process/stupidprocess.h
+    process/systemprocess.h process/systemprocess.cpp
 )
 
 add_library(${PROJECT_NAME}
     STATIC
-    ${srcs}
-)
+    ${srcs})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
     logger
