@@ -24,5 +24,5 @@ class StupidProcess : public Process
     void performWork() override;
 
   private:
-    std::chrono::milliseconds _duration { 1s };
+    std::chrono::milliseconds _duration { 500ms };
 };

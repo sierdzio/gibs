@@ -7,6 +7,7 @@
 #include <logger/log.h>
 
 #include <filesystem>
+#include <utility>
 
 namespace
 {
@@ -145,7 +146,7 @@ void Command::finalize()
     if (supportsModifiers(type))
     {
         std::string previous;
-        for (const auto &current : _modifiers)
+        for (const auto &current : std::as_const(_modifiers))
         {
             if (type == Syntax::Command::Executable && previous == Syntax::Modifier::Name)
             {
@@ -155,6 +156,11 @@ void Command::finalize()
             }
             else if (type == Syntax::Command::Library)
             {
+                if (previous == Syntax::Modifier::Library)
+                {
+                    previous.clear();
+                }
+
                 if (previous == Syntax::Modifier::Type)
                 {
                     if (current == Syntax::Modifier::Dynamic)
@@ -179,10 +185,9 @@ void Command::finalize()
                     previous.clear();
                     continue;
                 }
-                else
+                else if (not previous.empty())
                 {
                     Log::warning("Unknown library modifier:", previous, current);
-                    continue;
                 }
             }
             else if (type == Syntax::Command::Include)

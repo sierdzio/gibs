@@ -93,8 +93,6 @@ void Processor::waitForFinished()
 {
     forever
     {
-        Log::debug("Checking processes, count:", _processes.size());
-
         checkProcessStates();
 
         if (_processes.empty())

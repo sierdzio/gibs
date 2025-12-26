@@ -29,6 +29,7 @@ using Arguments = std::vector<std::string>;
 class Process
 {
   public:
+    Process();
     virtual ~Process();
 
     void setExecutable(const std::string &filePath);
@@ -52,10 +53,14 @@ class Process
     std::string fullCommandLineCall() const;
     bool hasMeta() const;
     std::string logMeta() const;
+    uint identifier() const;
+    std::string logIdentifier() const;
 
     Exit _result;
 
   private:
+    static uint _identifier;
+
     std::string _executablePath;
     Arguments _arguments;
     std::string _metaInformation;

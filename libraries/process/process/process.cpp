@@ -3,6 +3,13 @@
 #include <logger/log.h>
 #include <string>
 
+uint Process::_identifier = 0;
+
+Process::Process()
+{
+    _identifier++;
+}
+
 Process::~Process()
 {
     if (_thread.joinable())
@@ -45,18 +52,19 @@ bool Process::start()
 {
     if (executable().empty())
     {
-        Log::error("Cannot run process when executable name is empty!");
+        Log::error(logIdentifier(), "Cannot run process when executable name is empty!");
         finish(1, Exit::Status::FailedToExecute);
         return false;
     }
 
     Log::information(Log::Color(Log::Standard::Foreground::Green),
-                     "Running process:", executable(), arguments(), logMeta());
+                     logIdentifier(), " -> Running process:",
+                     executable(), arguments(), logMeta());
 
     _thread = std::thread(&Process::performWork, this);
     _thread.detach();
 
-    Log::debug("Process", executable(), "started");
+    Log::debug(logIdentifier(), " -> Process", executable(), "started");
 
     return true;
 }
@@ -113,4 +121,14 @@ bool Process::hasMeta() const
 std::string Process::logMeta() const
 {
     return hasMeta() ? ("Meta: " + metaInformation()) : std::string();
+}
+
+uint Process::identifier() const
+{
+    return _identifier;
+}
+
+std::string Process::logIdentifier() const
+{
+    return '(' + std::to_string(identifier()) + ')';
 }
