@@ -31,7 +31,7 @@ TEST(test_systemprocess, test_echo)
     process.setArguments({"\"hello there!\""});
 
     const auto result = process.start();
-    std::this_thread::sleep_for(500ms);
+    std::this_thread::sleep_for(200ms);
 
     EXPECT_EQ(process.result().rawCode, 0);
     EXPECT_EQ(process.result().status, Exit::Status::Success);
