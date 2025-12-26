@@ -37,11 +37,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     UNITY_BUILD_BATCH_SIZE "${UNITY_BUILD_BATCH_SIZE_VALUE}"
 )
 
-# option(BUILD_TESTS "Build process test suite" ON) # TODO: make it OFF by default
+option(BUILD_TESTS "Build process test suite" OFF)
 
-# if (BUILD_TESTS)
-#     message("Building process test suite")
-#     add_subdirectory(tests)
-# else()
-#     message("process test suite will not be built")
-# endif()
+if (BUILD_TESTS)
+    message("Building process test suite")
+    add_subdirectory(tests)
+else()
+    message("process test suite will not be built")
+endif()

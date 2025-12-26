@@ -34,7 +34,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     UNITY_BUILD_BATCH_SIZE "${UNITY_BUILD_BATCH_SIZE_VALUE}"
 )
 
-option(BUILD_TESTS "Build logger test suite" ON) # TODO: make it OFF by default
+option(BUILD_TESTS "Build logger test suite" OFF)
 
 if (BUILD_TESTS)
     message("Building logger test suite")

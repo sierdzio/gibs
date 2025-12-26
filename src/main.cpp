@@ -8,7 +8,6 @@
 #include "exceptions/commandexception.h"
 #include "exceptions/commandnotfound.h"
 #include "exceptions/emptylinkobject.h"
-#include "logger/color.h"
 #include "parsing/parser.h"
 #include "processing/processor.h"
 #include "tools/commandline.h"

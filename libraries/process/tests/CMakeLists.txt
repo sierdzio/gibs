@@ -2,10 +2,10 @@ include(CTest)
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
-set(NAME unit_tests_logger)
+set(NAME unit_tests_process)
 
 add_executable(${NAME}
-    test_log.cpp
+    test_process.cpp
 )
 
 target_link_libraries(${NAME}

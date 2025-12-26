@@ -18,7 +18,7 @@ add_subdirectory(libraries/logger)
 add_subdirectory(libraries/process)
 add_subdirectory(src)
 
-option(BUILD_TESTS "Build gibs test suite" ON) # TODO: make it OFF by default
+option(BUILD_TESTS "Build gibs test suite" OFF)
 
 if (BUILD_TESTS)
     message("Building gibs test suite")

@@ -6,7 +6,15 @@
 #include <ranges>
 #include <thread>
 
-using namespace std::chrono_literals;
+void StupidProcess::setDuration(const std::chrono::milliseconds duration)
+{
+    _duration = duration;
+}
+
+std::chrono::milliseconds StupidProcess::duration() const
+{
+    return _duration;
+}
 
 void StupidProcess::performWork()
 {
@@ -18,7 +26,7 @@ void StupidProcess::performWork()
     for (const auto i : std::views::iota(1, 6))
     {
         Log::debug("  -> Process:", executable(), "iteration:", i);
-        std::this_thread::sleep_for(1s);
+        std::this_thread::sleep_for(_duration);
     }
 
     Log::debug("  -> Done! Process has finished:", executable());

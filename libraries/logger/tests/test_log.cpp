@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-// TODO: move to logger library
 #include <logger/exceptions/loglevelexception.h>
 #include <logger/log.h>
 
