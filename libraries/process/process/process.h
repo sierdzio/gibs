@@ -59,10 +59,11 @@ class Process
     Exit _result;
 
   private:
-    static uint _identifier;
+    static uint _globalIdentifier;
 
     std::string _executablePath;
     Arguments _arguments;
     std::string _metaInformation;
     std::thread _thread;
+    uint _identifier = 0;
 };

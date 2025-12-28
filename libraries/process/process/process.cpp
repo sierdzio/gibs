@@ -3,11 +3,10 @@
 #include <logger/log.h>
 #include <string>
 
-uint Process::_identifier = 0;
+uint Process::_globalIdentifier = 1;
 
-Process::Process()
+Process::Process() : _identifier(_globalIdentifier++)
 {
-    _identifier++;
 }
 
 Process::~Process()
