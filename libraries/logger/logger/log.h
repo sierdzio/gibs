@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #define LOG_TYPES                                                                        \
     X(Silent, "silent")                                                                  \
@@ -43,6 +44,8 @@ namespace Private
 {
 std::string beginning(const Type type, const Color &color = {});
 std::string ending(const Type type, const Color &color = {});
+
+static std::mutex PrintMutex;
 } //namespace Private
 
 template <typename... Types> void log(const Type type, const Types &...args)
@@ -57,6 +60,8 @@ void log(const Type type, const Color &color, const Types &...args)
     {
         return;
     }
+
+    std::lock_guard guard(Private::PrintMutex);
 
     std::cout << Private::beginning(type, color);
 
