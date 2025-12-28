@@ -91,19 +91,19 @@ StringList CommandLine::toStringList(int argc, char *argv[])
 
             if (current.ends_with(Quote))
             {
-                result.push_back(multipart);
+                result.emplace_back(multipart);
                 multipart.clear();
             }
         }
         else
         {
-            result.push_back(argv[i]);
+            result.emplace_back(argv[i]);
         }
     }
 
     if (not multipart.empty())
     {
-        result.push_back(multipart);
+        result.emplace_back(multipart);
     }
 
     return result;

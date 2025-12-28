@@ -11,18 +11,18 @@ bool Linker::setup(const Command &command)
 
     for (const auto &current : objects)
     {
-        _arguments.push_back(current);
+        _arguments.emplace_back(current);
     }
 
     if (not isExe)
     {
-        _arguments.push_back(command.library().type == Syntax::LibraryType::Dynamic
-                                 ? "-shared"
-                                 : "-static");
+        _arguments.emplace_back(command.library().type == Syntax::LibraryType::Dynamic
+                                    ? "-shared"
+                                    : "-static");
     }
 
-    _arguments.push_back("-o");
-    _arguments.push_back(isExe ? command.executable().name : command.library().name);
+    _arguments.emplace_back("-o");
+    _arguments.emplace_back(isExe ? command.executable().name : command.library().name);
 
     return true;
 }

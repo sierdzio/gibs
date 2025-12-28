@@ -18,7 +18,7 @@ constexpr std::string Nl = "\n";
 
 bool Project::addCommand(const Command &command)
 {
-    commands.push_back(command);
+    commands.emplace_back(command);
     return true;
 }
 

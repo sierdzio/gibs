@@ -51,6 +51,7 @@ class Parser
     std::filesystem::path _projectDirectory;
     std::filesystem::path _projectFile;
     std::filesystem::path _projectEntryPoint;
+    // TODO: should be per target (library, executable) or even more granular to speed things up?
     std::vector<std::filesystem::path> _includePaths;
 
     Project _project;

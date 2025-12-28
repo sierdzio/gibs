@@ -16,7 +16,9 @@ bool LibraryComponent::isValid(const Syntax::Command type) const
 
 bool ObjectComponent::isValid(const Syntax::Command type) const
 {
-    return type == Syntax::Command::Source and not name.empty();
+    return type == Syntax::Command::Source
+           and not name.empty()
+           and not source.empty();
 }
 
 bool IncludeComponent::isValid(const Syntax::Command type) const

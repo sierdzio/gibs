@@ -58,12 +58,12 @@ bool Process::start()
 
     Log::information(Log::Color(Log::Standard::Foreground::Green),
                      logIdentifier(), " -> Running process:",
-                     executable(), arguments(), logMeta());
+                     fullCommandLineCall(), logMeta());
 
     _thread = std::thread(&Process::performWork, this);
     _thread.detach();
 
-    Log::debug(logIdentifier(), " -> Process", executable(), "started");
+    Log::debug(logIdentifier(), " -> Process", fullCommandLineCall(), "started");
 
     return true;
 }

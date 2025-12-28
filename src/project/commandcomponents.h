@@ -27,6 +27,7 @@ struct ObjectComponent : public Component
 {
     bool isValid(const Syntax::Command type) const override;
 
+    std::string source;
     std::string name;
     StringList includePaths;
 };

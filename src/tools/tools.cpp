@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <numeric>
 
 namespace
 {
@@ -107,4 +108,16 @@ bool Tools::isWhitespace(const char character)
 {
     // TODO: also consider narrow space, non-breaking space etc.
     return std::isspace(static_cast<unsigned char>(character));
+}
+
+StringList Tools::pathsToStrings(const std::vector<std::filesystem::path> &paths)
+{
+    StringList result;
+
+    for(const auto& path : paths)
+    {
+        result.emplace_back(path.string());
+    }
+
+    return result;
 }

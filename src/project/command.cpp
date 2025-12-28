@@ -245,6 +245,7 @@ void Command::finalize()
             {
                 filePath.replace_extension(Syntax::Extension::LibraryDynamic);
             }
+
             // TODO: use different extension per platform!
             Log::verbose("Appending library file:", filePath.string());
             _object.name = filePath.string();
@@ -255,6 +256,7 @@ void Command::finalize()
         if (type == Syntax::Command::Source)
         {
             std::filesystem::path filePath = _modifiers.back();
+            _object.source = filePath.string();
             filePath.replace_extension(Syntax::Extension::ObjectFile1);
             // TODO: use different extension per platform!
             Log::verbose("Appending object file:", filePath.string());
@@ -389,11 +391,11 @@ bool Command::addLinkObject(const std::string &name)
 
     if (type == Syntax::Command::Executable)
     {
-        _executable.objects.push_back(name);
+        _executable.objects.emplace_back(name);
     }
     else if (type == Syntax::Command::Library)
     {
-        _library.objects.push_back(name);
+        _library.objects.emplace_back(name);
     }
     else
     {
@@ -422,6 +424,11 @@ const LibraryComponent &Command::library() const
 }
 
 const ObjectComponent &Command::object() const
+{
+    return _object;
+}
+
+ObjectComponent &Command::objectReference()
 {
     return _object;
 }

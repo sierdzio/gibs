@@ -53,6 +53,7 @@ class Command
     void setExecutableName(const std::string &name);
     const LibraryComponent &library() const;
     const ObjectComponent &object() const;
+    ObjectComponent& objectReference();
     const IncludeComponent &include() const;
     const OptionComponent &option() const;
 

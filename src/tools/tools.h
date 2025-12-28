@@ -3,6 +3,7 @@
 #include "stringlist.h"
 
 #include <functional>
+#include <filesystem>
 
 namespace Tools
 {
@@ -38,6 +39,7 @@ bool contains(const std::string &string, const std::string &toFind);
 std::string listToString(const StringList &list);
 std::string inBrackets(const std::string &string);
 std::string boolToString(const bool value);
+StringList pathsToStrings(const std::vector<std::filesystem::path> &paths);
 
 bool isPathToFile(const std::string &path);
 bool isHeaderFile(const std::string &path);

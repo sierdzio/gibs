@@ -3,6 +3,8 @@
 
 #include <logger/log.h>
 
+#include <utility>
+
 bool Compiler::setup(const Command &command)
 {
     if (command.object().name.empty())
@@ -11,18 +13,21 @@ bool Compiler::setup(const Command &command)
         return false;
     }
 
-    for (const auto &current : command.object().includePaths)
+    for (const auto &current : std::as_const(command.object().includePaths))
     {
         if (current.empty())
         {
             continue;
         }
 
-        _arguments.push_back("-I");
-        _arguments.push_back(current);
+        _arguments.emplace_back("-I");
+        _arguments.emplace_back(current);
     }
 
-    _arguments.push_back(command.object().name);
+    _arguments.emplace_back("-o");
+    _arguments.emplace_back(command.object().name);
+
+    _arguments.emplace_back(command.object().source);
 
     return true;
 }

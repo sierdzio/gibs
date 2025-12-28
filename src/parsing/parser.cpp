@@ -195,7 +195,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     }
 
     Log::debug("Reading file:", path);
-    _compiledFiles.push_back(path);
+    _compiledFiles.emplace_back(path);
 
     CppState state;
     state.id = id;
@@ -244,6 +244,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         compile.targetId = state.id;
         compile.parentId = linkCommand->id();
         compile.finalize();
+        compile.objectReference().includePaths = Tools::pathsToStrings(_includePaths);
 
         Log::debug("Adding object file to linker command:", compile.object().name);
 
@@ -594,7 +595,7 @@ void Parser::handleCommand(Command command, CppState *state)
         else [[unlikely]]
         {
             Log::warning("Could not find file:", toFind);
-            _compiledFiles.push_back(toFind);
+            _compiledFiles.emplace_back(toFind);
             return;
         }
 
@@ -687,18 +688,18 @@ Syntax::FileType Parser::fileType(const std::filesystem::path &path) const
     {
         return Syntax::FileType::Project;
     }
-    else if (extension == Syntax::Extension::CppFile1 ||
+    else if (extension == Syntax::Extension::CppFile1 or
              extension == Syntax::Extension::CppFile2)
     {
         return Syntax::FileType::Cpp;
     }
-    else if (extension == Syntax::Extension::HeaderFile1 ||
-             extension == Syntax::Extension::HeaderFile2 ||
+    else if (extension == Syntax::Extension::HeaderFile1 or
+             extension == Syntax::Extension::HeaderFile2 or
              extension == Syntax::Extension::HeaderFile3)
     {
         return Syntax::FileType::H;
     }
-    else if (extension == Syntax::Extension::ObjectFile1 ||
+    else if (extension == Syntax::Extension::ObjectFile1 or
              extension == Syntax::Extension::ObjectFile2)
     {
         return Syntax::FileType::Object;
@@ -797,7 +798,7 @@ void Parser::addIncludePath(const std::filesystem::path &path)
     }
 
     Log::information("Adding to include paths:", result);
-    _includePaths.push_back(result);
+    _includePaths.emplace_back(result);
 }
 
 const std::filesystem::path &Parser::root() const
