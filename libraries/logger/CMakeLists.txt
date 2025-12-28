@@ -34,6 +34,13 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     UNITY_BUILD_BATCH_SIZE "${UNITY_BUILD_BATCH_SIZE_VALUE}"
 )
 
+if (SYNCHRONISE_LOG_MESSAGES)
+    message("SYNCHRONISE_LOG_MESSAGES is ENABLED")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC SYNCHRONISE_LOG_MESSAGES)
+else()
+    message("SYNCHRONISE_LOG_MESSAGES is DISABLED (default)")
+endif()
+
 option(BUILD_TESTS "Build logger test suite" OFF)
 
 if (BUILD_TESTS)

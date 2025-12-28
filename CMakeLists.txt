@@ -4,6 +4,9 @@ project(gibs VERSION 0.0.1
         DESCRIPTION "gibs - generally-in-source build system"
         LANGUAGES CXX)
 
+option(SYNCHRONISE_LOG_MESSAGES "Use mutex to make sure log messages are not getting mixed between threads" OFF)
+option(BUILD_TESTS "Build gibs test suite" OFF)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -17,8 +20,6 @@ include(config.cmake)
 add_subdirectory(libraries/logger)
 add_subdirectory(libraries/process)
 add_subdirectory(src)
-
-option(BUILD_TESTS "Build gibs test suite" OFF)
 
 if (BUILD_TESTS)
     message("Building gibs test suite")
