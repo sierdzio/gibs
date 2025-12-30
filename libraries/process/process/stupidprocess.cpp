@@ -18,11 +18,11 @@ std::chrono::milliseconds StupidProcess::duration() const
 
 void StupidProcess::performWork()
 {
-    _result.status = Exit::Status::InProgress;
+    const auto fullInvokation = fullCommandLineCall();
 
     for (const auto i : std::views::iota(1, 6))
     {
-        Log::verbose(logIdentifier(), " -> Process:", fullCommandLineCall(), "iteration:", i);
+        Log::verbose(logIdentifier(), " -> Process:", fullInvokation, "iteration:", i);
         std::this_thread::sleep_for(_duration);
     }
 

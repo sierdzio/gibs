@@ -19,6 +19,7 @@ Process::~Process()
 
 void Process::setExecutable(const std::string &filePath)
 {
+    std::lock_guard lock(_mutex);
     _executablePath = filePath;
 }
 
@@ -29,6 +30,7 @@ const std::string &Process::executable() const
 
 void Process::setArguments(const Arguments &args)
 {
+    std::lock_guard lock(_mutex);
     _arguments = args;
 }
 
@@ -39,6 +41,7 @@ const Arguments &Process::arguments() const
 
 void Process::setMetaInformation(const std::string &information)
 {
+    std::lock_guard lock(_mutex);
     _metaInformation = information;
 }
 
@@ -60,6 +63,7 @@ bool Process::start()
                      logIdentifier(), " -> Running process:",
                      fullCommandLineCall(), "Extra info:", logMeta());
 
+    _result.status = Exit::Status::InProgress;
     _thread = std::thread(&Process::performWork, this);
     _thread.detach();
 
@@ -79,16 +83,19 @@ Exit Process::result() const
 
 void Process::finish(const int code, const Exit::Status status)
 {
-    _result.rawCode = code;
-    _result.status = status;
-
-    Log::debug(logIdentifier(), " -> Process has finished:",
-               fullCommandLineCall(), "with exit code:", code);
+    {
+        std::lock_guard lock(_mutex);
+        _result.rawCode = code;
+        _result.status = status;
+    }
 
     if (_thread.joinable())
     {
         _thread.join();
     }
+
+    Log::debug(logIdentifier(), " -> Process has finished:",
+               fullCommandLineCall(), "with exit code:", code);
 }
 
 std::string Process::argsToString(const Arguments &args) const
@@ -110,6 +117,11 @@ std::string Process::argsToString(const Arguments &args) const
 
 std::string Process::fullCommandLineCall() const
 {
+    if (executable().empty() or arguments().empty())
+    {
+        return  {};
+    }
+
     return executable() + ' ' + argsToString(arguments());
 }
 
