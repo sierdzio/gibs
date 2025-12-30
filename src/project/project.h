@@ -6,13 +6,21 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
-struct Project
+class Processor;
+
+class Project
 {
+  public:
+    Project(std::shared_ptr<Processor> processor);
+
     bool addCommand(const Command &command);
 
     CommandId linkCommandIdFor(const TargetId &id) const;
     Command &commandRef(const CommandId id);
+
+    void onParsingFinished();
 
     void logCommandTree() const;
 
@@ -25,4 +33,5 @@ struct Project
     void logCommand(const int depth, const Command &command, std::string *string) const;
 
     std::unordered_map<CommandId, int> _commandDepths;
+    std::shared_ptr<Processor> _processor;
 };

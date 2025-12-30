@@ -10,6 +10,7 @@
 #include "exceptions/emptylinkobject.h"
 #include "parsing/parser.h"
 #include "processing/processor.h"
+#include "project/project.h"
 #include "tools/commandline.h"
 
 #include <logger/log.h>
@@ -37,9 +38,12 @@ int main(int argc, char *argv[])
     Log::setLogLevel(cmd.logLevel());
     Log::debug(cmd.parsedFlagsText());
 
-    Processor processor;
+    auto processor = std::make_shared<Processor>();
+    processor->setDryRun(cmd.isDryRun());
 
-    Parser parser(&cmd, &processor);
+    auto project = std::make_shared<Project>(processor);
+
+    Parser parser(cmd.input(), cmd.isQuickMode(), project);
 
     if (parser.status() != AppError::NoError)
     {
@@ -85,9 +89,8 @@ int main(int argc, char *argv[])
         Log::error("Unhandled exception");
     }
 
-    processor.waitForFinished();
-
-    parser.logCommandTree();
+    processor->waitForFinished();
+    project->logCommandTree();
 
     const auto end = std::chrono::steady_clock::now();
     const auto duration =

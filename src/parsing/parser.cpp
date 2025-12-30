@@ -7,6 +7,7 @@
 
 #include "project/command.h"
 #include "project/targetid.h"
+#include "project/project.h"
 
 #include <logger/log.h>
 
@@ -24,33 +25,33 @@ namespace
 constexpr auto Dot = ".";
 }
 
-Parser::Parser(const CommandLine *cmd, Processor *processor)
-    : _input(cmd->input()), _processor(processor), _cmd(cmd)
+Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode, std::shared_ptr<Project> project)
+    : _project(project), _isQuickMode(isQuickMode)
 {
-    _processor->setDryRun(cmd->isDryRun());
+    auto input = inputPath;
 
-    if (_input.empty())
+    if (input.empty())
     {
-        _input = std::filesystem::current_path();
+        input = std::filesystem::current_path();
     }
 
-    if (not std::filesystem::exists(_input))
+    if (not std::filesystem::exists(input))
     {
-        Log::error("Input path does not exist, cannot continue:", _input);
+        Log::error("Input path does not exist, cannot continue:", input);
         _status = AppError::WrongInputPath;
         return;
     }
 
-    const auto dir = std::filesystem::directory_entry(_input);
+    const auto dir = std::filesystem::directory_entry(input);
 
     if (dir.is_regular_file())
     {
-        Log::information("Got a regular file ", _input);
+        Log::information("Got a regular file ", input);
         _projectEntryPoint = dir;
-        const auto base = std::filesystem::path(_input).remove_filename();
+        const auto base = std::filesystem::path(input).remove_filename();
         _projectDirectory = std::filesystem::directory_entry(base);
 
-        const auto type = fileType(_input);
+        const auto type = fileType(input);
 
         if (type == Syntax::FileType::Project)
         {
@@ -64,7 +65,7 @@ Parser::Parser(const CommandLine *cmd, Processor *processor)
         {
             Log::error(
                 "Input file type is incorrect: neither .gibs, nor a C++ source file:",
-                _input, "Extension is:", _input.extension());
+                input, "Extension is:", input.extension());
             _status = AppError::IncorrectInputFileType;
             return;
         }
@@ -72,7 +73,7 @@ Parser::Parser(const CommandLine *cmd, Processor *processor)
     else if (dir.is_directory())
     {
         Log::information("Got a directory, will scan it for project files or main.cpp:",
-                         _input);
+                         input);
         _projectDirectory = dir;
 
         scanProjectDirectoryForEntryPoints();
@@ -90,32 +91,29 @@ void Parser::parse()
 {
     // Take project name from parent directory - for now. It can be adjusted later if
     // "target name" command is found inside project files
-    _project.id =
+    _project->id =
         TargetId(_projectDirectory.parent_path().filename(), TargetId::Type::Executable);
 
-    Log::information("Project name:", _project.id.name());
+    Log::information("Project name:", _project->id.name());
 
     if (_projectFile.has_filename())
     {
-        parseProjectFile(_projectFile, _project.id);
+        parseProjectFile(_projectFile, _project->id);
     }
 
     if (_projectEntryPoint.has_filename())
     {
         Command link;
-        link.targetId = _project.id;
+        link.targetId = _project->id;
         // TODO: executable or library or just target - decide
         link.type = Syntax::Command::Executable;
-        link.append(_project.id.name());
+        link.append(_project->id.name());
         link.finalize();
-        _project.addCommand(link);
-        parseCppFile(_projectEntryPoint, _project.id);
+        _project->addCommand(link);
+        parseCppFile(_projectEntryPoint, _project->id);
     }
-}
 
-void Parser::logCommandTree() const
-{
-    _project.logCommandTree();
+    _project->onParsingFinished();
 }
 
 bool Parser::scanProjectDirectoryForEntryPoints()
@@ -222,7 +220,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     if (type == Syntax::FileType::Cpp)
     {
         // Prepare link command if not already present:
-        auto linkId = _project.linkCommandIdFor(state.id);
+        auto linkId = _project->linkCommandIdFor(state.id);
         if (linkId == 0) [[unlikely]]
         {
             Command link;
@@ -232,10 +230,10 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             link.targetId = id;
             link.append(std::filesystem::relative(state.id.name(), root()));
             link.finalize();
-            _project.addCommand(link);
+            _project->addCommand(link);
         }
 
-        auto linkCommand = &_project.commandRef(linkId);
+        auto linkCommand = &_project->commandRef(linkId);
 
         // Now, add compilation command for this cpp file:
         Command compile;
@@ -251,11 +249,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         linkCommand->addLinkObject(compile.object().name);
 
         Log::information("Compiling cpp file:", path.filename());
-        _project.addCommand(compile);
-        _processor->schedule(compile);
-
-        // TODO: only execute this command after all children have finished processing!
-        //_processor->schedule(link);
+        _project->addCommand(compile);
     }
     else if (type == Syntax::FileType::H)
     {
@@ -416,7 +410,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         }
 
         // Recognize interesting parts of C++ code:
-        if (_cmd->isQuickMode() and
+        if (_isQuickMode and
             (word == Syntax::CppKeywords::Class or word == Syntax::CppKeywords::Struct or
              word == Syntax::CppKeywords::Int or word == Syntax::CppKeywords::Char or
              word.starts_with(Syntax::CppKeywords::Main) or
@@ -511,12 +505,12 @@ void Parser::handleCommand(Command command, CppState *state)
     {
         //if this is first Target command, and/ or it is issued in main.cpp, assume
         //it is naming the whole project and executable
-        if (not _projectIdAlreadySet and state->id == _project.id)
+        if (not _projectIdAlreadySet and state->id == _project->id)
         {
             Log::information("Autop-setting project name and executable name to:",
                              command.executable().name);
-            const auto &commandId = _project.linkCommandIdFor(state->id);
-            _project.commandRef(commandId).setExecutableName(command.executable().name);
+            const auto &commandId = _project->linkCommandIdFor(state->id);
+            _project->commandRef(commandId).setExecutableName(command.executable().name);
             _projectIdAlreadySet = true;
         }
         else
@@ -531,14 +525,14 @@ void Parser::handleCommand(Command command, CppState *state)
 
                 // Command link;
                 command.type = Syntax::Command::Library;
-                command.parentId = _project.linkCommandIdFor(state->id);
+                command.parentId = _project->linkCommandIdFor(state->id);
                 command.targetId = TargetId(std::move(name), TargetId::Type::Library);
                 command.append(
                     std::filesystem::relative(command.targetId.name(), root()));
                 command.finalize();
 
                 // Link this library together with parent target
-                auto linkCommand = &_project.commandRef(command.parentId);
+                auto linkCommand = &_project->commandRef(command.parentId);
                 linkCommand->addLinkObject(command.object().name);
 
                 // Ensure subsequent files are registered for compilation under this
@@ -574,7 +568,7 @@ void Parser::handleCommand(Command command, CppState *state)
 
     if (shouldAdd)
     {
-        _project.addCommand(command);
+        _project->addCommand(command);
     }
 
     const bool hasModifiers = command.hasModifiers();

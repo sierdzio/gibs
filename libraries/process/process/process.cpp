@@ -56,14 +56,12 @@ bool Process::start()
         return false;
     }
 
-    Log::information(Log::Color(Log::Standard::Foreground::Green),
+    Log::debug(Log::Color(Log::Standard::Foreground::Green),
                      logIdentifier(), " -> Running process:",
-                     fullCommandLineCall(), logMeta());
+                     fullCommandLineCall(), "Extra info:", logMeta());
 
     _thread = std::thread(&Process::performWork, this);
     _thread.detach();
-
-    Log::debug(logIdentifier(), " -> Process", fullCommandLineCall(), "started");
 
     return true;
 }
@@ -83,6 +81,9 @@ void Process::finish(const int code, const Exit::Status status)
 {
     _result.rawCode = code;
     _result.status = status;
+
+    Log::debug(logIdentifier(), " -> Process has finished:",
+               fullCommandLineCall(), "with exit code:", code);
 
     if (_thread.joinable())
     {

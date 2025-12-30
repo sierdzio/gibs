@@ -1,8 +1,7 @@
 #pragma once
 
-#include "processing/processor.h"
-#include "project/project.h"
 #include "syntax.h"
+#include "project/command.h"
 #include "tools/apperror.h"
 #include "tools/stringlist.h"
 
@@ -10,20 +9,21 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <memory>
 
 class CommandLine;
+class Project;
 struct CppState;
 struct TargetId;
+
 class Parser
 {
   public:
-    Parser(const CommandLine *cmd, Processor *processor);
+    Parser(const std::filesystem::path& inputPath, const bool isQuickMode, std::shared_ptr<Project> project);
 
     AppError status() const;
 
     void parse();
-
-    void logCommandTree() const;
 
   private:
     bool scanProjectDirectoryForEntryPoints();
@@ -44,8 +44,6 @@ class Parser
     void addIncludePath(const std::filesystem::path &path);
     const std::filesystem::path &root() const;
 
-    std::filesystem::path _input;
-
     // TODO: move to Project?
 
     std::filesystem::path _projectDirectory;
@@ -53,9 +51,6 @@ class Parser
     std::filesystem::path _projectEntryPoint;
     // TODO: should be per target (library, executable) or even more granular to speed things up?
     std::vector<std::filesystem::path> _includePaths;
-
-    Project _project;
-    Processor *_processor = nullptr;
 
     // TODO: move to project?
     // TODO: separate list per-target and project; optimize lookup
@@ -66,8 +61,9 @@ class Parser
      */
     StringList _compiledFiles;
 
-    const CommandLine *_cmd = nullptr;
+    std::shared_ptr<Project> _project;
 
     AppError _status = AppError::NoError;
     bool _projectIdAlreadySet = false;
+    bool _isQuickMode = false;
 };

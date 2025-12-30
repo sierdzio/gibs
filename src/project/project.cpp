@@ -1,5 +1,6 @@
 #include "project.h"
 #include "command.h"
+#include "processing/processor.h"
 #include "exceptions/commanddepthexception.h"
 #include "exceptions/commandnotfound.h"
 
@@ -16,9 +17,19 @@ constexpr std::string Space = " ";
 constexpr std::string Nl = "\n";
 } //namespace
 
+Project::Project(std::shared_ptr<Processor> processor) : _processor(processor)
+{
+}
+
 bool Project::addCommand(const Command &command)
 {
     commands.emplace_back(command);
+
+    if (command.type == Syntax::Command::Source)
+    {
+        _processor->schedule(command);
+    }
+
     return true;
 }
 
@@ -42,6 +53,21 @@ Command &Project::commandRef(const CommandId id)
     }
 
     throw CommandNotFound(id, commands);
+}
+
+void Project::onParsingFinished()
+{
+    // Library and executable linking is deferred until after all commands are
+    // parsed.
+    // TODO: add and respect dependencies between libraries and executables
+    for (const auto& command : commands)
+    {
+        if (command.type == Syntax::Command::Library or
+            command.type == Syntax::Command::Executable)
+        {
+            _processor->schedule(command);
+        }
+    }
 }
 
 /*!
