@@ -39,6 +39,7 @@ class CommandLine
         std::string current;
         std::string previous;
         std::set<std::string> parsed;
+        bool hasError = false;
     };
 
     bool parse();

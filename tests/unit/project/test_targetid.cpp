@@ -3,7 +3,7 @@
 #include <exceptions/targetidtypeexception.h>
 #include <project/targetid.h>
 
-TEST(test_targetid, test_typeString)
+TEST(targetid, typeString)
 {
     EXPECT_EQ(TargetId::typeString(TargetId::Type::Unknown), "unknown");
     EXPECT_EQ(TargetId::typeString(TargetId::Type::Executable), "executable");
@@ -12,7 +12,7 @@ TEST(test_targetid, test_typeString)
                  TargetIdTypeException);
 }
 
-TEST(test_targetid, test_typeValue)
+TEST(targetid, typeValue)
 {
     EXPECT_EQ(TargetId::typeValue("unknown"), TargetId::Type::Unknown);
     EXPECT_EQ(TargetId::typeValue("executable"), TargetId::Type::Executable);
@@ -23,7 +23,7 @@ TEST(test_targetid, test_typeValue)
     EXPECT_EQ(TargetId::typeValue("Library"), TargetId::Type::Unknown);
 }
 
-TEST(test_targetid, test_TargetId)
+TEST(targetid, TargetId)
 {
     const TargetId t1;
     const TargetId t2;

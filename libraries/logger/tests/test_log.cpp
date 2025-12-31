@@ -3,7 +3,7 @@
 #include <logger/exceptions/loglevelexception.h>
 #include <logger/log.h>
 
-TEST(test_log, test_typeString)
+TEST(log, typeString)
 {
     EXPECT_EQ(Log::typeString(Log::Type::Silent), "silent");
     EXPECT_EQ(Log::typeString(Log::Type::Error), "error");
@@ -15,7 +15,7 @@ TEST(test_log, test_typeString)
     EXPECT_THROW(Log::typeString(static_cast<Log::Type>(123)), LogLevelException);
 }
 
-TEST(test_log, test_typeValue)
+TEST(log, typeValue)
 {
     EXPECT_EQ(Log::typeValue("silent"), Log::Type::Silent);
     EXPECT_EQ(Log::typeValue("error"), Log::Type::Error);
@@ -36,7 +36,7 @@ TEST(test_log, test_typeValue)
     EXPECT_EQ(Log::typeValue("verBose"), Log::Type::Information);
 }
 
-TEST(test_log, test_LogLevel)
+TEST(log, LogLevel)
 {
     EXPECT_TRUE(Log::logLevelsCount() > 0);
 
@@ -64,7 +64,7 @@ TEST(test_log, test_LogLevel)
     EXPECT_EQ(Log::logLevel(), defaultLevel);
 }
 
-TEST(test_log, test_UseColorfulLogs)
+TEST(log, UseColorfulLogs)
 {
     EXPECT_TRUE(Log::usingColorfulLogs());
     Log::setUseColorfulLogs(false);
@@ -72,12 +72,12 @@ TEST(test_log, test_UseColorfulLogs)
     Log::setUseColorfulLogs(true);
 }
 
-TEST(test_log, test_Begining)
+TEST(log, Begining)
 {
     EXPECT_TRUE(Log::Private::beginning(Log::Type::Information).size() > 0);
 }
 
-TEST(test_log, test_Ending)
+TEST(log, Ending)
 {
     EXPECT_TRUE(Log::Private::ending(Log::Type::Information).size() > 0);
 }

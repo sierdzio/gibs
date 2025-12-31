@@ -272,6 +272,11 @@ bool CommandLine::parse()
 
 bool CommandLine::handleHelpAndVersion(ParseStatus& status)
 {
+    if (status.hasError)
+    {
+        return false;
+    }
+
     if (status.current == H or status.current == Help)
     {
         return set(_hasHelp, true, status, Help);
@@ -287,6 +292,11 @@ bool CommandLine::handleHelpAndVersion(ParseStatus& status)
 
 bool CommandLine::handleFlags(ParseStatus& status)
 {
+    if (status.hasError)
+    {
+        return false;
+    }
+
     if (status.current == R or status.current == Run)
     {
         return set(_runImmediately, true, status, Run);
@@ -327,6 +337,11 @@ bool CommandLine::handleFlags(ParseStatus& status)
 
 bool CommandLine::handleOptionsWithValues(ParseStatus& status)
 {
+    if (status.hasError)
+    {
+        return false;
+    }
+
     if (status.previous == LogLevel)
     {
         return set(_logLevel, Log::typeValue(status.current), status, LogLevel);
@@ -342,6 +357,11 @@ bool CommandLine::handleOptionsWithValues(ParseStatus& status)
 
 bool CommandLine::handlePositionalArguments(ParseStatus& status)
 {
+    if (status.hasError)
+    {
+        return false;
+    }
+
     if (not status.parsed.contains(Executable))
     {
         return set(_executable, status.current, status, Executable);
@@ -358,6 +378,7 @@ bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status, const
     if (not result.second)
     {
         Log::warning("Duplicated command line argument:", name, "with value:", toSet);
+        status.hasError = true;
         return false;
     }
     else

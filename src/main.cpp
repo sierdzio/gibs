@@ -21,6 +21,13 @@ int main(int argc, char *argv[])
 
     const CommandLine cmd(CommandLine::toStringList(argc, argv));
 
+    if (not cmd.isValid())
+    {
+        std::cout << "Error when parsing command line!" << std::endl;
+        std::cout << cmd.helpText() << std::endl;
+        return -1;
+    }
+
     if (cmd.hasHelp())
     {
         std::cout << cmd.helpText() << std::endl;

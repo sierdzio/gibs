@@ -4,7 +4,7 @@
 #include <parsing/syntax.h>
 #include <project/command.h>
 
-TEST(test_command, test_Command)
+TEST(command, Command)
 {
     Command c1;
 
@@ -33,7 +33,7 @@ TEST(test_command, test_Command)
     EXPECT_FALSE(c1.option().isValid(Syntax::Command::Executable));
 }
 
-TEST(test_command, test_isValid)
+TEST(command, isValid)
 {
     Log::setLogLevel(Log::Type::Verbose);
 

@@ -4,7 +4,7 @@
 #include <tools/commandline.h>
 #include <tools/stringlist.h>
 
-TEST(test_commandline, test_toStringList)
+TEST(commandline, toStringList)
 {
     {
         constexpr int argc = 5;
@@ -55,7 +55,7 @@ TEST(test_commandline, test_toStringList)
     // TODO: test single quotes
 }
 
-TEST(test_commandline, test_CommandLine)
+TEST(commandline, CommandLine)
 {
     {
         const CommandLine cmd({});
@@ -73,6 +73,8 @@ TEST(test_commandline, test_CommandLine)
         EXPECT_FALSE(cmd.isDebug());
         EXPECT_FALSE(cmd.isQuickMode());
         EXPECT_TRUE(cmd.colorfulLogs());
+        EXPECT_FALSE(cmd.isDryRun());
+        EXPECT_FALSE(cmd.isLogProcessOutput());
     }
 
     {
@@ -91,11 +93,13 @@ TEST(test_commandline, test_CommandLine)
         EXPECT_FALSE(cmd.isDebug());
         EXPECT_TRUE(cmd.isQuickMode());
         EXPECT_TRUE(cmd.colorfulLogs());
+        EXPECT_FALSE(cmd.isDryRun());
+        EXPECT_FALSE(cmd.isLogProcessOutput());
     }
 
     {
         const CommandLine cmd({"-h", "-v", "-r", "-d", "-q", "--verbose", "--log-level",
-                               "verbose", "--no-color", "main.cpp"});
+                               "verbose", "--no-color", "--dry-run", "--log-process-output", "main.cpp"});
 
         EXPECT_TRUE(cmd.parsedFlagsText().size() > 0);
         EXPECT_TRUE(cmd.helpText().size() > 0);
@@ -110,6 +114,8 @@ TEST(test_commandline, test_CommandLine)
         EXPECT_TRUE(cmd.isDebug());
         EXPECT_TRUE(cmd.isQuickMode());
         EXPECT_FALSE(cmd.colorfulLogs());
+        EXPECT_TRUE(cmd.isDryRun());
+        EXPECT_TRUE(cmd.isLogProcessOutput());
     }
 
     {
@@ -127,7 +133,7 @@ TEST(test_commandline, test_CommandLine)
     }
 }
 
-TEST(test_commandline, test_paths)
+TEST(commandline, paths)
 {
     const std::string exe {"executable"};
 
@@ -153,5 +159,16 @@ TEST(test_commandline, test_paths)
 
         EXPECT_TRUE(cmd.isValid());
         EXPECT_EQ(cmd.input(), path);
+    }
+}
+
+TEST(commandline, duplicates)
+{
+    {
+        const CommandLine cmd({"abcd", "--verbose", "defg", "--verbose"});
+
+        EXPECT_FALSE(cmd.input().empty());
+        EXPECT_EQ(cmd.logLevel(), Log::Type::Verbose);
+        EXPECT_FALSE(cmd.isValid());
     }
 }

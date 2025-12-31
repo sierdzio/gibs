@@ -6,7 +6,7 @@
 #include <tools/stringlist.h>
 #include <tools/tools.h>
 
-TEST(test_tools, test_ScopeGuard)
+TEST(tools, ScopeGuard)
 {
     const std::string result{"A TEST!"};
     auto string = new std::string(result);
@@ -28,7 +28,7 @@ TEST(test_tools, test_ScopeGuard)
     EXPECT_EQ(result, "A TEST!");
 }
 
-TEST(test_tools, test_prepareIncludePath)
+TEST(tools, prepareIncludePath)
 {
     const std::string result1{"a/b/c.h"};
     EXPECT_EQ(Tools::prepareIncludePath("a/b/c.h"), result1);
@@ -49,7 +49,7 @@ TEST(test_tools, test_prepareIncludePath)
     EXPECT_NE(Tools::prepareIncludePath("<\"c.h\""), result2);
 }
 
-TEST(test_tools, test_contains)
+TEST(tools, contains)
 {
     const StringList vector{"ab", "cd", "ef", ""};
     EXPECT_TRUE(Tools::contains(vector, "ab"));
@@ -69,7 +69,7 @@ TEST(test_tools, test_contains)
     EXPECT_FALSE(Tools::contains(string, "  "));
 }
 
-TEST(test_tools, test_listToString)
+TEST(tools, listToString)
 {
     const StringList vector{"ab", "cd", "ef", ""};
 
@@ -78,7 +78,7 @@ TEST(test_tools, test_listToString)
     EXPECT_EQ(Tools::listToString({" ", " ", " "}), " ,  ,  ");
 }
 
-TEST(test_tools, test_inBrackets)
+TEST(tools, inBrackets)
 {
     EXPECT_EQ(Tools::inBrackets("abc"), "(abc)");
     EXPECT_EQ(Tools::inBrackets(" "), "( )");
@@ -86,7 +86,7 @@ TEST(test_tools, test_inBrackets)
     EXPECT_EQ(Tools::inBrackets("(abc)"), "((abc))");
 }
 
-TEST(test_tools, test_boolToString)
+TEST(tools, boolToString)
 {
     EXPECT_EQ(Tools::boolToString(true), "true");
     EXPECT_EQ(Tools::boolToString(false), "false");
@@ -94,7 +94,7 @@ TEST(test_tools, test_boolToString)
     EXPECT_EQ(Tools::boolToString(-1), "true");
 }
 
-TEST(test_tools, test_isPathToFile)
+TEST(tools, isPathToFile)
 {
     // TODO: this is platform-specific! Make separate tests for macOS and Windows.
     // Also, maybe just check the test executable path here?
@@ -115,7 +115,7 @@ TEST(test_tools, test_isPathToFile)
     EXPECT_FALSE(Tools::isPathToFile("/a/b"));
 }
 
-TEST(test_tools, test_isHeaderFile)
+TEST(tools, isHeaderFile)
 {
     EXPECT_TRUE(Tools::isHeaderFile("string.h"));
     EXPECT_TRUE(Tools::isHeaderFile("a.h"));
@@ -133,7 +133,7 @@ TEST(test_tools, test_isHeaderFile)
     EXPECT_FALSE(Tools::isHeaderFile("some/folder/a.cxx"));
 }
 
-TEST(test_tools, test_isWhitespace)
+TEST(tools, isWhitespace)
 {
     EXPECT_TRUE(Tools::isWhitespace(' '));
     EXPECT_TRUE(Tools::isWhitespace('\t'));

@@ -4,7 +4,7 @@
 #include <parsing/syntax.h>
 
 // TODO: MetaEnum? EnumClass? Come up with some clever thingy
-TEST(test_syntax, test_commandString)
+TEST(syntax, commandString)
 {
     EXPECT_EQ(Syntax::commandString(Syntax::Command::Unknown), "unknown");
     EXPECT_EQ(Syntax::commandString(Syntax::Command::Invalid), "invalid");
@@ -22,7 +22,7 @@ TEST(test_syntax, test_commandString)
                  CommandException);
 }
 
-TEST(test_syntax, test_commandValue)
+TEST(syntax, commandValue)
 {
     EXPECT_EQ(Syntax::commandValue("unknown"), Syntax::Command::Unknown);
     EXPECT_EQ(Syntax::commandValue("invalid"), Syntax::Command::Invalid);
@@ -44,7 +44,7 @@ TEST(test_syntax, test_commandValue)
     EXPECT_THROW(Syntax::commandValue("qt "), CommandStringException);
 }
 
-TEST(test_syntax, test_commandCount)
+TEST(syntax, commandCount)
 {
     EXPECT_EQ(Syntax::commandCount(), 12);
 }

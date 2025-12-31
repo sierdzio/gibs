@@ -2,7 +2,7 @@
 
 #include <process/stupidprocess.h>
 
-TEST(test_stupidprocess, test_defaults)
+TEST(stupidprocess, defaults)
 {
     StupidProcess process;
 
@@ -23,7 +23,7 @@ TEST(test_stupidprocess, test_defaults)
     EXPECT_FALSE(result);
 }
 
-TEST(test_stupidprocess, test_setExecutable)
+TEST(stupidprocess, setExecutable)
 {
     StupidProcess process;
 
@@ -32,7 +32,7 @@ TEST(test_stupidprocess, test_setExecutable)
     EXPECT_EQ(process.executable(), "abc");
 }
 
-TEST(test_stupidprocess, test_setArguments)
+TEST(stupidprocess, setArguments)
 {
     StupidProcess process;
     const std::vector<std::string> args {"a", "b", "cd"};
@@ -42,7 +42,7 @@ TEST(test_stupidprocess, test_setArguments)
     EXPECT_EQ(process.arguments(), args);
 }
 
-TEST(test_stupidprocess, test_setMetaInformation)
+TEST(stupidprocess, setMetaInformation)
 {
     StupidProcess process;
 
@@ -51,7 +51,7 @@ TEST(test_stupidprocess, test_setMetaInformation)
     EXPECT_EQ(process.metaInformation(), "abc");
 }
 
-TEST(test_stupidprocess, test_setDuration)
+TEST(stupidprocess, setDuration)
 {
     StupidProcess process;
 
@@ -60,7 +60,7 @@ TEST(test_stupidprocess, test_setDuration)
     EXPECT_EQ(process.duration(), 123ms);
 }
 
-TEST(test_stupidprocess, test_normalRun)
+TEST(stupidprocess, normalRun)
 {
     StupidProcess process;
     process.setExecutable("abc");
@@ -77,7 +77,7 @@ TEST(test_stupidprocess, test_normalRun)
     EXPECT_TRUE(result);
 }
 
-TEST(test_stupidprocess, test_duration)
+TEST(stupidprocess, duration)
 {
     StupidProcess process;
     process.setExecutable("echo");

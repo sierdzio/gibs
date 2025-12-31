@@ -4,7 +4,7 @@
 
 using namespace std::chrono_literals;
 
-TEST(test_systemprocess, test_defaults)
+TEST(systemprocess, defaults)
 {
     SystemProcess process;
 
@@ -24,7 +24,7 @@ TEST(test_systemprocess, test_defaults)
     EXPECT_FALSE(result);
 }
 
-TEST(test_systemprocess, test_echo)
+TEST(systemprocess, echo)
 {
     SystemProcess process;
     process.setExecutable("echo");
