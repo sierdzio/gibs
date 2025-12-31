@@ -91,6 +91,16 @@ Exit Process::result() const
     return _result;
 }
 
+std::string Process::fullCommandLineCall() const
+{
+    if (executable().empty() or arguments().empty())
+    {
+        return  {};
+    }
+
+    return executable() + ' ' + argsToString(arguments());
+}
+
 void Process::finish(const int code, const Exit::Status status)
 {
     {
@@ -123,16 +133,6 @@ std::string Process::argsToString(const Arguments &args) const
     }
 
     return result;
-}
-
-std::string Process::fullCommandLineCall() const
-{
-    if (executable().empty() or arguments().empty())
-    {
-        return  {};
-    }
-
-    return executable() + ' ' + argsToString(arguments());
 }
 
 bool Process::hasMeta() const

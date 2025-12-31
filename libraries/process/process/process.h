@@ -47,14 +47,14 @@ class Process
 
     bool start();
     bool isFinished() const;
-
     Exit result() const;
+
+    std::string fullCommandLineCall() const;
 
   protected:
     virtual void performWork() = 0;
     void finish(const int code, const Exit::Status status);
     std::string argsToString(const Arguments &args) const;
-    std::string fullCommandLineCall() const;
     bool hasMeta() const;
     std::string logMeta() const;
     uint identifier() const;

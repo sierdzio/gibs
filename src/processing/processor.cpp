@@ -98,7 +98,7 @@ void Processor::waitForFinished()
 
         if (_processes.empty())
         {
-            Log::debug("All processes have finished.");
+            Log::verbose("All processes have finished.");
             break;
         }
         else
@@ -136,8 +136,6 @@ void Processor::checkProcessStates()
 
         if (current.process->isFinished())
         {
-            Log::information("Process finished:", current.process->executable(),
-                             "command ID:", current.commandId);
             _processes.erase(_processes.begin() + static_cast<long>(index));
         }
         else
