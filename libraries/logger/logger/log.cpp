@@ -5,7 +5,7 @@
 #include <array>
 #include <iosfwd>
 
-static Log::Type RuntimeLogLevel = Log::Type::Information;
+static Log::Type RuntimeLogLevel = Log::Type::Verbose;
 static bool UseColors = true;
 
 namespace
@@ -196,4 +196,10 @@ std::string Log::Private::beginning(const Type type, const Color &color)
 std::string Log::Private::ending(const Type type, const Color &color)
 {
     return (hasColor(type, color) ? ColorEnd : std::string()) + Nl;
+}
+
+std::ostream &Log::operator<<(std::ostream &stream, const Type type)
+{
+    stream << Log::typeString(type);
+    return stream;
 }

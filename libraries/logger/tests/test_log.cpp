@@ -40,7 +40,7 @@ TEST(test_log, test_LogLevel)
 {
     EXPECT_TRUE(Log::logLevelsCount() > 0);
 
-    constexpr auto defaultLevel = Log::Type::Information;
+    constexpr auto defaultLevel = Log::Type::Verbose;
     EXPECT_EQ(Log::logLevel(), defaultLevel);
     EXPECT_TRUE(Log::isWithinLogLevel(Log::Type::Silent));
     EXPECT_TRUE(Log::isWithinLogLevel(Log::Type::Error));

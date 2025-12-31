@@ -33,7 +33,7 @@ enum class Type
 // TODO: add catches for exceptions in places where these throwers are used,
 // or catch and handle the errors in-place. No need to propagate the problem perhaps?
 const std::string typeString(const Type type);
-Type typeValue(const std::string &string);
+Log::Type typeValue(const std::string &string);
 
 void setLogLevel(const Type type);
 Log::Type logLevel();
@@ -127,5 +127,7 @@ template <typename... Types> void error(const Color &color, const Types &...args
 {
     log(Type::Error, color, args...);
 }
+
+std::ostream &operator<<(std::ostream &stream, const Log::Type type);
 
 }; // namespace Log

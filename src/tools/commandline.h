@@ -5,7 +5,7 @@
 #include <logger/log.h>
 
 #include <string>
-#include <vector>
+#include <set>
 
 class CommandLine
 {
@@ -31,13 +31,30 @@ class CommandLine
     bool isQuickMode() const;
     bool colorfulLogs() const;
     bool isDryRun() const;
+    bool isLogProcessOutput() const;
 
   private:
+    struct ParseStatus
+    {
+        std::string current;
+        std::string previous;
+        std::set<std::string> parsed;
+    };
+
     bool parse();
-    [[nodiscard]] std::string helpAppend(std::string &&string, const StringList &flags,
+    bool handleHelpAndVersion(ParseStatus& status);
+    bool handleFlags(ParseStatus& status);
+    bool handleOptionsWithValues(ParseStatus& status);
+    bool handlePositionalArguments(ParseStatus& status);
+    bool set(auto& value, const auto& toSet,
+             ParseStatus& status, const std::string& name) const;
+
+    [[nodiscard]] std::string helpAppend(std::string &&string,
+                                         const StringList &flags,
                                          const std::string &explanation) const;
 
     StringList _args;
+    std::string _executable;
     std::string _input;
     Log::Type _logLevel = Log::Type::Information;
 
@@ -49,4 +66,5 @@ class CommandLine
     bool _isQuick = false;
     bool _colorfulLogs = true;
     bool _dryRun = false;
+    bool _logProcessOutput = false;
 };

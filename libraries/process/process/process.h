@@ -42,6 +42,9 @@ class Process
     void setMetaInformation(const std::string &information);
     const std::string &metaInformation() const;
 
+    void setLogProcessOutput(const bool enabled);
+    bool isLogProcessOutput() const;
+
     bool start();
     bool isFinished() const;
 
@@ -68,4 +71,5 @@ class Process
     std::string _metaInformation;
     std::thread _thread;
     uint _identifier = 0;
+    bool _logProcessOutput = false;
 };

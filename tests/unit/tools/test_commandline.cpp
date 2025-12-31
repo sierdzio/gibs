@@ -129,9 +129,11 @@ TEST(test_commandline, test_CommandLine)
 
 TEST(test_commandline, test_paths)
 {
+    const std::string exe {"executable"};
+
     {
         const std::string path{"path/to/main.cpp"};
-        const CommandLine cmd({path});
+        const CommandLine cmd({exe, path});
 
         EXPECT_TRUE(cmd.isValid());
         EXPECT_EQ(cmd.input(), path);
@@ -139,7 +141,7 @@ TEST(test_commandline, test_paths)
 
     {
         const std::string path{"\\\\localhost\\some\\weird\\path\\to\\main.cpp"};
-        const CommandLine cmd({path});
+        const CommandLine cmd({exe, path});
 
         EXPECT_TRUE(cmd.isValid());
         EXPECT_EQ(cmd.input(), path);
@@ -147,7 +149,7 @@ TEST(test_commandline, test_paths)
 
     {
         const std::string path{"path with spaces/main.cpp"};
-        const CommandLine cmd({path});
+        const CommandLine cmd({exe, path});
 
         EXPECT_TRUE(cmd.isValid());
         EXPECT_EQ(cmd.input(), path);

@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 
     auto processor = std::make_shared<Processor>();
     processor->setDryRun(cmd.isDryRun());
+    processor->setLogProcessOutput(cmd.isLogProcessOutput());
 
     auto project = std::make_shared<Project>(processor);
 

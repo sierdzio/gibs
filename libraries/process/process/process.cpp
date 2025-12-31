@@ -50,6 +50,16 @@ const std::string &Process::metaInformation() const
     return _metaInformation;
 }
 
+void Process::setLogProcessOutput(const bool enabled)
+{
+    _logProcessOutput = enabled;
+}
+
+bool Process::isLogProcessOutput() const
+{
+    return _logProcessOutput;
+}
+
 bool Process::start()
 {
     if (executable().empty())

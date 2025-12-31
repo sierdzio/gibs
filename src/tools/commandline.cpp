@@ -6,7 +6,6 @@
 #include <cassert>
 #include <cstddef>
 #include <string>
-#include <vector>
 
 namespace
 {
@@ -56,6 +55,14 @@ constexpr auto DryRun = "--dry-run";
 constexpr auto DryRunExplanation =
     "Does not actually run any compilation or linking commands. Commands are only "
     "printed out but not executed.";
+
+constexpr auto LogProcessOutput = "--log-process-output";
+constexpr auto LogProcessOutputExplanation =
+    "Prints standard and error outputs from spawned processes "
+    "(compiler, linker etc.).";
+
+constexpr auto Executable = "executable";
+constexpr auto Input = "input";
 
 constexpr auto DoubleSpace = "  ";
 constexpr auto Quote = "\"";
@@ -142,6 +149,7 @@ std::string CommandLine::parsedFlagsText() const
     appendIf(&result, true, LogLevel, Log::typeString(_logLevel));
     appendIf(&result, not colorfulLogs(), NoColor);
     appendIf(&result, isDryRun(), DryRun);
+    appendIf(&result, isLogProcessOutput(), LogProcessOutput);
 
     return result;
 }
@@ -164,6 +172,7 @@ std::string CommandLine::helpText() const
     result = helpAppend(std::move(result), {L, LogLevel}, LogLevelExplanation);
     result = helpAppend(std::move(result), {NoColor}, NoColorExplanation);
     result = helpAppend(std::move(result), {DryRun}, DryRunExplanation);
+    result = helpAppend(std::move(result), {LogProcessOutput}, LogProcessOutputExplanation);
 
     return result;
 }
@@ -223,108 +232,137 @@ bool CommandLine::isDryRun() const
     return _dryRun;
 }
 
+bool CommandLine::isLogProcessOutput() const
+{
+    return _logProcessOutput;
+}
+
 bool CommandLine::parse()
 {
-    const auto canAdvance = [](const std::size_t i, const std::size_t size) -> bool
-    { return i < size; };
-
     const auto size = _args.size();
-
-    bool logLevelAlreadySet = false;
-    std::string holdOverArgument;
+    ParseStatus status;
 
     // Check if version or health flag is present
-    for (std::size_t i = 0; canAdvance(i, size); ++i)
+    for (std::size_t i = 0; i < size; ++i)
     {
-        const auto &current = _args.at(i);
+        status.current = _args.at(i);
 
-        // Handle held over options with values:
+        const bool argumentValid = handleHelpAndVersion(status)
+                                   or handleFlags(status)
+                                   or handleOptionsWithValues(status)
+                                   or handlePositionalArguments(status);
 
-        if (holdOverArgument == LogLevel)
+        if (not argumentValid)
         {
-            const auto value = Log::typeValue(current);
-
-            if (logLevelAlreadySet)
-            {
-                Log::warning(
-                    "Log level has already been set:", Log::typeString(_logLevel),
-                    "overwriting with:", Log::typeString(value));
-            }
-
-            holdOverArgument.clear();
-            logLevelAlreadySet = true;
-            _logLevel = value;
-            continue;
+            Log::error("Unrecognized command line argument:", status.current);
+            return false;
         }
 
-        // Handle simple options (flags):
+        status.previous = status.current;
+    }
 
-        if (current == H or current == Help)
-        {
-            _hasHelp = true;
-            continue;
-        }
+    // Set default log level:
+    if (not status.parsed.contains(LogLevel))
+    {
+        set(_logLevel, Log::Type::Information, status, LogLevel);
+    }
 
-        if (current == V or current == Version)
-        {
-            _hasVersion = true;
-            continue;
-        }
+    return true;
+}
 
-        if (current == R or current == Run)
-        {
-            _runImmediately = true;
-            continue;
-        }
+bool CommandLine::handleHelpAndVersion(ParseStatus& status)
+{
+    if (status.current == H or status.current == Help)
+    {
+        return set(_hasHelp, true, status, Help);
+    }
 
-        if (current == D or current == Debug)
-        {
-            _isDebug = true;
-            continue;
-        }
+    if (status.current == V or status.current == Version)
+    {
+        return set(_hasVersion, true, status, Version);
+    }
 
-        if (current == Q or current == Quick)
-        {
-            _isQuick = true;
-            continue;
-        }
+    return false;
+}
 
-        if (current == Verbose)
-        {
-            if (logLevelAlreadySet)
-            {
-                Log::warning(
-                    "Log level has already been set:", Log::typeString(_logLevel),
-                    "overwriting with:", Log::typeString(Log::Type::Verbose));
-            }
+bool CommandLine::handleFlags(ParseStatus& status)
+{
+    if (status.current == R or status.current == Run)
+    {
+        return set(_runImmediately, true, status, Run);
+    }
 
-            logLevelAlreadySet = true;
-            _logLevel = Log::Type::Verbose;
-            continue;
-        }
+    if (status.current == D or status.current == Debug)
+    {
+        return set(_isDebug, true, status, Debug);
+    }
 
-        if (current == NoColor)
-        {
-            _colorfulLogs = false;
-            continue;
-        }
+    if (status.current == Q or status.current == Quick)
+    {
+        return set(_isQuick, true, status, Quick);
+    }
 
-        if (current == DryRun)
-        {
-            _dryRun = true;
-            continue;
-        }
+    if (status.current == Verbose)
+    {
+        return set(_logLevel, Log::Type::Verbose, status, LogLevel);
+    }
 
-        // Handle options with values:
+    if (status.current == NoColor)
+    {
+        return set(_colorfulLogs, false, status, NoColor);
+    }
 
-        if (current == L || current == LogLevel)
-        {
-            holdOverArgument = LogLevel;
-            continue;
-        }
+    if (status.current == DryRun)
+    {
+        return set(_dryRun, true, status, DryRun);
+    }
 
-        // Handle positional arguments:
-        _input = current;
+    if (status.current == LogProcessOutput)
+    {
+        return set(_logProcessOutput, true, status, LogProcessOutput);
+    }
+
+    return false;
+}
+
+bool CommandLine::handleOptionsWithValues(ParseStatus& status)
+{
+    if (status.previous == LogLevel)
+    {
+        return set(_logLevel, Log::typeValue(status.current), status, LogLevel);
+    }
+
+    if (status.current == L || status.current == LogLevel)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool CommandLine::handlePositionalArguments(ParseStatus& status)
+{
+    if (not status.parsed.contains(Executable))
+    {
+        return set(_executable, status.current, status, Executable);
+    }
+
+    return set(_input, status.current, status, Input);
+}
+
+bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status, const std::string &name) const
+{
+    value = toSet;
+    const auto result = status.parsed.insert(name);
+
+    if (not result.second)
+    {
+        Log::warning("Duplicated command line argument:", name, "with value:", toSet);
+        return false;
+    }
+    else
+    {
+        Log::verbose("Found argument:", name, "with value:", value);
     }
 
     return true;

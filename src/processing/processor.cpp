@@ -84,6 +84,7 @@ void Processor::schedule(const Command &command)
 
     if (process and not isDryRun())
     {
+        process->setLogProcessOutput(isLogProcessOutput());
         _processes.push_back({command.id(), std::move(process)});
         _processes.back().process->start();
     }
@@ -115,6 +116,16 @@ void Processor::setDryRun(const bool dryRun)
 bool Processor::isDryRun() const
 {
     return _dryRun;
+}
+
+void Processor::setLogProcessOutput(const bool enabled)
+{
+    _logProcessOutput = enabled;
+}
+
+bool Processor::isLogProcessOutput() const
+{
+    return _logProcessOutput;
 }
 
 void Processor::checkProcessStates()

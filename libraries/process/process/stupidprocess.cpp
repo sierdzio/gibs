@@ -22,7 +22,10 @@ void StupidProcess::performWork()
 
     for (const auto i : std::views::iota(1, 6))
     {
-        Log::verbose(logIdentifier(), " -> Process:", fullInvokation, "iteration:", i);
+        if (isLogProcessOutput())
+        {
+            Log::verbose(logIdentifier(), " -> Process:", fullInvokation, "iteration:", i);
+        }
         std::this_thread::sleep_for(_duration);
     }
 

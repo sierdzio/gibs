@@ -23,9 +23,13 @@ class Processor
     void setDryRun(const bool dryRun);
     bool isDryRun() const;
 
+    void setLogProcessOutput(const bool enabled);
+    bool isLogProcessOutput() const;
+
   private:
     void checkProcessStates();
 
     std::vector<RunningProcess> _processes;
     bool _dryRun = false;
+    bool _logProcessOutput = false;
 };
