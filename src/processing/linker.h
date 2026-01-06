@@ -2,12 +2,18 @@
 
 #include "tool.h"
 
-struct Linker : public Tool
+class Linker : public Tool
 {
-    bool setup(const Command &command) override;
+  public:
+    Linker(const Command &command);
+
     std::string command() const override;
     StringList arguments() const override;
 
+  protected:
+    bool setup(const Command &command) override;
+
   private:
     StringList _arguments;
+    std::string _command;
 };

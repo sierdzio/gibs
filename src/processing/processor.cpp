@@ -26,12 +26,13 @@ void Processor::schedule(const Command &command)
     switch (command.type)
     {
     case Syntax::Command::Executable:
-    case Syntax::Command::Library:
         Log::debug("Processing:", typeString, "command:", command.whole());
         Log::error("Not implemented yet!");
+        break;
+    case Syntax::Command::Library:
+        Log::debug("Processing:", typeString, "command:", command.whole());
         {
-            Linker tool;
-            tool.setup(command);
+            Linker tool(command);
 
             if (not isDryRun())
             {
@@ -55,8 +56,7 @@ void Processor::schedule(const Command &command)
         Log::debug("Processing:", typeString, "command:", command.whole());
         Log::error("Not fully functional yet!");
         {
-            Compiler tool;
-            tool.setup(command);
+            Compiler tool(command);
 
             if (not isDryRun())
             {

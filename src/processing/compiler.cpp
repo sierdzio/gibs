@@ -5,6 +5,21 @@
 
 #include <utility>
 
+Compiler::Compiler(const Command &command)
+{
+    Compiler::setup(command);
+}
+
+std::string Compiler::command() const
+{
+    return "g++";
+}
+
+StringList Compiler::arguments() const
+{
+    return _arguments;
+}
+
 bool Compiler::setup(const Command &command)
 {
     if (command.object().name.empty())
@@ -30,14 +45,4 @@ bool Compiler::setup(const Command &command)
     _arguments.emplace_back(command.object().source);
 
     return true;
-}
-
-std::string Compiler::command() const
-{
-    return "g++";
-}
-
-StringList Compiler::arguments() const
-{
-    return _arguments;
 }

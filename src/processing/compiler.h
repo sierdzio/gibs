@@ -4,9 +4,14 @@
 
 struct Compiler : public Tool
 {
-    bool setup(const Command &command) override;
+  public:
+    Compiler(const Command &command);
+
     std::string command() const override;
     StringList arguments() const override;
+
+  protected:
+    bool setup(const Command &command) override;
 
   private:
     StringList _arguments;
