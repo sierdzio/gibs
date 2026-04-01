@@ -172,7 +172,8 @@ std::string CommandLine::helpText() const
     result = helpAppend(std::move(result), {L, LogLevel}, LogLevelExplanation);
     result = helpAppend(std::move(result), {NoColor}, NoColorExplanation);
     result = helpAppend(std::move(result), {DryRun}, DryRunExplanation);
-    result = helpAppend(std::move(result), {LogProcessOutput}, LogProcessOutputExplanation);
+    result =
+        helpAppend(std::move(result), {LogProcessOutput}, LogProcessOutputExplanation);
 
     return result;
 }
@@ -241,16 +242,16 @@ bool CommandLine::parse()
 {
     const auto size = _args.size();
     ParseStatus status;
+    status.firstArgumentIsFlag = (size > 0 && _args.front().starts_with("-"));
 
     // Check if version or health flag is present
     for (std::size_t i = 0; i < size; ++i)
     {
         status.current = _args.at(i);
 
-        const bool argumentValid = handleHelpAndVersion(status)
-                                   or handleFlags(status)
-                                   or handleOptionsWithValues(status)
-                                   or handlePositionalArguments(status);
+        const bool argumentValid = handleHelpAndVersion(status) or handleFlags(status) or
+                                   handleOptionsWithValues(status) or
+                                   handlePositionalArguments(status);
 
         if (not argumentValid)
         {
@@ -270,7 +271,7 @@ bool CommandLine::parse()
     return true;
 }
 
-bool CommandLine::handleHelpAndVersion(ParseStatus& status)
+bool CommandLine::handleHelpAndVersion(ParseStatus &status)
 {
     if (status.hasError)
     {
@@ -290,7 +291,7 @@ bool CommandLine::handleHelpAndVersion(ParseStatus& status)
     return false;
 }
 
-bool CommandLine::handleFlags(ParseStatus& status)
+bool CommandLine::handleFlags(ParseStatus &status)
 {
     if (status.hasError)
     {
@@ -335,7 +336,7 @@ bool CommandLine::handleFlags(ParseStatus& status)
     return false;
 }
 
-bool CommandLine::handleOptionsWithValues(ParseStatus& status)
+bool CommandLine::handleOptionsWithValues(ParseStatus &status)
 {
     if (status.hasError)
     {
@@ -355,7 +356,7 @@ bool CommandLine::handleOptionsWithValues(ParseStatus& status)
     return false;
 }
 
-bool CommandLine::handlePositionalArguments(ParseStatus& status)
+bool CommandLine::handlePositionalArguments(ParseStatus &status)
 {
     if (status.hasError)
     {
@@ -364,15 +365,39 @@ bool CommandLine::handlePositionalArguments(ParseStatus& status)
 
     if (not status.parsed.contains(Executable))
     {
+        Log::debug("handlePositionalArguments: firstArgumentIsFlag=",
+                   status.firstArgumentIsFlag, "current=", status.current);
+        if (status.firstArgumentIsFlag)
+        {
+            return set(_input, status.current, status, Input);
+        }
+
         return set(_executable, status.current, status, Executable);
     }
 
     return set(_input, status.current, status, Input);
 }
 
-bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status, const std::string &name) const
+bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status,
+                      const std::string &name) const
 {
     value = toSet;
+
+    if (name == LogLevel)
+    {
+        const auto result = status.parsed.insert(name);
+
+        if (not result.second)
+        {
+            Log::warning("Duplicated command line argument:", name, "with value:", toSet,
+                         "(last value wins)");
+            return true;
+        }
+
+        Log::verbose("Found argument:", name, "with value:", value);
+        return true;
+    }
+
     const auto result = status.parsed.insert(name);
 
     if (not result.second)

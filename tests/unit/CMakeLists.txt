@@ -6,6 +6,7 @@ add_executable(unit_tests_gibs
     parsing/test_syntax.cpp
     project/test_targetid.cpp
     project/test_command.cpp
+    processing/test_tool.cpp
 )
 
 # TODO: investigate, should not be needed

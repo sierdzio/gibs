@@ -10,14 +10,9 @@ Compiler::Compiler(const Command &command)
     Compiler::setup(command);
 }
 
-std::string Compiler::command() const
+const std::vector<CommandData> &Compiler::commands() const
 {
-    return "g++";
-}
-
-StringList Compiler::arguments() const
-{
-    return _arguments;
+    return _commands;
 }
 
 bool Compiler::setup(const Command &command)
@@ -28,6 +23,9 @@ bool Compiler::setup(const Command &command)
         return false;
     }
 
+    CommandData commandData;
+    commandData.command = "g++";
+
     for (const auto &current : std::as_const(command.object().includePaths))
     {
         if (current.empty())
@@ -35,14 +33,16 @@ bool Compiler::setup(const Command &command)
             continue;
         }
 
-        _arguments.emplace_back("-I");
-        _arguments.emplace_back(current);
+        commandData.arguments.emplace_back("-I");
+        commandData.arguments.emplace_back(current);
     }
 
-    _arguments.emplace_back("-o");
-    _arguments.emplace_back(command.object().name);
+    commandData.arguments.emplace_back("-o");
+    commandData.arguments.emplace_back(command.object().name);
+    commandData.arguments.emplace_back(command.object().source);
 
-    _arguments.emplace_back(command.object().source);
+    _commands.clear();
+    _commands.emplace_back(std::move(commandData));
 
     return true;
 }

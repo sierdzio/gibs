@@ -7,7 +7,6 @@
 
 #include <optional>
 #include <string>
-#include <vector>
 
 using CommandId = uint;
 constexpr CommandId NullCommandId = 0;

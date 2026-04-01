@@ -99,7 +99,8 @@ TEST(commandline, CommandLine)
 
     {
         const CommandLine cmd({"-h", "-v", "-r", "-d", "-q", "--verbose", "--log-level",
-                               "verbose", "--no-color", "--dry-run", "--log-process-output", "main.cpp"});
+                               "verbose", "--no-color", "--dry-run",
+                               "--log-process-output", "main.cpp"});
 
         EXPECT_TRUE(cmd.parsedFlagsText().size() > 0);
         EXPECT_TRUE(cmd.helpText().size() > 0);
@@ -135,7 +136,7 @@ TEST(commandline, CommandLine)
 
 TEST(commandline, paths)
 {
-    const std::string exe {"executable"};
+    const std::string exe{"executable"};
 
     {
         const std::string path{"path/to/main.cpp"};
@@ -165,10 +166,17 @@ TEST(commandline, paths)
 TEST(commandline, duplicates)
 {
     {
-        const CommandLine cmd({"abcd", "--verbose", "defg", "--verbose"});
+        const CommandLine cmd({"abcd", "--dry-run", "defg", "--dry-run"});
 
         EXPECT_FALSE(cmd.input().empty());
-        EXPECT_EQ(cmd.logLevel(), Log::Type::Verbose);
+        EXPECT_TRUE(cmd.isDryRun());
         EXPECT_FALSE(cmd.isValid());
+    }
+
+    {
+        const CommandLine cmd({"abcd", "--verbose", "defg", "--log-level", "debug"});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_EQ(cmd.logLevel(), Log::Type::Debug);
     }
 }

@@ -22,6 +22,7 @@ void Processor::schedule(const Command &command)
     const auto typeString = Syntax::commandString(command.type);
 
     std::unique_ptr<Process> process = nullptr;
+    bool processesHandled = false;
 
     switch (command.type)
     {
@@ -32,16 +33,25 @@ void Processor::schedule(const Command &command)
     case Syntax::Command::Library:
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
-            Linker tool(command);
+            const Linker tool(command);
 
-            if (not isDryRun())
+            for (const auto &toolCommand : tool.commands())
             {
-                process = std::make_unique<StupidProcess>();
-                process->setExecutable(tool.command());
-                process->setArguments(tool.arguments());
-                process->setMetaInformation(std::to_string(command.id()) + " " +
-                                            Syntax::commandString(command.type));
+                if (not isDryRun())
+                {
+                    process = std::make_unique<StupidProcess>();
+                    process->setExecutable(toolCommand.command);
+                    process->setArguments(toolCommand.arguments);
+                    process->setMetaInformation(std::to_string(command.id()) + " " +
+                                                Syntax::commandString(command.type));
+
+                    process->setLogProcessOutput(isLogProcessOutput());
+                    _processes.push_back({command.id(), std::move(process)});
+                    _processes.back().process->start();
+                }
             }
+
+            processesHandled = true;
         }
         break;
     case Syntax::Command::Option:
@@ -56,16 +66,25 @@ void Processor::schedule(const Command &command)
         Log::debug("Processing:", typeString, "command:", command.whole());
         Log::error("Not fully functional yet!");
         {
-            Compiler tool(command);
+            const Compiler tool(command);
 
-            if (not isDryRun())
+            for (const auto &toolCommand : tool.commands())
             {
-                process = std::make_unique<StupidProcess>();
-                process->setExecutable(tool.command());
-                process->setArguments(tool.arguments());
-                process->setMetaInformation(std::to_string(command.id()) + " " +
-                                            Syntax::commandString(command.type));
+                if (not isDryRun())
+                {
+                    process = std::make_unique<StupidProcess>();
+                    process->setExecutable(toolCommand.command);
+                    process->setArguments(toolCommand.arguments);
+                    process->setMetaInformation(std::to_string(command.id()) + " " +
+                                                Syntax::commandString(command.type));
+
+                    process->setLogProcessOutput(isLogProcessOutput());
+                    _processes.push_back({command.id(), std::move(process)});
+                    _processes.back().process->start();
+                }
             }
+
+            processesHandled = true;
         }
 
         break;
@@ -82,7 +101,7 @@ void Processor::schedule(const Command &command)
         return;
     }
 
-    if (process and not isDryRun())
+    if (not processesHandled && process and not isDryRun())
     {
         process->setLogProcessOutput(isLogProcessOutput());
         _processes.push_back({command.id(), std::move(process)});

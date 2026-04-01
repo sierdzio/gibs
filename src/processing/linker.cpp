@@ -8,14 +8,9 @@ Linker::Linker(const Command &command)
     Linker::setup(command);
 }
 
-std::string Linker::command() const
+const std::vector<CommandData> &Linker::commands() const
 {
-    return _command;
-}
-
-StringList Linker::arguments() const
-{
-    return _arguments;
+    return _commands;
 }
 
 bool Linker::setup(const Command &command)
@@ -23,36 +18,61 @@ bool Linker::setup(const Command &command)
     const bool isExe = command.type == Syntax::Command::Executable;
     const bool isStatic = command.library().type == Syntax::LibraryType::Static;
 
-    // TODO: based on library type, populate different commands
-    // /usr/bin/ar qc libmultiple-files-and-libs-lib.a "CMakeFiles/multiple-files-and-libs-lib.dir/exported.cpp.o" "CMakeFiles/multiple-files-and-libs-lib.dir/libraryclass.cpp.o"
-    // /usr/bin/ranlib libmultiple-files-and-libs-lib.a
-
-    if (isStatic and not isExe)
-    {
-        _command = "ar";
-    }
-    else
-    {
-        _command = "g++";
-    }
+    _commands.clear();
 
     const auto &objects =
         isExe ? command.executable().objects : command.library().objects;
 
+    if (isExe)
+    {
+        CommandData commandData;
+        commandData.command = "g++";
+        for (const auto &current : objects)
+        {
+            commandData.arguments.emplace_back(current);
+        }
+        commandData.arguments.emplace_back("-o");
+        commandData.arguments.emplace_back(command.executable().name);
+        _commands.emplace_back(std::move(commandData));
+
+        return true;
+    }
+
+    if (isStatic)
+    {
+        const std::string archiveName = command.object().name;
+
+        CommandData arCommand;
+        arCommand.command = "ar";
+        arCommand.arguments.emplace_back("qc");
+        arCommand.arguments.emplace_back(archiveName);
+        for (const auto &current : objects)
+        {
+            arCommand.arguments.emplace_back(current);
+        }
+
+        CommandData ranlibCommand;
+        ranlibCommand.command = "ranlib";
+        ranlibCommand.arguments.emplace_back(archiveName);
+
+        _commands.emplace_back(std::move(arCommand));
+        _commands.emplace_back(std::move(ranlibCommand));
+
+        return true;
+    }
+
+    // Dynamic library path
+    CommandData commandData;
+    commandData.command = "g++";
     for (const auto &current : objects)
     {
-        _arguments.emplace_back(current);
+        commandData.arguments.emplace_back(current);
     }
+    commandData.arguments.emplace_back("-shared");
+    commandData.arguments.emplace_back("-o");
+    commandData.arguments.emplace_back(command.object().name);
 
-    if (not isExe)
-    {
-        _arguments.emplace_back(command.library().type == Syntax::LibraryType::Dynamic
-                                    ? "-shared"
-                                    : "-static");
-    }
-
-    _arguments.emplace_back("-o");
-    _arguments.emplace_back(isExe ? command.executable().name : command.library().name);
+    _commands.emplace_back(std::move(commandData));
 
     return true;
 }

@@ -4,8 +4,8 @@
 
 #include <logger/log.h>
 
-#include <string>
 #include <set>
+#include <string>
 
 class CommandLine
 {
@@ -40,18 +40,18 @@ class CommandLine
         std::string previous;
         std::set<std::string> parsed;
         bool hasError = false;
+        bool firstArgumentIsFlag = false;
     };
 
     bool parse();
-    bool handleHelpAndVersion(ParseStatus& status);
-    bool handleFlags(ParseStatus& status);
-    bool handleOptionsWithValues(ParseStatus& status);
-    bool handlePositionalArguments(ParseStatus& status);
-    bool set(auto& value, const auto& toSet,
-             ParseStatus& status, const std::string& name) const;
+    bool handleHelpAndVersion(ParseStatus &status);
+    bool handleFlags(ParseStatus &status);
+    bool handleOptionsWithValues(ParseStatus &status);
+    bool handlePositionalArguments(ParseStatus &status);
+    bool set(auto &value, const auto &toSet, ParseStatus &status,
+             const std::string &name) const;
 
-    [[nodiscard]] std::string helpAppend(std::string &&string,
-                                         const StringList &flags,
+    [[nodiscard]] std::string helpAppend(std::string &&string, const StringList &flags,
                                          const std::string &explanation) const;
 
     StringList _args;

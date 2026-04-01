@@ -1,0 +1,67 @@
+#include <algorithm>
+#include <gtest/gtest.h>
+
+#include "parsing/syntax.h"
+#include "processing/compiler.h"
+#include "processing/linker.h"
+#include "project/command.h"
+
+TEST(processing, CompilerCommands)
+{
+    Command command;
+    EXPECT_TRUE(command.append("source"));
+    EXPECT_TRUE(command.append("main.cpp"));
+    command.finalize();
+
+    command.objectReference().includePaths = {"include"};
+
+    Compiler tool(command);
+    const auto &commands = tool.commands();
+
+    ASSERT_EQ(commands.size(), 1u);
+    EXPECT_EQ(commands[0].command, "g++");
+    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                          "-I") != commands[0].arguments.end());
+    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                          "include") != commands[0].arguments.end());
+    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                          "-o") != commands[0].arguments.end());
+    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                          "main.o") != commands[0].arguments.end());
+    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                          "main.cpp") != commands[0].arguments.end());
+}
+
+TEST(processing, LinkerStaticLibraryMultiCommand)
+{
+    Command command;
+    EXPECT_TRUE(command.append("library"));
+    EXPECT_TRUE(command.append("type"));
+    EXPECT_TRUE(command.append("static"));
+    EXPECT_TRUE(command.append("name"));
+    EXPECT_TRUE(command.append("mylib"));
+    command.finalize();
+
+    EXPECT_TRUE(command.addLinkObject("file1.o"));
+    EXPECT_TRUE(command.addLinkObject("file2.o"));
+
+    Linker tool(command);
+    const auto &commands = tool.commands();
+
+    ASSERT_EQ(commands.size(), 2u);
+
+    EXPECT_EQ(commands[0].command, "ar");
+    EXPECT_EQ(commands[1].command, "ranlib");
+
+    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                          "qc") != commands[0].arguments.end());
+    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                          "mylib.a") != commands[0].arguments.end());
+    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                          "file1.o") != commands[0].arguments.end());
+    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                          "file2.o") != commands[0].arguments.end());
+
+    EXPECT_EQ(commands[1].arguments.size(), 1u);
+    EXPECT_EQ(commands[1].arguments[0], "mylib.a");
+}
