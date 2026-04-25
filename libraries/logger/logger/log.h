@@ -3,6 +3,7 @@
 #include "color.h"
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -43,10 +44,16 @@ bool isWithinLogLevel(const Type type);
 void setUseColorfulLogs(const bool enableColor);
 bool usingColorfulLogs();
 
+void setLogFile(const std::string &path);
+void closeLogFile();
+
 namespace Private
 {
 std::string beginning(const Type type, const Color &color = {});
 std::string ending(const Type type, const Color &color = {});
+
+bool isFileLoggingEnabled();
+std::ostream &logFileStream();
 
 #ifdef SYNCHRONISE_LOG_MESSAGES
 static std::mutex PrintMutex;
@@ -70,12 +77,19 @@ void log(const Type type, const Color &color, const Types &...args)
     std::lock_guard<std::mutex> guard(Private::PrintMutex);
 #endif
 
-    std::cout << Private::beginning(type, color);
+    std::ostringstream message;
+    message << Private::beginning(type, color);
+    ([&] { message << args << ' '; }(), ...);
+    message << Private::ending(type, color);
 
-    // This is a "loop" lambda
-    ([&] { std::cout << args << ' '; }(), ...);
+    const auto output = message.str();
+    std::cout << output;
 
-    std::cout << Private::ending(type, color);
+    if (Private::isFileLoggingEnabled())
+    {
+        Private::logFileStream() << output;
+        Private::logFileStream().flush();
+    }
 }
 
 template <typename... Types> void verbose(const Types &...args)

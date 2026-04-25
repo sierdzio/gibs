@@ -1,3 +1,5 @@
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
 
 #include <logger/exceptions/loglevelexception.h>
@@ -70,6 +72,69 @@ TEST(log, UseColorfulLogs)
     Log::setUseColorfulLogs(false);
     EXPECT_FALSE(Log::usingColorfulLogs());
     Log::setUseColorfulLogs(true);
+}
+
+TEST(log, LogFileDuplication)
+{
+    namespace fs = std::filesystem;
+    const auto tempLogFile = fs::temp_directory_path() / "logger_test_output.log";
+
+    Log::setUseColorfulLogs(false);
+    Log::setLogFile(tempLogFile.string());
+
+    std::ostringstream capturedOutput;
+    auto *previousBuffer = std::cout.rdbuf(capturedOutput.rdbuf());
+
+    Log::information("Duplicated", "log", "message");
+    std::cout.rdbuf(previousBuffer);
+
+    Log::closeLogFile();
+
+    std::ifstream file(tempLogFile, std::ios::binary);
+    ASSERT_TRUE(file.is_open());
+
+    const std::string fileContents{
+        std::istreambuf_iterator<char>(file),
+        std::istreambuf_iterator<char>()
+    };
+    file.close();
+
+    EXPECT_EQ(capturedOutput.str(), fileContents);
+    EXPECT_TRUE(fs::remove(tempLogFile));
+}
+
+TEST(log, LogFileInvalidPath)
+{
+    namespace fs = std::filesystem;
+    const auto invalidPath = "/nonexistent/directory/that/does/not/exist/logfile.log";
+
+    EXPECT_THROW(Log::setLogFile(invalidPath), std::runtime_error);
+}
+
+TEST(log, LogFileInvalidPathConsoleStillWorks)
+{
+    namespace fs = std::filesystem;
+    const auto invalidPath = "/nonexistent/directory/that/does/not/exist/logfile.log";
+
+    Log::setUseColorfulLogs(false);
+
+    try
+    {
+        Log::setLogFile(invalidPath);
+    }
+    catch (const std::runtime_error &)
+    {
+        // Expected to fail
+    }
+
+    std::ostringstream capturedOutput;
+    auto *previousBuffer = std::cout.rdbuf(capturedOutput.rdbuf());
+
+    Log::information("Console", "still", "works");
+    std::cout.rdbuf(previousBuffer);
+
+    EXPECT_FALSE(capturedOutput.str().empty());
+    EXPECT_TRUE(capturedOutput.str().find("Console") != std::string::npos);
 }
 
 TEST(log, Begining)

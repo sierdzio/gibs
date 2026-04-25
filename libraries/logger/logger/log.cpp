@@ -3,10 +3,13 @@
 
 #include <algorithm>
 #include <array>
+#include <fstream>
 #include <iosfwd>
+#include <sstream>
 
 static Log::Type RuntimeLogLevel = Log::Type::Verbose;
 static bool UseColors = true;
+static std::ofstream LogFileStream;
 
 namespace
 {
@@ -186,6 +189,39 @@ void Log::setUseColorfulLogs(const bool enableColor)
 bool Log::usingColorfulLogs()
 {
     return UseColors;
+}
+
+void Log::setLogFile(const std::string &path)
+{
+    if (LogFileStream.is_open())
+    {
+        LogFileStream.close();
+    }
+
+    LogFileStream.open(path, std::ios::out | std::ios::trunc);
+
+    if (not LogFileStream.is_open())
+    {
+        throw std::runtime_error("Cannot open log file: " + path);
+    }
+}
+
+void Log::closeLogFile()
+{
+    if (LogFileStream.is_open())
+    {
+        LogFileStream.close();
+    }
+}
+
+bool Log::Private::isFileLoggingEnabled()
+{
+    return LogFileStream.is_open();
+}
+
+std::ostream &Log::Private::logFileStream()
+{
+    return LogFileStream;
 }
 
 std::string Log::Private::beginning(const Type type, const Color &color)
