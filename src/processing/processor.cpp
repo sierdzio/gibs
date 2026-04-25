@@ -26,11 +26,8 @@ void Processor::schedule(const Command &command)
 
     switch (command.type)
     {
-    case Syntax::Command::Executable:
-        Log::debug("Processing:", typeString, "command:", command.whole());
-        Log::error("Not implemented yet!");
-        break;
     case Syntax::Command::Library:
+    case Syntax::Command::Executable:
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
             const Linker tool(command);
