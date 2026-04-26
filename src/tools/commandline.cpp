@@ -84,6 +84,7 @@ constexpr auto InputExplanation =
 
 constexpr auto DoubleSpace = "  ";
 constexpr auto Quote = "\"";
+constexpr auto DateTimeFormat = "%Y-%m-%dT%H:%M:%SZ";
 }; // namespace
 
 StringList CommandLine::toStringList(int argc, char *argv[])
@@ -423,7 +424,7 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
             const auto now = std::chrono::system_clock::now();
             const auto time = std::chrono::system_clock::to_time_t(now);
             std::ostringstream dateTimeStream;
-            dateTimeStream << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%SZ");
+            dateTimeStream << std::put_time(std::localtime(&time), DateTimeFormat);
             const auto dateTimeString = dateTimeStream.str();
             const auto path =
                 std::filesystem::current_path() / ("gibs-" + dateTimeString + ".log");
