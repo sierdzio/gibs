@@ -723,12 +723,26 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 
         const auto current = root() / dir;
 
-        for (auto const &it : std::filesystem::directory_iterator(current))
+        // Skip non-existent directories (e.g., system header paths like <string>)
+        if (not std::filesystem::exists(current))
         {
-            if (it.exists() && it.path().filename() == name)
+            continue;
+        }
+
+        try
+        {
+            for (auto const &it : std::filesystem::directory_iterator(current))
             {
-                return std::filesystem::relative(it, std::filesystem::current_path());
+                if (it.exists() && it.path().filename() == name)
+                {
+                    return std::filesystem::relative(it, std::filesystem::current_path());
+                }
             }
+        }
+        catch (const std::filesystem::filesystem_error &)
+        {
+            // Ignore filesystem errors (e.g., permission denied, path not found)
+            continue;
         }
     }
 
