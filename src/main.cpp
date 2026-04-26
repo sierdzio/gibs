@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     Log::setUseColorfulLogs(cmd.colorfulLogs());
     Log::information("Setting log level to:", Log::typeString(cmd.logLevel()));
     Log::setLogLevel(cmd.logLevel());
+    Log::setLogFile(cmd.logFilePath());
     Log::debug(cmd.parsedFlagsText());
 
     auto processor = std::make_shared<Processor>();

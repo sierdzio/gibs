@@ -17,10 +17,12 @@ class CommandLine
     std::string parsedFlagsText() const;
 
     std::string helpText() const;
-    std::string versionText() const;
+    const std::string &versionText() const;
 
-    std::string input() const;
+    const std::string &input() const;
 
+    const std::string &logFilePath() const;
+    bool isLogFilePathSet() const;
     Log::Type logLevel() const;
 
     bool isValid() const;
@@ -57,6 +59,7 @@ class CommandLine
     StringList _args;
     std::string _executable;
     std::string _input;
+    std::string _logFilePath;
     Log::Type _logLevel = Log::Type::Information;
 
     bool _isValid = false;

@@ -4,7 +4,11 @@
 #include <logger/log.h>
 
 #include <cassert>
+#include <chrono>
 #include <cstddef>
+#include <filesystem>
+#include <iomanip>
+#include <sstream>
 #include <string>
 
 namespace
@@ -48,6 +52,14 @@ constexpr auto LogLevelExplanation =
     "is combined with --verbose, only the last flag is "
     "taken into account.";
 
+constexpr auto LogFilePath = "--log-file-path";
+constexpr auto LogFilePathExplanation =
+    "Duplicates all console logs into this file. "
+    "If the file does not exist, it will be created. "
+    "If the file does exist, it will be cleared and written to. "
+    "If a path to a directory is provided, a log file called 'gibs-<datetime>.log "
+    "will be created.";
+
 constexpr auto NoColor = "--no-color";
 constexpr auto NoColorExplanation = "Disables color in log messages.";
 
@@ -63,6 +75,11 @@ constexpr auto LogProcessOutputExplanation =
 
 constexpr auto Executable = "executable";
 constexpr auto Input = "input";
+constexpr auto InputExplanation =
+    "Path to the input file or directory to build. If a directory is provided, gibs will "
+    "look for files with supported extensions in it and its subdirectories. If a file is "
+    "provided, gibs will try to build it. If no input is provided, gibs will try to "
+    "build a file called 'main' with a supported extension in the current directory.";
 
 constexpr auto DoubleSpace = "  ";
 constexpr auto Quote = "\"";
@@ -147,9 +164,11 @@ std::string CommandLine::parsedFlagsText() const
     appendIf(&result, isDebug(), Debug);
     appendIf(&result, isQuickMode(), Quick);
     appendIf(&result, true, LogLevel, Log::typeString(_logLevel));
+    appendIf(&result, isLogFilePathSet(), LogFilePath, logFilePath());
     appendIf(&result, not colorfulLogs(), NoColor);
     appendIf(&result, isDryRun(), DryRun);
     appendIf(&result, isLogProcessOutput(), LogProcessOutput);
+    appendIf(&result, true, Input, input());
 
     return result;
 }
@@ -170,22 +189,34 @@ std::string CommandLine::helpText() const
     result = helpAppend(std::move(result), {Q, Quick}, QuickExplanation);
     result = helpAppend(std::move(result), {Verbose}, VerboseExplanation);
     result = helpAppend(std::move(result), {L, LogLevel}, LogLevelExplanation);
+    result = helpAppend(std::move(result), {LogFilePath}, LogFilePathExplanation);
     result = helpAppend(std::move(result), {NoColor}, NoColorExplanation);
     result = helpAppend(std::move(result), {DryRun}, DryRunExplanation);
     result =
         helpAppend(std::move(result), {LogProcessOutput}, LogProcessOutputExplanation);
+    result = helpAppend(std::move(result), {Input}, InputExplanation);
 
     return result;
 }
 
-std::string CommandLine::versionText() const
+const std::string &CommandLine::versionText() const
 {
     return VersionInfo::versionNumber;
 }
 
-std::string CommandLine::input() const
+const std::string &CommandLine::input() const
 {
     return _input;
+}
+
+const std::string &CommandLine::logFilePath() const
+{
+    return _logFilePath;
+}
+
+bool CommandLine::isLogFilePathSet() const
+{
+    return _logFilePath.size() > 0;
 }
 
 Log::Type CommandLine::logLevel() const
@@ -248,6 +279,15 @@ bool CommandLine::parse()
     for (std::size_t i = 0; i < size; ++i)
     {
         status.current = _args.at(i);
+
+        if (status.firstArgumentIsFlag)
+        {
+            if (handlePositionalArguments(status))
+            {
+                status.previous = status.current;
+                continue;
+            }
+        }
 
         const bool argumentValid = handleHelpAndVersion(status) or handleFlags(status) or
                                    handleOptionsWithValues(status) or
@@ -363,19 +403,59 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
         return false;
     }
 
-    if (not status.parsed.contains(Executable))
+    Log::debug(
+        "handlePositionalArguments:", "firstArgumentIsFlag=", status.firstArgumentIsFlag,
+        "current=", status.current, "previous=", status.previous);
+
+    if (status.current == LogFilePath)
     {
-        Log::debug("handlePositionalArguments: firstArgumentIsFlag=",
-                   status.firstArgumentIsFlag, "current=", status.current);
-        if (status.firstArgumentIsFlag)
+        status.firstArgumentIsFlag = true;
+        return true;
+    }
+
+    if (not status.firstArgumentIsFlag)
+    {
+        if (not status.parsed.contains(Executable))
+        {
+            return set(_executable, status.current, status, Executable);
+        }
+        else if (not status.parsed.contains(Input))
         {
             return set(_input, status.current, status, Input);
         }
 
-        return set(_executable, status.current, status, Executable);
+        Log::error("Unrecognized positional command line argument:", status.current);
+        return false;
     }
 
-    return set(_input, status.current, status, Input);
+    if (status.previous == Input)
+    {
+        return set(_input, status.current, status, Input);
+    }
+    else if (status.previous == LogFilePath)
+    {
+        status.firstArgumentIsFlag = false;
+
+        if (status.current.starts_with('-'))
+        {
+            const auto now = std::chrono::system_clock::now();
+            const auto time = std::chrono::system_clock::to_time_t(now);
+            std::ostringstream dateTimeStream;
+            dateTimeStream << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%SZ");
+            const auto dateTimeString = dateTimeStream.str();
+            const auto path =
+                std::filesystem::current_path() / ("gibs-" + dateTimeString + ".log");
+
+            Log::information(
+                "Log file path argument provided without a value, using default:", path);
+            return set(_logFilePath, path, status, LogFilePath);
+        }
+
+        return set(_logFilePath, status.current, status, LogFilePath);
+    }
+
+    Log::error("Unrecognized command line argument:", status.current);
+    return false;
 }
 
 bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status,
@@ -436,6 +516,7 @@ std::string CommandLine::helpAppend(std::string &&string, const StringList &flag
         string.append(flag);
     }
 
+    string.push_back('\t');
     string.push_back('\t');
     string.append(explanation);
     string.push_back('\n');

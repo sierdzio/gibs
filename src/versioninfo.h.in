@@ -1,5 +1,8 @@
 #pragma once
 
-namespace VersionInfo {
-    constexpr auto versionNumber = "${PROJECT_VERSION}";
+#include <string>
+
+namespace VersionInfo
+{
+const std::string versionNumber = "${PROJECT_VERSION}";
 };
