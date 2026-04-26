@@ -1,8 +1,8 @@
 #include "project.h"
 #include "command.h"
-#include "processing/processor.h"
 #include "exceptions/commanddepthexception.h"
 #include "exceptions/commandnotfound.h"
+#include "processing/processor.h"
 
 #include <logger/log.h>
 
@@ -59,11 +59,26 @@ void Project::onParsingFinished()
 {
     // Library and executable linking is deferred until after all commands are
     // parsed.
-    // TODO: add and respect dependencies between libraries and executables
-    for (const auto& command : commands)
+    // Schedule libraries first so their archives are created before any
+    // executables that depend on them are linked. Then wait for those
+    // processes to finish and schedule executables.
+
+    // First, schedule all library link commands.
+    for (const auto &command : commands)
     {
-        if (command.type == Syntax::Command::Library or
-            command.type == Syntax::Command::Executable)
+        if (command.type == Syntax::Command::Library)
+        {
+            _processor->schedule(command);
+        }
+    }
+
+    // Wait for library build/link processes to finish so .a/.so files exist.
+    _processor->waitForFinished();
+
+    // Now schedule executable link commands.
+    for (const auto &command : commands)
+    {
+        if (command.type == Syntax::Command::Executable)
         {
             _processor->schedule(command);
         }
