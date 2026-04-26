@@ -285,7 +285,7 @@ bool CommandLine::parse()
 
         Tools::ScopeGuard guard([&status]() { status.previous = status.current; });
 
-        if (status.previous == LogFilePath and status.current.starts_with('-'))
+        if (status.previous == LogFilePath and isFlag(status))
         {
             if (handlePositionalArguments(status))
             {
@@ -418,7 +418,7 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
     if (status.previous == LogFilePath or
         (status.isLastArgument and status.current == LogFilePath))
     {
-        if (status.current.starts_with('-'))
+        if (isFlag(status))
         {
             const auto now = std::chrono::system_clock::now();
             const auto time = std::chrono::system_clock::to_time_t(now);
@@ -486,6 +486,11 @@ bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status,
     }
 
     return true;
+}
+
+bool CommandLine::isFlag(const ParseStatus &status) const
+{
+    return status.current.starts_with('-');
 }
 
 std::string CommandLine::helpAppend(std::string &&string, const StringList &flags,

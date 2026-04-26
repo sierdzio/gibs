@@ -53,6 +53,7 @@ class CommandLine
     bool handlePositionalArguments(ParseStatus &status);
     bool set(auto &value, const auto &toSet, ParseStatus &status,
              const std::string &name) const;
+    bool isFlag(const ParseStatus &status) const;
 
     [[nodiscard]] std::string helpAppend(std::string &&string, const StringList &flags,
                                          const std::string &explanation) const;
