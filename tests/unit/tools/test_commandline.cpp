@@ -117,6 +117,8 @@ TEST(commandline, CommandLine)
         EXPECT_FALSE(cmd.colorfulLogs());
         EXPECT_TRUE(cmd.isDryRun());
         EXPECT_TRUE(cmd.isLogProcessOutput());
+        EXPECT_FALSE(cmd.isLogFilePathSet());
+        EXPECT_TRUE(cmd.logFilePath().empty());
     }
 
     {
@@ -212,8 +214,8 @@ TEST(commandline, logFilePath)
         const CommandLine cmd({"-l", "/tmp/my.log"});
 
         EXPECT_TRUE(cmd.isValid());
-        EXPECT_TRUE(cmd.isLogFilePathSet());
-        EXPECT_EQ(cmd.logFilePath(), "/tmp/my.log");
+        EXPECT_FALSE(cmd.isLogFilePathSet());
+        EXPECT_TRUE(cmd.logFilePath().empty());
     }
 
     {

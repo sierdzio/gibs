@@ -206,6 +206,7 @@ const std::string &CommandLine::versionText() const
 
 const std::string &CommandLine::input() const
 {
+    Log::warning("Input file:", _input);
     return _input;
 }
 
@@ -278,7 +279,18 @@ bool CommandLine::parse()
     for (std::size_t i = 0; i < size; ++i)
     {
         status.current = _args.at(i);
+        status.isFirstArgument = (i == 0);
         status.isLastArgument = (i == size - 1);
+
+        if (status.previous == LogFilePath and status.current.starts_with('-'))
+        {
+            if (handlePositionalArguments(status))
+            {
+                // TODO: use RAII to set previous value reliably
+                status.previous = status.current;
+                continue;
+            }
+        }
 
         const bool argumentValid = handleHelpAndVersion(status) or handleFlags(status) or
                                    handleOptionsWithValues(status) or
@@ -426,7 +438,7 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
     }
 
     // First positional argument is the executable
-    if (not status.parsed.contains(Executable))
+    if (status.isFirstArgument and not status.parsed.contains(Executable))
     {
         return set(_executable, status.current, status, Executable);
     }

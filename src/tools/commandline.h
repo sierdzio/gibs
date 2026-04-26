@@ -42,6 +42,7 @@ class CommandLine
         std::string previous;
         std::set<std::string> parsed;
         bool hasError = false;
+        bool isFirstArgument = false;
         bool isLastArgument = false;
     };
 
