@@ -273,12 +273,12 @@ bool CommandLine::parse()
 {
     const auto size = _args.size();
     ParseStatus status;
-    status.firstArgumentIsFlag = (size > 0 && _args.front().starts_with("-"));
 
     // Check if version or health flag is present
     for (std::size_t i = 0; i < size; ++i)
     {
         status.current = _args.at(i);
+        status.isLastArgument = (i == size - 1);
 
         const bool argumentValid = handleHelpAndVersion(status) or handleFlags(status) or
                                    handleOptionsWithValues(status) or
@@ -394,21 +394,19 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
         return false;
     }
 
-    Log::debug(
-        "handlePositionalArguments:", "firstArgumentIsFlag=", status.firstArgumentIsFlag,
-        "current=", status.current, "previous=", status.previous);
+    Log::debug("handlePositionalArguments:", "current:", status.current,
+               "previous:", status.previous, "isLastArgument:", status.isLastArgument);
 
-    // Skip flags (arguments starting with -)
-    if (status.current.starts_with('-'))
+    if (not status.isLastArgument and status.current == LogFilePath)
     {
-        return false;
+        // LogFilePath is not the last argument, so we proceed to parse next arguments
+        return true;
     }
 
     // Handle log file path value (previous was --log-file-path)
-    if (status.previous == LogFilePath)
+    if (status.previous == LogFilePath or
+        (status.isLastArgument and status.current == LogFilePath))
     {
-        status.firstArgumentIsFlag = false;
-
         if (status.current.starts_with('-'))
         {
             const auto now = std::chrono::system_clock::now();
@@ -425,12 +423,6 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
         }
 
         return set(_logFilePath, status.current, status, LogFilePath);
-    }
-
-    // Handle input value (previous was the executable or another input)
-    if (status.previous == Input)
-    {
-        return set(_input, status.current, status, Input);
     }
 
     // First positional argument is the executable

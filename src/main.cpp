@@ -18,7 +18,6 @@
 int main(int argc, char *argv[])
 {
     const auto begin = std::chrono::steady_clock::now();
-
     const CommandLine cmd(CommandLine::toStringList(argc, argv));
 
     if (not cmd.isValid())
@@ -43,7 +42,18 @@ int main(int argc, char *argv[])
     Log::setUseColorfulLogs(cmd.colorfulLogs());
     Log::information("Setting log level to:", Log::typeString(cmd.logLevel()));
     Log::setLogLevel(cmd.logLevel());
-    Log::setLogFile(cmd.logFilePath());
+    if (cmd.isLogFilePathSet())
+    {
+        try
+        {
+            Log::setLogFile(cmd.logFilePath());
+        }
+        catch (const std::runtime_error &e)
+        {
+            Log::error("Failed to set log file path:", e.what());
+            return -2;
+        }
+    }
     Log::debug(cmd.parsedFlagsText());
 
     auto processor = std::make_shared<Processor>();
