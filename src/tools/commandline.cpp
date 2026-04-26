@@ -280,15 +280,6 @@ bool CommandLine::parse()
     {
         status.current = _args.at(i);
 
-        if (status.firstArgumentIsFlag)
-        {
-            if (handlePositionalArguments(status))
-            {
-                status.previous = status.current;
-                continue;
-            }
-        }
-
         const bool argumentValid = handleHelpAndVersion(status) or handleFlags(status) or
                                    handleOptionsWithValues(status) or
                                    handlePositionalArguments(status);
@@ -407,32 +398,14 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
         "handlePositionalArguments:", "firstArgumentIsFlag=", status.firstArgumentIsFlag,
         "current=", status.current, "previous=", status.previous);
 
-    if (status.current == LogFilePath)
+    // Skip flags (arguments starting with -)
+    if (status.current.starts_with('-'))
     {
-        status.firstArgumentIsFlag = true;
-        return true;
-    }
-
-    if (not status.firstArgumentIsFlag)
-    {
-        if (not status.parsed.contains(Executable))
-        {
-            return set(_executable, status.current, status, Executable);
-        }
-        else if (not status.parsed.contains(Input))
-        {
-            return set(_input, status.current, status, Input);
-        }
-
-        Log::error("Unrecognized positional command line argument:", status.current);
         return false;
     }
 
-    if (status.previous == Input)
-    {
-        return set(_input, status.current, status, Input);
-    }
-    else if (status.previous == LogFilePath)
+    // Handle log file path value (previous was --log-file-path)
+    if (status.previous == LogFilePath)
     {
         status.firstArgumentIsFlag = false;
 
@@ -454,7 +427,25 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
         return set(_logFilePath, status.current, status, LogFilePath);
     }
 
-    Log::error("Unrecognized command line argument:", status.current);
+    // Handle input value (previous was the executable or another input)
+    if (status.previous == Input)
+    {
+        return set(_input, status.current, status, Input);
+    }
+
+    // First positional argument is the executable
+    if (not status.parsed.contains(Executable))
+    {
+        return set(_executable, status.current, status, Executable);
+    }
+
+    // Second positional argument is the input file
+    if (not status.parsed.contains(Input))
+    {
+        return set(_input, status.current, status, Input);
+    }
+
+    Log::error("Unrecognized positional command line argument:", status.current);
     return false;
 }
 

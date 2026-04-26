@@ -180,3 +180,47 @@ TEST(commandline, duplicates)
         EXPECT_EQ(cmd.logLevel(), Log::Type::Debug);
     }
 }
+
+TEST(commandline, logFilePath)
+{
+    {
+        const CommandLine cmd({});
+
+        EXPECT_FALSE(cmd.isLogFilePathSet());
+        EXPECT_TRUE(cmd.logFilePath().empty());
+    }
+
+    {
+        const CommandLine cmd({"--log-file-path", "/tmp/test.log"});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_TRUE(cmd.isLogFilePathSet());
+        EXPECT_EQ(cmd.logFilePath(), "/tmp/test.log");
+    }
+
+    {
+        const CommandLine cmd(
+            {"executable", "--log-file-path", "/var/log/gibs.log", "input.cpp"});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_TRUE(cmd.isLogFilePathSet());
+        EXPECT_EQ(cmd.logFilePath(), "/var/log/gibs.log");
+        EXPECT_EQ(cmd.input(), "input.cpp");
+    }
+
+    {
+        const CommandLine cmd({"-l", "/tmp/my.log"});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_TRUE(cmd.isLogFilePathSet());
+        EXPECT_EQ(cmd.logFilePath(), "/tmp/my.log");
+    }
+
+    {
+        // Test that log file path appears in parsed flags text
+        const CommandLine cmd({"--log-file-path", "/tmp/test.log", "main.cpp"});
+        const auto flagsText = cmd.parsedFlagsText();
+
+        EXPECT_TRUE(flagsText.find("/tmp/test.log") != std::string::npos);
+    }
+}
