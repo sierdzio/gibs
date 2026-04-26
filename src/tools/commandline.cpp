@@ -1,4 +1,5 @@
 #include "commandline.h"
+#include "tools/tools.h"
 #include "versioninfo.h"
 
 #include <logger/log.h>
@@ -282,12 +283,12 @@ bool CommandLine::parse()
         status.isFirstArgument = (i == 0);
         status.isLastArgument = (i == size - 1);
 
+        Tools::ScopeGuard guard([&status]() { status.previous = status.current; });
+
         if (status.previous == LogFilePath and status.current.starts_with('-'))
         {
             if (handlePositionalArguments(status))
             {
-                // TODO: use RAII to set previous value reliably
-                status.previous = status.current;
                 continue;
             }
         }
@@ -301,8 +302,6 @@ bool CommandLine::parse()
             Log::error("Unrecognized command line argument:", status.current);
             return false;
         }
-
-        status.previous = status.current;
     }
 
     // Set default log level:
