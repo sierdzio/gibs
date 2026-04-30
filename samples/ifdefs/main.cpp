@@ -4,14 +4,14 @@
 #include "someclass.h"
 
 #ifdef Q_OS_LINUX
-#include <QDebug>
+#include <iostream>
 #endif
 
 int main()
 {
-    SomeClass sc;
 #ifdef Q_OS_LINUX
-    qDebug() << sc.text();
+    SomeClass sc;
+    std::cout << sc.text() << std::endl;
 #else
     // Nothing
 #endif

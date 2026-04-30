@@ -1,7 +1,8 @@
 //i target name SimpleTestFolder
 //i includes folder
 //    Random text
-#include "someclass.h"
+
+#include "folder/someclass.h"
 
 #include <iostream>
 

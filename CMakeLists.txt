@@ -6,6 +6,7 @@ project(gibs VERSION 0.0.1
 
 option(SYNCHRONISE_LOG_MESSAGES "Use mutex to make sure log messages are not getting mixed between threads" OFF)
 option(BUILD_TESTS "Build gibs test suite" OFF)
+option(BUILD_SAMPLES "Build gibs samples" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -27,4 +28,11 @@ if (BUILD_TESTS)
     add_subdirectory(tests)
 else()
     message("gibs test suite will not be built")
+endif()
+
+if (BUILD_SAMPLES)
+    message("Building gibs samples")
+    add_subdirectory(samples)
+else()
+    message("gibs samples will not be built")
 endif()

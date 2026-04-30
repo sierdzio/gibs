@@ -6,15 +6,15 @@
 #include "someclass.h"
 #endif
 
-#include <QDebug>
+#include <iostream>
 
 int main()
 {
 #ifdef MY_FEATURE
     SomeClass sc;
-    qDebug() << sc.text();
+    std::cout << sc.text() << std::endl;
 #else
-    qDebug() << "No feature!";
+    std::cout << "No feature!" << std::endl;
 #endif
     return 0;
 }

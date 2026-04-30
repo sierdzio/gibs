@@ -1,9 +1,9 @@
 #pragma once
 
-#include <QString>
+#include <string>
 
 class SomeClass
 {
   public:
-    QString text() const;
+    std::string text() const;
 };

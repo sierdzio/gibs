@@ -1,0 +1,10 @@
+add_subdirectory(feature)
+add_subdirectory(folder)
+add_subdirectory(ifdefs)
+add_subdirectory(multiple-files)
+add_subdirectory(multiple-files-and-libs)
+add_subdirectory(single-file)
+add_subdirectory(single-project-file)
+# TODO: add cmake files for these:
+#add_subdirectory(subproject)
+#add_subdirectory(subproject-static)
