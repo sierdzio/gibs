@@ -9,20 +9,21 @@
 #include <logger/log.h>
 #include <process/stupidprocess.h>
 
+#include <future>
 #include <memory>
 #include <string>
 #include <thread>
 
 using namespace std::chrono_literals;
 
-void Processor::schedule(const Command &command)
+std::shared_future<void> Processor::schedule(const Command &command)
 {
     Log::information("Scheduling command: ", command.whole());
 
     const auto typeString = Syntax::commandString(command.type);
-
-    std::unique_ptr<Process> process = nullptr;
-    bool processesHandled = false;
+    auto completion = std::make_shared<std::promise<void>>();
+    auto future = completion->get_future().share();
+    std::vector<std::unique_ptr<Process>> processes;
 
     switch (command.type)
     {
@@ -36,32 +37,21 @@ void Processor::schedule(const Command &command)
             {
                 if (not isDryRun())
                 {
-                    process = std::make_unique<StupidProcess>();
+                    auto process = std::make_unique<StupidProcess>();
                     process->setExecutable(toolCommand.command);
                     process->setArguments(toolCommand.arguments);
                     process->setMetaInformation(std::to_string(command.id()) + " " +
                                                 Syntax::commandString(command.type));
 
                     process->setLogProcessOutput(isLogProcessOutput());
-                    _processes.push_back({command.id(), std::move(process)});
-                    _processes.back().process->start();
+                    process->start();
+                    processes.emplace_back(std::move(process));
                 }
             }
-
-            processesHandled = true;
         }
-        break;
-    case Syntax::Command::Option:
-        Log::debug("Processing:", typeString, "command:", command.whole());
-        Log::error("Not implemented yet!");
-        break;
-    case Syntax::Command::Qt:
-        Log::debug("Processing:", typeString, "command:", command.whole());
-        Log::error("Not implemented yet!");
         break;
     case Syntax::Command::Source:
         Log::debug("Processing:", typeString, "command:", command.whole());
-        Log::error("Not fully functional yet!");
         {
             const Compiler tool(command);
 
@@ -69,25 +59,33 @@ void Processor::schedule(const Command &command)
             {
                 if (not isDryRun())
                 {
-                    process = std::make_unique<StupidProcess>();
+                    auto process = std::make_unique<StupidProcess>();
                     process->setExecutable(toolCommand.command);
                     process->setArguments(toolCommand.arguments);
                     process->setMetaInformation(std::to_string(command.id()) + " " +
                                                 Syntax::commandString(command.type));
 
                     process->setLogProcessOutput(isLogProcessOutput());
-                    _processes.push_back({command.id(), std::move(process)});
-                    _processes.back().process->start();
+                    process->start();
+                    processes.emplace_back(std::move(process));
                 }
             }
-
-            processesHandled = true;
         }
-
         break;
+    case Syntax::Command::Option:
+        Log::debug("Processing:", typeString, "command:", command.whole());
+        Log::error("Not implemented yet!");
+        completion->set_value();
+        return future;
+    case Syntax::Command::Qt:
+        Log::debug("Processing:", typeString, "command:", command.whole());
+        Log::error("Not implemented yet!");
+        completion->set_value();
+        return future;
     case Syntax::Command::Tool:
         Log::debug("Processing:", typeString, "command:", command.whole());
-        break;
+        completion->set_value();
+        return future;
     case Syntax::Command::Include:
     case Syntax::Command::Feature:
     case Syntax::Command::Subproject:
@@ -95,15 +93,20 @@ void Processor::schedule(const Command &command)
     case Syntax::Command::Invalid:
     case Syntax::Command::Unknown:
         Log::warning("This command type:", typeString, "does not need to be processed");
-        return;
+        completion->set_value();
+        return future;
     }
 
-    if (not processesHandled && process and not isDryRun())
+    if (processes.empty())
     {
-        process->setLogProcessOutput(isLogProcessOutput());
-        _processes.push_back({command.id(), std::move(process)});
-        _processes.back().process->start();
+        completion->set_value();
     }
+    else
+    {
+        _runningCommands.push_back({command.id(), std::move(processes), completion});
+    }
+
+    return future;
 }
 
 void Processor::waitForFinished()
@@ -112,7 +115,7 @@ void Processor::waitForFinished()
     {
         checkProcessStates();
 
-        if (_processes.empty())
+        if (_runningCommands.empty())
         {
             Log::verbose("All processes have finished.");
             break;
@@ -146,13 +149,28 @@ bool Processor::isLogProcessOutput() const
 
 void Processor::checkProcessStates()
 {
-    for (size_t index = 0; index < _processes.size(); /* nothing */)
+    for (size_t index = 0; index < _runningCommands.size(); /* nothing */)
     {
-        auto &current = _processes.at(index);
+        auto &current = _runningCommands.at(index);
 
-        if (current.process->isFinished())
+        for (size_t processIndex = 0; processIndex < current.processes.size();
+             /* nothing */)
         {
-            _processes.erase(_processes.begin() + static_cast<long>(index));
+            if (current.processes.at(processIndex)->isFinished())
+            {
+                current.processes.erase(current.processes.begin() +
+                                        static_cast<long>(processIndex));
+            }
+            else
+            {
+                ++processIndex;
+            }
+        }
+
+        if (current.processes.empty())
+        {
+            current.completion->set_value();
+            _runningCommands.erase(_runningCommands.begin() + static_cast<long>(index));
         }
         else
         {

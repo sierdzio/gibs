@@ -3,10 +3,11 @@
 #include "project/command.h"
 #include "targetid.h"
 
+#include <future>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <memory>
 
 class Processor;
 
@@ -33,5 +34,6 @@ class Project
     void logCommand(const int depth, const Command &command, std::string *string) const;
 
     std::unordered_map<CommandId, int> _commandDepths;
+    std::unordered_map<CommandId, std::shared_future<void>> _commandCompletionFutures;
     std::shared_ptr<Processor> _processor;
 };

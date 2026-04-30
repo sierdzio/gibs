@@ -8,6 +8,11 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
+#include <future>
+#include <thread>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace
 {
@@ -27,7 +32,8 @@ bool Project::addCommand(const Command &command)
 
     if (command.type == Syntax::Command::Source)
     {
-        _processor->schedule(command);
+        _commandCompletionFutures[command.id()] = _processor->schedule(commands.back());
+        commands.back().setIsReadyToExecute(true);
     }
 
     return true;
@@ -57,32 +63,82 @@ Command &Project::commandRef(const CommandId id)
 
 void Project::onParsingFinished()
 {
-    // Library and executable linking is deferred until after all commands are
-    // parsed.
-    // Schedule libraries first so their archives are created before any
-    // executables that depend on them are linked. Then wait for those
-    // processes to finish and schedule executables.
+    // Schedule libraries and executables based on the dependency graph that
+    // was constructed while parsing. Each link command waits for its child
+    // commands to complete before being scheduled.
 
-    // First, schedule all library link commands.
+    std::unordered_map<CommandId, std::vector<CommandId>> children;
     for (const auto &command : commands)
     {
-        if (command.type == Syntax::Command::Library)
+        if (command.parentId != NullCommandId)
         {
-            _processor->schedule(command);
+            children[command.parentId].push_back(command.id());
         }
     }
 
-    // Wait for library build/link processes to finish so .a/.so files exist.
+    std::unordered_set<CommandId> pending;
+    for (const auto &command : commands)
+    {
+        if (command.type == Syntax::Command::Library ||
+            command.type == Syntax::Command::Executable)
+        {
+            pending.insert(command.id());
+        }
+    }
+
+    while (not pending.empty())
+    {
+        bool madeProgress = false;
+
+        // Update process states to ensure futures are set to ready
+        _processor->checkProcessStates();
+
+        for (const auto commandId :
+             std::vector<CommandId>(pending.begin(), pending.end()))
+        {
+            const auto &command = commandRef(commandId);
+            const auto childIt = children.find(commandId);
+            bool dependenciesReady = true;
+
+            if (childIt != children.cend())
+            {
+                for (const auto childId : childIt->second)
+                {
+                    const auto futureIt = _commandCompletionFutures.find(childId);
+                    if (futureIt == _commandCompletionFutures.cend() ||
+                        futureIt->second.wait_for(std::chrono::seconds(0)) !=
+                            std::future_status::ready)
+                    {
+                        dependenciesReady = false;
+                        break;
+                    }
+                }
+            }
+
+            if (not dependenciesReady)
+            {
+                continue;
+            }
+
+            _commandCompletionFutures[commandId] = _processor->schedule(command);
+            commandRef(commandId).setIsReadyToExecute(true);
+            pending.erase(commandId);
+            madeProgress = true;
+        }
+
+        if (pending.empty())
+        {
+            break;
+        }
+
+        if (not madeProgress)
+        {
+            // If no progress was made, wait a bit before checking again
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+
     _processor->waitForFinished();
-
-    // Now schedule executable link commands.
-    for (const auto &command : commands)
-    {
-        if (command.type == Syntax::Command::Executable)
-        {
-            _processor->schedule(command);
-        }
-    }
 }
 
 /*!

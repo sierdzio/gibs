@@ -2,14 +2,16 @@
 
 #include "project/command.h"
 
+#include <future>
 #include <memory>
 #include <process/process.h>
 #include <vector>
 
-struct RunningProcess
+struct RunningCommand
 {
     CommandId commandId;
-    std::unique_ptr<Process> process;
+    std::vector<std::unique_ptr<Process>> processes;
+    std::shared_ptr<std::promise<void>> completion;
 };
 
 class Processor
@@ -17,7 +19,7 @@ class Processor
   public:
     Processor() = default;
 
-    void schedule(const Command &command);
+    std::shared_future<void> schedule(const Command &command);
     void waitForFinished();
 
     void setDryRun(const bool dryRun);
@@ -26,10 +28,9 @@ class Processor
     void setLogProcessOutput(const bool enabled);
     bool isLogProcessOutput() const;
 
-  private:
-    void checkProcessStates();
+    void checkProcessStates(); // Made public for Project to update futures
 
-    std::vector<RunningProcess> _processes;
+    std::vector<RunningCommand> _runningCommands;
     bool _dryRun = false;
     bool _logProcessOutput = false;
 };
