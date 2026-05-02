@@ -1,6 +1,6 @@
 #include "dryrunprocess.h"
 
-DryRunProcess::DryRunProcess()
+DryRunProcess::DryRunProcess() : StupidProcess()
 {
     setDuration(std::chrono::milliseconds(0));
 }

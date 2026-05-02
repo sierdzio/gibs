@@ -55,6 +55,11 @@ class ProjectDependencyTest : public ::testing::Test
         _project = std::make_shared<Project>(_processor);
     }
 
+    void TearDown() override
+    {
+        _processor->waitForFinished();
+    }
+
     std::shared_ptr<Processor> _processor;
     std::shared_ptr<Project> _project;
 };
@@ -62,9 +67,11 @@ class ProjectDependencyTest : public ::testing::Test
 TEST_F(ProjectDependencyTest, SourceCommandsScheduledImmediately)
 {
     Command source = makeSourceCommand("main.cpp");
+    const auto sourceId = source.id();
+
     _project->addCommand(source);
 
-    EXPECT_TRUE(_project->commands.back().isReadyToExecute());
+    EXPECT_TRUE(_project->commandRef(sourceId).isReadyToExecute());
 }
 
 TEST_F(ProjectDependencyTest, LibraryScheduledAfterSourcesToComplete)

@@ -8,13 +8,13 @@ option(GIBS_STRICT "Treat warnings errors, plus enforce other, related checks" O
 
 # Enable LTO (link time optimization)
 if (GIBS_LTO)
-  set(LINK_TIME_OPTIMIZATION TRUE)
+  set(LINK_TIME_OPTIMIZATION ON)
   message("Building with LTO enabled")
 endif ()
 
 # Enable unity builds
 if (GIBS_UNITY_BUILD)
-  set(UNITY_BUILD_VALUE TRUE)
+  set(UNITY_BUILD_VALUE ON)
   set(UNITY_BUILD_MODE_VALUE BATCH)
   set(UNITY_BUILD_BATCH_SIZE_VALUE 16)
   message("Building with unity (jumbo) build enabled")
