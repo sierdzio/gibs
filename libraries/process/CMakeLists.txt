@@ -7,6 +7,7 @@ project(process VERSION 0.0.1
 set(srcs
     process/process.cpp process/process.h
     process/stupidprocess.cpp process/stupidprocess.h
+    process/dryrunprocess.cpp process/dryrunprocess.h
     process/systemprocess.h process/systemprocess.cpp
 )
 

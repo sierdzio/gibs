@@ -2,11 +2,18 @@
 
 #include "stringlist.h"
 
-#include <functional>
 #include <filesystem>
+#include <functional>
 
 namespace Tools
 {
+/*!
+ * Executes the provided function when going out of scope.
+ *
+ * Use whenever you need to ensure that a certain piece of
+ * code is executed when leaving the current scope, for example
+ * to release a resource or reset a state.
+ */
 class ScopeGuard
 {
   public:

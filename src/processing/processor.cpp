@@ -7,6 +7,7 @@
 #include "tools/tools.h"
 
 #include <logger/log.h>
+#include <process/dryrunprocess.h>
 #include <process/stupidprocess.h>
 
 #include <future>
@@ -35,18 +36,25 @@ std::shared_future<void> Processor::schedule(const Command &command)
 
             for (const auto &toolCommand : tool.commands())
             {
-                if (not isDryRun())
-                {
-                    auto process = std::make_unique<StupidProcess>();
-                    process->setExecutable(toolCommand.command);
-                    process->setArguments(toolCommand.arguments);
-                    process->setMetaInformation(std::to_string(command.id()) + " " +
-                                                Syntax::commandString(command.type));
+                std::unique_ptr<Process> process;
 
-                    process->setLogProcessOutput(isLogProcessOutput());
-                    process->start();
-                    processes.emplace_back(std::move(process));
+                if (isDryRun())
+                {
+                    process = std::make_unique<DryRunProcess>();
                 }
+                else
+                {
+                    process = std::make_unique<StupidProcess>();
+                }
+
+                process->setExecutable(toolCommand.command);
+                process->setArguments(toolCommand.arguments);
+                process->setMetaInformation(std::to_string(command.id()) + " " +
+                                            Syntax::commandString(command.type));
+
+                process->setLogProcessOutput(isLogProcessOutput());
+                process->start();
+                processes.emplace_back(std::move(process));
             }
         }
         break;
@@ -57,26 +65,28 @@ std::shared_future<void> Processor::schedule(const Command &command)
 
             for (const auto &toolCommand : tool.commands())
             {
-                if (not isDryRun())
-                {
-                    auto process = std::make_unique<StupidProcess>();
-                    process->setExecutable(toolCommand.command);
-                    process->setArguments(toolCommand.arguments);
-                    process->setMetaInformation(std::to_string(command.id()) + " " +
-                                                Syntax::commandString(command.type));
+                std::unique_ptr<Process> process;
 
-                    process->setLogProcessOutput(isLogProcessOutput());
-                    process->start();
-                    processes.emplace_back(std::move(process));
+                if (isDryRun())
+                {
+                    process = std::make_unique<DryRunProcess>();
                 }
+                else
+                {
+                    process = std::make_unique<StupidProcess>();
+                }
+
+                process->setExecutable(toolCommand.command);
+                process->setArguments(toolCommand.arguments);
+                process->setMetaInformation(std::to_string(command.id()) + " " +
+                                            Syntax::commandString(command.type));
+
+                process->setLogProcessOutput(isLogProcessOutput());
+                process->start();
+                processes.emplace_back(std::move(process));
             }
         }
         break;
-    case Syntax::Command::Option:
-        Log::debug("Processing:", typeString, "command:", command.whole());
-        Log::error("Not implemented yet!");
-        completion->set_value();
-        return future;
     case Syntax::Command::Qt:
         Log::debug("Processing:", typeString, "command:", command.whole());
         Log::error("Not implemented yet!");
@@ -86,6 +96,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
         Log::debug("Processing:", typeString, "command:", command.whole());
         completion->set_value();
         return future;
+    case Syntax::Command::Option:
     case Syntax::Command::Include:
     case Syntax::Command::Feature:
     case Syntax::Command::Subproject:
