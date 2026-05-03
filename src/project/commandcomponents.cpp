@@ -2,6 +2,7 @@
 #include "parsing/syntax.h"
 #include "tools/tools.h"
 
+#include <algorithm>
 #include <filesystem>
 
 bool ExecutableComponent::isValid(const Syntax::Command type) const
@@ -16,9 +17,7 @@ bool LibraryComponent::isValid(const Syntax::Command type) const
 
 bool ObjectComponent::isValid(const Syntax::Command type) const
 {
-    return type == Syntax::Command::Source
-           and not name.empty()
-           and not source.empty();
+    return type == Syntax::Command::Source and not name.empty() and not source.empty();
 }
 
 bool IncludeComponent::isValid(const Syntax::Command type) const
@@ -53,4 +52,12 @@ bool OptionComponent::isValid(const Syntax::Command type) const
 {
     return (type == Syntax::Command::Feature or type == Syntax::Command::Option) and
            name.size() > 0;
+}
+
+std::string OptionComponent::define() const
+{
+    std::string result = name;
+    std::replace(result.begin(), result.end(), '-', '_');
+    std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+    return result;
 }

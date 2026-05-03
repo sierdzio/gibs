@@ -2,5 +2,5 @@
 
 std::string SomeClass::text() const
 {
-    return "simple!";
+    return "Feature is enabled!";
 }

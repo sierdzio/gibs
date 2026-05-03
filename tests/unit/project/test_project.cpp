@@ -7,8 +7,6 @@
 #include <project/project.h>
 
 #include <memory>
-#include <thread>
-#include <unordered_map>
 #include <vector>
 
 // Helper to create a valid source command

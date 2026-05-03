@@ -37,6 +37,17 @@ bool Compiler::setup(const Command &command)
         commandData.arguments.emplace_back(current);
     }
 
+    for (const auto &current : std::as_const(command.object().defines))
+    {
+        if (current.empty())
+        {
+            continue;
+        }
+
+        commandData.arguments.emplace_back("-D");
+        commandData.arguments.emplace_back(current);
+    }
+
     commandData.arguments.emplace_back("-o");
     commandData.arguments.emplace_back(command.object().name);
     commandData.arguments.emplace_back(command.object().source);

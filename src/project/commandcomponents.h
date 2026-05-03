@@ -30,6 +30,7 @@ struct ObjectComponent : public Component
     std::string source;
     std::string name;
     StringList includePaths;
+    StringList defines;
 };
 
 struct IncludeComponent : public Component
@@ -48,6 +49,7 @@ struct IncludeComponent : public Component
 struct OptionComponent : public Component
 {
     bool isValid(const Syntax::Command type) const override;
+    std::string define() const;
 
     std::string name;
     bool defaultValue = false;

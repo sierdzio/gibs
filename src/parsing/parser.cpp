@@ -6,8 +6,8 @@
 #include "tools/tools.h"
 
 #include "project/command.h"
-#include "project/targetid.h"
 #include "project/project.h"
+#include "project/targetid.h"
 
 #include <logger/log.h>
 
@@ -25,7 +25,8 @@ namespace
 constexpr auto Dot = ".";
 }
 
-Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode, std::shared_ptr<Project> project)
+Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode,
+               std::shared_ptr<Project> project)
     : _project(project), _isQuickMode(isQuickMode)
 {
     auto input = inputPath;
@@ -563,7 +564,17 @@ void Parser::handleCommand(Command command, CppState *state)
     else if (command.type == Syntax::Command::Feature or
              command.type == Syntax::Command::Option)
     {
-        // TODO: handle option
+        Log::information(
+            "Found an option:", Tools::inQuotes(command.option().name),
+            "define name:", Tools::inQuotes(command.option().define()),
+            "with default value:", Tools::boolToString(command.option().defaultValue),
+            "is on?", Tools::boolToString(command.option().isOn));
+
+        // TODO: find the correct command to attach this option to - it should be the
+        // current source (object) command so that it can be used as define.
+        // Alternatively, we can attach this to the whole target
+        auto &parent = _project->commandRef(command.parentId);
+        parent.objectReference().defines.emplace_back(command.option().name);
     }
 
     if (shouldAdd)

@@ -95,3 +95,74 @@ TEST(command, isValid)
         EXPECT_FALSE(c.isValid());
     }
 }
+
+TEST(command, OptionComponentDefine)
+{
+    Log::setLogLevel(Log::Type::Verbose);
+
+    // Test simple option name conversion
+    {
+        Command c;
+        EXPECT_TRUE(c.append("feature"));
+        EXPECT_TRUE(c.append("name"));
+        EXPECT_TRUE(c.append("my-feature"));
+        c.finalize();
+        EXPECT_EQ(c.option().define(), "MY_FEATURE");
+    }
+
+    // Test option with multiple dashes
+    {
+        Command c;
+        EXPECT_TRUE(c.append("option"));
+        EXPECT_TRUE(c.append("name"));
+        EXPECT_TRUE(c.append("my-long-option"));
+        c.finalize();
+        EXPECT_EQ(c.option().define(), "MY_LONG_OPTION");
+    }
+
+    // Test option without dashes
+    {
+        Command c;
+        EXPECT_TRUE(c.append("feature"));
+        EXPECT_TRUE(c.append("name"));
+        EXPECT_TRUE(c.append("MYFEATURE"));
+        c.finalize();
+        EXPECT_EQ(c.option().define(), "MYFEATURE");
+    }
+
+    // Test option with lowercase
+    {
+        Command c;
+        EXPECT_TRUE(c.append("option"));
+        EXPECT_TRUE(c.append("name"));
+        EXPECT_TRUE(c.append("lowercase-option"));
+        c.finalize();
+        EXPECT_EQ(c.option().define(), "LOWERCASE_OPTION");
+    }
+}
+
+TEST(command, ObjectComponentDefines)
+{
+    Log::setLogLevel(Log::Type::Verbose);
+
+    // Test that ObjectComponent has defines field
+    {
+        Command c;
+        EXPECT_TRUE(c.append("source"));
+        EXPECT_TRUE(c.append("test.cpp"));
+        c.finalize();
+
+        // Initially empty
+        EXPECT_TRUE(c.object().defines.empty());
+
+        // Can add defines
+        c.objectReference().defines.emplace_back("DEBUG");
+        EXPECT_EQ(c.object().defines.size(), 1);
+        EXPECT_EQ(c.object().defines[0], "DEBUG");
+
+        // Can add multiple defines
+        c.objectReference().defines.emplace_back("MY_FEATURE");
+        EXPECT_EQ(c.object().defines.size(), 2);
+        EXPECT_EQ(c.object().defines[1], "MY_FEATURE");
+    }
+}

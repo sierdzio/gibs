@@ -145,3 +145,12 @@ TEST(tools, isWhitespace)
     EXPECT_FALSE(Tools::isWhitespace(-1));
     EXPECT_FALSE(Tools::isWhitespace(-127));
 }
+
+TEST(tools, inQuotes)
+{
+    EXPECT_EQ(Tools::inQuotes("abc"), "\"abc\"");
+    EXPECT_EQ(Tools::inQuotes(" "), "\" \"");
+    EXPECT_EQ(Tools::inQuotes(""), "\"\"");
+    EXPECT_EQ(Tools::inQuotes("hello world"), "\"hello world\"");
+    EXPECT_EQ(Tools::inQuotes("path/to/file.h"), "\"path/to/file.h\"");
+}

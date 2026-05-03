@@ -4,11 +4,10 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
-#include <numeric>
 
 namespace
 {
-constexpr auto Quote = '"';
+constexpr auto Quote = '\"';
 constexpr auto ListSep = ", ";
 constexpr auto True = "true";
 constexpr auto False = "false";
@@ -83,6 +82,11 @@ std::string Tools::inBrackets(const std::string &string)
     return '(' + string + ')';
 }
 
+std::string Tools::inQuotes(const std::string &string)
+{
+    return Quote + string + Quote;
+}
+
 std::string Tools::boolToString(const bool value)
 {
     return value ? True : False;
@@ -114,7 +118,7 @@ StringList Tools::pathsToStrings(const std::vector<std::filesystem::path> &paths
 {
     StringList result;
 
-    for(const auto& path : paths)
+    for (const auto &path : paths)
     {
         result.emplace_back(path.string());
     }

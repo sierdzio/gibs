@@ -216,18 +216,19 @@ void Command::finalize()
                     }
                     else
                     {
-                        Log::warning("Unrecognised default value:", current,
-                                     "for option:", Syntax::commandString(type));
+                        Log::error("Unrecognised default value:", current,
+                                   "for option:", Syntax::commandString(type));
                     }
 
                     previous.clear();
                     continue;
                 }
-
-                _option.name = current;
-
-                previous.clear();
-                continue;
+                else if (previous == Syntax::Modifier::Name)
+                {
+                    _option.name = current;
+                    previous.clear();
+                    continue;
+                }
             }
 
             previous = current;

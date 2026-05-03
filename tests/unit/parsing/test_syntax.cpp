@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <parsing/syntax.h>
-
+#include <project/command.h>
 // TODO: MetaEnum? EnumClass? Come up with some clever thingy
 TEST(syntax, commandString)
 {
@@ -47,4 +47,39 @@ TEST(syntax, commandValue)
 TEST(syntax, commandCount)
 {
     EXPECT_EQ(Syntax::commandCount(), 12);
+}
+
+TEST(syntax, OptionComponentParsing)
+{
+    // Test valid feature command
+    {
+        Command c;
+        EXPECT_TRUE(c.append("feature"));
+        EXPECT_TRUE(c.append("name"));
+        EXPECT_TRUE(c.append("my-feature"));
+        EXPECT_TRUE(c.append("default"));
+        EXPECT_TRUE(c.append("on"));
+        c.finalize();
+
+        EXPECT_TRUE(c.isValid());
+        EXPECT_EQ(c.option().name, "my-feature");
+        EXPECT_TRUE(c.option().defaultValue);
+        EXPECT_TRUE(c.option().isValid(Syntax::Command::Feature));
+    }
+
+    // Test valid option command
+    {
+        Command c;
+        EXPECT_TRUE(c.append("option"));
+        EXPECT_TRUE(c.append("name"));
+        EXPECT_TRUE(c.append("my-option"));
+        EXPECT_TRUE(c.append("default"));
+        EXPECT_TRUE(c.append("off"));
+        c.finalize();
+
+        EXPECT_TRUE(c.isValid());
+        EXPECT_EQ(c.option().name, "my-option");
+        EXPECT_FALSE(c.option().defaultValue);
+        EXPECT_TRUE(c.option().isValid(Syntax::Command::Option));
+    }
 }

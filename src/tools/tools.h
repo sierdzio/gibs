@@ -45,6 +45,7 @@ bool contains(const std::string &string, const std::string &toFind);
 
 std::string listToString(const StringList &list);
 std::string inBrackets(const std::string &string);
+std::string inQuotes(const std::string &string);
 std::string boolToString(const bool value);
 StringList pathsToStrings(const std::vector<std::filesystem::path> &paths);
 
