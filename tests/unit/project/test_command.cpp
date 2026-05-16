@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <exceptions/commandexception.h>
 
 #include <logger/log.h>
 #include <parsing/syntax.h>
@@ -138,6 +139,105 @@ TEST(command, OptionComponentDefine)
         EXPECT_TRUE(c.append("lowercase-option"));
         c.finalize({});
         EXPECT_EQ(c.option().define(), "LOWERCASE_OPTION");
+    }
+}
+
+TEST(command, OptionFinalizeOverridesDefaultValue)
+{
+    Log::setLogLevel(Log::Type::Verbose);
+
+    ArgumentsList arguments;
+    arguments["my-feature"] = true;
+
+    Command c;
+    EXPECT_TRUE(c.append("feature"));
+    EXPECT_TRUE(c.append("name"));
+    EXPECT_TRUE(c.append("my-feature"));
+    EXPECT_TRUE(c.append("default"));
+    EXPECT_TRUE(c.append("off"));
+    c.finalize(arguments);
+
+    EXPECT_TRUE(c.isValid());
+    EXPECT_EQ(c.option().name, "my-feature");
+    EXPECT_FALSE(c.option().defaultValue);
+    EXPECT_TRUE(c.option().isOn);
+}
+
+TEST(command, OptionFinalizeUsesDefaultForNonBooleanOverride)
+{
+    Log::setLogLevel(Log::Type::Verbose);
+
+    ArgumentsList arguments;
+    arguments["my-feature"] = std::string("not-a-bool");
+
+    Command c;
+    EXPECT_TRUE(c.append("feature"));
+    EXPECT_TRUE(c.append("name"));
+    EXPECT_TRUE(c.append("my-feature"));
+    EXPECT_TRUE(c.append("default"));
+    EXPECT_TRUE(c.append("on"));
+    c.finalize(arguments);
+
+    EXPECT_TRUE(c.isValid());
+    EXPECT_EQ(c.option().name, "my-feature");
+    EXPECT_TRUE(c.option().defaultValue);
+    EXPECT_TRUE(c.option().isOn);
+}
+
+TEST(command, PathSemantics)
+{
+    {
+        Command c;
+        EXPECT_TRUE(c.append("source"));
+        EXPECT_TRUE(c.append("main.cpp"));
+        c.finalize({});
+
+        EXPECT_TRUE(c.hasPath());
+        EXPECT_EQ(c.path(), "main.o");
+    }
+
+    {
+        Command c;
+        EXPECT_TRUE(c.append("include"));
+        EXPECT_TRUE(c.append("file.h"));
+        c.finalize({});
+
+        EXPECT_TRUE(c.hasPath());
+        EXPECT_EQ(c.path(), "file.h");
+    }
+
+    {
+        Command c;
+        EXPECT_TRUE(c.append("executable"));
+        EXPECT_TRUE(c.append("name"));
+        EXPECT_TRUE(c.append("app"));
+        c.finalize({});
+
+        EXPECT_TRUE(c.hasPath());
+        EXPECT_EQ(c.path(), "app");
+    }
+
+    {
+        Command c;
+        EXPECT_TRUE(c.append("library"));
+        EXPECT_TRUE(c.append("type"));
+        EXPECT_TRUE(c.append("static"));
+        EXPECT_TRUE(c.append("name"));
+        EXPECT_TRUE(c.append("mylib"));
+        c.finalize({});
+
+        EXPECT_TRUE(c.hasPath());
+        EXPECT_EQ(c.path(), "mylib");
+    }
+
+    {
+        Command c;
+        EXPECT_TRUE(c.append("feature"));
+        EXPECT_TRUE(c.append("name"));
+        EXPECT_TRUE(c.append("my-feature"));
+
+        EXPECT_FALSE(c.hasPath());
+        EXPECT_THROW(c.path(), CommandStringException);
     }
 }
 

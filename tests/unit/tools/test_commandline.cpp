@@ -226,3 +226,16 @@ TEST(commandline, logFilePath)
         EXPECT_TRUE(flagsText.find("/tmp/test.log") != std::string::npos);
     }
 }
+
+TEST(commandline, otherArguments)
+{
+    {
+        const CommandLine cmd({});
+        EXPECT_TRUE(cmd.otherArguments().empty());
+    }
+
+    {
+        const CommandLine cmd({"-q", "main.cpp"});
+        EXPECT_TRUE(cmd.otherArguments().empty());
+    }
+}
