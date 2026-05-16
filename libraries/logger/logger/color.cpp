@@ -65,7 +65,7 @@ Color::Color(const Rgb &foreground, const Rgb &background)
     }
 }
 
-const std::string &Color::ansiEscapeCode() const
+std::string Color::ansiEscapeCode() const
 {
     return _ansiEscapeCode;
 }

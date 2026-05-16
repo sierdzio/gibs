@@ -74,7 +74,7 @@ class Color
           const Standard::Background background = Standard::Background::Default);
     Color(const Rgb &foreground, const Rgb &background = {});
 
-    const std::string &ansiEscapeCode() const;
+    std::string ansiEscapeCode() const;
     bool isDefault() const;
 
   private:

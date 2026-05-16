@@ -103,19 +103,17 @@ std::string Process::fullCommandLineCall() const
 
 void Process::finish(const int code, const Exit::Status status)
 {
+    // Update result under lock. Do not attempt to join the thread here — joining
+    // from within the worker may attempt to join the current thread and throw
+    // std::system_error. Thread lifetime is managed by either detaching (in
+    // start()) or joining in the destructor when appropriate.
     {
         std::lock_guard lock(_mutex);
         _result.rawCode = code;
         _result.status = status;
     }
 
-    if (_thread.joinable())
-    {
-        _thread.join();
-    }
-
-    Log::debug(logIdentifier(), " -> Process has finished:",
-               fullCommandLineCall(), "with exit code:", code);
+    Log::debug(logIdentifier(), " -> Process has finished:", fullCommandLineCall(), "with exit code:", code);
 }
 
 std::string Process::argsToString(const Arguments &args) const
