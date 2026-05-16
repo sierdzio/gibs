@@ -1,5 +1,6 @@
 #pragma once
 
+#include "argumentslist.h"
 #include "stringlist.h"
 
 #include <logger/log.h>
@@ -24,6 +25,8 @@ class CommandLine
     const std::string &logFilePath() const;
     bool isLogFilePathSet() const;
     Log::Type logLevel() const;
+
+    ArgumentsList otherArguments() const;
 
     bool isValid() const;
     bool hasHelp() const;
@@ -62,6 +65,7 @@ class CommandLine
     std::string _executable;
     std::string _input;
     std::string _logFilePath;
+    ArgumentsList _otherArguments;
     Log::Type _logLevel = Log::Type::Information;
 
     bool _isValid = false;

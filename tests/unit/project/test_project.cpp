@@ -15,7 +15,7 @@ Command makeSourceCommand(const std::string &filename)
     Command cmd;
     cmd.append("source");
     cmd.append(filename);
-    cmd.finalize();
+    cmd.finalize({});
     return cmd;
 }
 
@@ -28,7 +28,7 @@ Command makeLibraryCommand(const std::string &libname)
     cmd.append(libname);
     cmd.append("type");
     cmd.append("static");
-    cmd.finalize();
+    cmd.finalize({});
     return cmd;
 }
 
@@ -39,7 +39,7 @@ Command makeExecutableCommand(const std::string &exename)
     cmd.append("executable");
     cmd.append("name");
     cmd.append(exename);
-    cmd.finalize();
+    cmd.finalize({});
     return cmd;
 }
 

@@ -7,6 +7,7 @@
 #include <logger/log.h>
 
 #include <filesystem>
+#include <typeindex>
 #include <utility>
 
 namespace
@@ -136,7 +137,7 @@ bool Command::canBeProcessed() const
     return false;
 }
 
-void Command::finalize()
+void Command::finalize(const ArgumentsList &arguments)
 {
     if (_modifiers.empty())
     {
@@ -218,6 +219,31 @@ void Command::finalize()
                     {
                         Log::error("Unrecognised default value:", current,
                                    "for option:", Syntax::commandString(type));
+                    }
+
+                    if (const auto it = arguments.find(_option.name);
+                        it != arguments.end())
+                    {
+                        const auto &value = it->second;
+
+                        if (value.type() == std::type_index(typeid(bool)))
+                        {
+                            _option.isOn = std::any_cast<bool>(value);
+                        }
+                        else
+                        {
+                            Log::warning("Option:", _option.name,
+                                         "has non-boolean value:", value.type().name(),
+                                         "so default value will be used:",
+                                         Tools::boolToString(_option.defaultValue));
+                            _option.isOn = _option.defaultValue;
+                        }
+                    }
+                    else
+                    {
+                        Log::information("Option:", _option.name, "using default value:",
+                                         Tools::boolToString(_option.defaultValue));
+                        _option.isOn = _option.defaultValue;
                     }
 
                     previous.clear();
@@ -337,25 +363,8 @@ std::string Command::value() const
     return _modifiers.back();
 }
 
-std::string Command::path() const
+const std::string &Command::path() const
 {
-    if (type == Syntax::Command::Include)
-    {
-        return _include.path;
-    }
-    else if (type == Syntax::Command::Source)
-    {
-        return _object.name;
-    }
-    else if (type == Syntax::Command::Executable)
-    {
-        return _executable.name;
-    }
-    else if (type == Syntax::Command::Library)
-    {
-        return _library.name;
-    }
-
     switch (type)
     {
     case Syntax::Command::Include:
@@ -380,7 +389,30 @@ std::string Command::path() const
     Log::error("Path requested from command which does not support it:",
                Syntax::commandString(type), "available modifiers are:", _modifiers);
 
-    return {};
+    throw CommandStringException("Path requested from command which does not support it");
+}
+
+bool Command::hasPath() const
+{
+    switch (type)
+    {
+    case Syntax::Command::Include:
+    case Syntax::Command::Source:
+    case Syntax::Command::Executable:
+    case Syntax::Command::Library:
+        return true;
+    case Syntax::Command::Define:
+    case Syntax::Command::Feature:
+    case Syntax::Command::Option:
+    case Syntax::Command::Qt:
+    case Syntax::Command::Subproject:
+    case Syntax::Command::Tool:
+    case Syntax::Command::Invalid:
+    case Syntax::Command::Unknown:
+        return false;
+    }
+
+    return false;
 }
 
 bool Command::addLinkObject(const std::string &name)

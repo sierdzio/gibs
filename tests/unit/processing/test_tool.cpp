@@ -11,7 +11,7 @@ TEST(processing, CompilerCommands)
     Command command;
     EXPECT_TRUE(command.append("source"));
     EXPECT_TRUE(command.append("main.cpp"));
-    command.finalize();
+    command.finalize({});
 
     command.objectReference().includePaths = {"include"};
 
@@ -40,7 +40,7 @@ TEST(processing, LinkerStaticLibraryMultiCommand)
     EXPECT_TRUE(command.append("static"));
     EXPECT_TRUE(command.append("name"));
     EXPECT_TRUE(command.append("mylib"));
-    command.finalize();
+    command.finalize({});
 
     EXPECT_TRUE(command.addLinkObject("file1.o"));
     EXPECT_TRUE(command.addLinkObject("file2.o"));
@@ -70,7 +70,7 @@ TEST(processing, CompilerDefines)
     Command command;
     EXPECT_TRUE(command.append("source"));
     EXPECT_TRUE(command.append("main.cpp"));
-    command.finalize();
+    command.finalize({});
 
     // Add some defines
     command.objectReference().defines = {"DEBUG", "MY_FEATURE", "VERSION=1"};
@@ -95,7 +95,7 @@ TEST(processing, CompilerEmptyDefines)
     Command command;
     EXPECT_TRUE(command.append("source"));
     EXPECT_TRUE(command.append("test.cpp"));
-    command.finalize();
+    command.finalize({});
 
     // Add includes with empty defines (to ensure empty defines are skipped)
     command.objectReference().defines = {"DEBUG", "", "MY_FEATURE"};

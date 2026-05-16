@@ -19,7 +19,7 @@ TEST(command, Command)
     EXPECT_FALSE(c1.include().isValid(Syntax::Command::Executable));
     EXPECT_FALSE(c1.option().isValid(Syntax::Command::Executable));
 
-    c1.finalize();
+    c1.finalize({});
 
     EXPECT_FALSE(c1.isValid());
     EXPECT_FALSE(c1.isReadyToExecute());
@@ -106,7 +106,7 @@ TEST(command, OptionComponentDefine)
         EXPECT_TRUE(c.append("feature"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("my-feature"));
-        c.finalize();
+        c.finalize({});
         EXPECT_EQ(c.option().define(), "MY_FEATURE");
     }
 
@@ -116,7 +116,7 @@ TEST(command, OptionComponentDefine)
         EXPECT_TRUE(c.append("option"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("my-long-option"));
-        c.finalize();
+        c.finalize({});
         EXPECT_EQ(c.option().define(), "MY_LONG_OPTION");
     }
 
@@ -126,7 +126,7 @@ TEST(command, OptionComponentDefine)
         EXPECT_TRUE(c.append("feature"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("MYFEATURE"));
-        c.finalize();
+        c.finalize({});
         EXPECT_EQ(c.option().define(), "MYFEATURE");
     }
 
@@ -136,7 +136,7 @@ TEST(command, OptionComponentDefine)
         EXPECT_TRUE(c.append("option"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("lowercase-option"));
-        c.finalize();
+        c.finalize({});
         EXPECT_EQ(c.option().define(), "LOWERCASE_OPTION");
     }
 }
@@ -150,7 +150,7 @@ TEST(command, ObjectComponentDefines)
         Command c;
         EXPECT_TRUE(c.append("source"));
         EXPECT_TRUE(c.append("test.cpp"));
-        c.finalize();
+        c.finalize({});
 
         // Initially empty
         EXPECT_TRUE(c.object().defines.empty());

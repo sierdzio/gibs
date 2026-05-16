@@ -334,6 +334,13 @@ Or unselect it using:
 gibs main.cpp -- --no-tts-support
 ```
 
+On / off syntax is also supported:
+
+```bash
+gibs main.cpp -- --tts-support=OFF
+gibs main.cpp -- --tts-support=ON
+```
+
 ## Recommendations
 
 It's best to put gibs commands early in .cpp or .h file, so that they can be

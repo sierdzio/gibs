@@ -1,15 +1,16 @@
 #pragma once
 
-#include "syntax.h"
 #include "project/command.h"
+#include "syntax.h"
 #include "tools/apperror.h"
+#include "tools/argumentslist.h"
 #include "tools/stringlist.h"
 
 #include <filesystem>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-#include <memory>
 
 class CommandLine;
 class Project;
@@ -19,7 +20,8 @@ struct TargetId;
 class Parser
 {
   public:
-    Parser(const std::filesystem::path& inputPath, const bool isQuickMode, std::shared_ptr<Project> project);
+    Parser(const std::filesystem::path &inputPath, const bool isQuickMode,
+           const ArgumentsList &arguments, std::shared_ptr<Project> project);
 
     AppError status() const;
 
@@ -49,7 +51,8 @@ class Parser
     std::filesystem::path _projectDirectory;
     std::filesystem::path _projectFile;
     std::filesystem::path _projectEntryPoint;
-    // TODO: should be per target (library, executable) or even more granular to speed things up?
+    // TODO: should be per target (library, executable) or even more granular to speed
+    // things up?
     std::vector<std::filesystem::path> _includePaths;
 
     // TODO: move to project?
@@ -60,6 +63,7 @@ class Parser
      * processed through handleCommand().
      */
     StringList _compiledFiles;
+    ArgumentsList _arguments;
 
     std::shared_ptr<Project> _project;
 

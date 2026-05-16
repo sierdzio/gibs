@@ -16,8 +16,7 @@ const char *CommandException::what() const noexcept
 }
 
 CommandStringException::CommandStringException(const std::string &value)
-    : std::exception(), message("String: " + value +
-                                " is not a valid representation of Syntax::Command enum")
+    : std::exception(), message("Command exception: " + value)
 {
 }
 

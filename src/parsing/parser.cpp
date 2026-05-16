@@ -26,8 +26,8 @@ constexpr auto Dot = ".";
 }
 
 Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode,
-               std::shared_ptr<Project> project)
-    : _project(project), _isQuickMode(isQuickMode)
+               const ArgumentsList &arguments, std::shared_ptr<Project> project)
+    : _project(project), _isQuickMode(isQuickMode), _arguments(arguments)
 {
     auto input = inputPath;
 
@@ -109,7 +109,7 @@ void Parser::parse()
         // TODO: executable or library or just target - decide
         link.type = Syntax::Command::Executable;
         link.append(_project->id.name());
-        link.finalize();
+        link.finalize(_arguments);
         _project->addCommand(link);
         parseCppFile(_projectEntryPoint, _project->id);
     }
@@ -230,7 +230,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                             : Syntax::Command::Library;
             link.targetId = id;
             link.append(std::filesystem::relative(state.id.name(), root()));
-            link.finalize();
+            link.finalize(_arguments);
             _project->addCommand(link);
         }
 
@@ -242,7 +242,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         compile.append(std::filesystem::relative(path, root()));
         compile.targetId = state.id;
         compile.parentId = linkCommand->id();
-        compile.finalize();
+        compile.finalize(_arguments);
         compile.objectReference().includePaths = Tools::pathsToStrings(_includePaths);
 
         Log::debug("Adding object file to linker command:", compile.object().name);
@@ -317,7 +317,7 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
         }
     }
 
-    command.finalize();
+    command.finalize(_arguments);
 
     CppState state;
     state.id = id;
@@ -464,7 +464,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
     if (command.isValid())
     {
-        command.finalize();
+        command.finalize(_arguments);
 
         if (command.type == Syntax::Command::Include and
             not command.include().isLibrary and
@@ -493,13 +493,13 @@ void Parser::handleCommand(Command command, CppState *state)
 
     Log::information("Found command:", command.whole());
 
-    bool shouldParse = false;
+    bool hasPath = false;
     bool shouldAdd = false;
 
     if (command.type == Syntax::Command::Source)
     {
         shouldAdd = true;
-        shouldParse = true;
+        hasPath = true;
     }
     else if (command.type == Syntax::Command::Library or
              command.type == Syntax::Command::Executable)
@@ -530,7 +530,7 @@ void Parser::handleCommand(Command command, CppState *state)
                 command.targetId = TargetId(std::move(name), TargetId::Type::Library);
                 command.append(
                     std::filesystem::relative(command.targetId.name(), root()));
-                command.finalize();
+                command.finalize(_arguments);
 
                 // Link this library together with parent target
                 auto linkCommand = &_project->commandRef(command.parentId);
@@ -544,12 +544,14 @@ void Parser::handleCommand(Command command, CppState *state)
             else
             {
                 // TODO
+                Log::verbose("TODO: Preparing executable target:",
+                             command.executable().name);
             }
         }
     }
     else if (command.type == Syntax::Command::Include)
     {
-        shouldParse = true;
+        hasPath = true;
 
         // TODO: load library! If it is a gibs library
 
@@ -564,17 +566,21 @@ void Parser::handleCommand(Command command, CppState *state)
     else if (command.type == Syntax::Command::Feature or
              command.type == Syntax::Command::Option)
     {
+        command.parentId = _project->linkCommandIdFor(state->id);
+
         Log::information(
             "Found an option:", Tools::inQuotes(command.option().name),
             "define name:", Tools::inQuotes(command.option().define()),
             "with default value:", Tools::boolToString(command.option().defaultValue),
-            "is on?", Tools::boolToString(command.option().isOn));
+            "is on?", Tools::boolToString(command.option().isOn),
+            "parent ID:", command.parentId, "target ID:", command.targetId,
+            "state target ID:", state->id);
 
-        // TODO: find the correct command to attach this option to - it should be the
-        // current source (object) command so that it can be used as define.
-        // Alternatively, we can attach this to the whole target
-        auto &parent = _project->commandRef(command.parentId);
-        parent.objectReference().defines.emplace_back(command.option().name);
+        if (command.option().isOn)
+        {
+            auto &parent = _project->commandRef(command.parentId);
+            parent.objectReference().defines.emplace_back(command.option().name);
+        }
     }
 
     if (shouldAdd)
@@ -584,13 +590,14 @@ void Parser::handleCommand(Command command, CppState *state)
 
     const bool hasModifiers = command.hasModifiers();
 
-    Log::verbose("Command:", command.whole(), "should parse:", shouldParse,
-                 "has mods:", hasModifiers, "type:", Syntax::commandString(command.type),
-                 "path:", command.path());
-
-    if (shouldParse and hasModifiers)
+    if (hasPath and hasModifiers)
     {
-        const auto toFind = command.path();
+        const auto &toFind = command.path();
+
+        Log::verbose("Command:", command.whole(), "has path:", hasPath,
+                     "has mods:", hasModifiers,
+                     "type:", Syntax::commandString(command.type), "path:", toFind);
+
         const auto pathOptional = findFile(toFind);
 
         if (pathOptional.has_value()) [[likely]]
@@ -655,7 +662,6 @@ void Parser::handleCommand(Command command, CppState *state)
             }
             else if (Tools::isPathToFile(path.string()))
             {
-                // Log::verbose("is header?", Tools::isHeaderFile(path), "file:", path);
                 if (Tools::isHeaderFile(path))
                 {
                     parseCppFile(path, state->id);
@@ -676,6 +682,21 @@ void Parser::handleCommand(Command command, CppState *state)
             else if (not path.empty())
             {
                 addIncludePath(path);
+            }
+        }
+    }
+    else
+    {
+        Log::verbose("Command:", command.whole(), "has path:", hasPath,
+                     "has mods:", Tools::boolToString(hasModifiers),
+                     "type:", Syntax::commandString(command.type));
+
+        if (hasModifiers)
+        {
+            if (command.type == Syntax::Command::Feature or
+                command.type == Syntax::Command::Option)
+            {
+                // Nothing to do
             }
         }
     }

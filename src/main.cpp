@@ -62,12 +62,14 @@ int main(int argc, char *argv[])
 
     auto project = std::make_shared<Project>(processor);
 
-    Parser parser(cmd.input(), cmd.isQuickMode(), project);
+    Parser parser(cmd.input(), cmd.isQuickMode(), cmd.otherArguments(), project);
 
     if (parser.status() != AppError::NoError)
     {
         return static_cast<int>(parser.status());
     }
+
+    int result = 0;
 
     try
     {
@@ -75,37 +77,44 @@ int main(int argc, char *argv[])
 
         if (parser.status() != AppError::NoError)
         {
-            return static_cast<int>(parser.status());
+            result = static_cast<int>(parser.status());
         }
     }
     catch (const CommandNotFound &e)
     {
         Log::error(e.what());
+        result = -3;
     }
     catch (const CommandDepthException &e)
     {
         // Warning because it is a missing functionality but not crucial
         Log::warning(e.what());
+        result = -4;
     }
     catch (const CommandException &e)
     {
         Log::error(e.what());
+        result = -5;
     }
     catch (const CommandStringException &e)
     {
         Log::error(e.what());
+        result = -6;
     }
     catch (const EmptyLinkObject &e)
     {
         Log::error(e.what());
+        result = -7;
     }
     catch (const std::runtime_error &e)
     {
         Log::error("Unknown error:", e.what());
+        result = -8;
     }
     catch (...)
     {
         Log::error("Unhandled exception");
+        result = -9;
     }
 
     processor->waitForFinished();
@@ -117,5 +126,14 @@ int main(int argc, char *argv[])
 
     Log::information("gibs took:", duration, "ms of your time");
 
-    return 0;
+    if (result == 0)
+    {
+        Log::information("gibs finished successfully!");
+    }
+    else
+    {
+        Log::error("gibs finished with errors! Error code:", result);
+    }
+
+    return result;
 }

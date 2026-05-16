@@ -3,6 +3,7 @@
 #include "commandcomponents.h"
 #include "parsing/syntax.h"
 #include "targetid.h"
+#include "tools/argumentslist.h"
 #include "tools/stringlist.h"
 
 #include <optional>
@@ -27,7 +28,7 @@ class Command
      * After calling append() to add data to the command, call this method
      * to do processing of all the modifiers.
      */
-    void finalize();
+    void finalize(const ArgumentsList &arguments);
 
     bool isReadyToExecute() const;
     void setIsReadyToExecute(const bool ready);
@@ -44,7 +45,8 @@ class Command
      If this command contains any file paths, first one will be returned here.
      Otherwise, an empty string is returned.
     */
-    std::string path() const;
+    const std::string &path() const;
+    bool hasPath() const;
 
     bool addLinkObject(const std::string &name);
 
@@ -52,7 +54,7 @@ class Command
     void setExecutableName(const std::string &name);
     const LibraryComponent &library() const;
     const ObjectComponent &object() const;
-    ObjectComponent& objectReference();
+    ObjectComponent &objectReference();
     const IncludeComponent &include() const;
     const OptionComponent &option() const;
 

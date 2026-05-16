@@ -85,6 +85,7 @@ constexpr auto InputExplanation =
 constexpr auto DoubleSpace = "  ";
 constexpr auto Quote = "\"";
 constexpr auto DateTimeFormat = "%Y-%m-%dT%H:%M:%SZ";
+constexpr auto OtherArgumentsSeparator = "--";
 }; // namespace
 
 StringList CommandLine::toStringList(int argc, char *argv[])
@@ -171,6 +172,7 @@ std::string CommandLine::parsedFlagsText() const
     appendIf(&result, isDryRun(), DryRun);
     appendIf(&result, isLogProcessOutput(), LogProcessOutput);
     appendIf(&result, true, Input, input());
+    // TODO: add other arguments
 
     return result;
 }
@@ -197,6 +199,7 @@ std::string CommandLine::helpText() const
     result =
         helpAppend(std::move(result), {LogProcessOutput}, LogProcessOutputExplanation);
     result = helpAppend(std::move(result), {Input}, InputExplanation);
+    // TODO: add other arguments
 
     return result;
 }
@@ -225,6 +228,11 @@ bool CommandLine::isLogFilePathSet() const
 Log::Type CommandLine::logLevel() const
 {
     return _logLevel;
+}
+
+ArgumentsList CommandLine::otherArguments() const
+{
+    return _otherArguments;
 }
 
 bool CommandLine::isValid() const
@@ -285,6 +293,8 @@ bool CommandLine::parse()
         status.isLastArgument = (i == size - 1);
 
         Tools::ScopeGuard guard([&status]() { status.previous = status.current; });
+
+        // TODO: add other arguments
 
         if (status.previous == LogFilePath and isFlag(status))
         {

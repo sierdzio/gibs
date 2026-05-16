@@ -59,7 +59,7 @@ TEST(syntax, OptionComponentParsing)
         EXPECT_TRUE(c.append("my-feature"));
         EXPECT_TRUE(c.append("default"));
         EXPECT_TRUE(c.append("on"));
-        c.finalize();
+        c.finalize({});
 
         EXPECT_TRUE(c.isValid());
         EXPECT_EQ(c.option().name, "my-feature");
@@ -75,7 +75,7 @@ TEST(syntax, OptionComponentParsing)
         EXPECT_TRUE(c.append("my-option"));
         EXPECT_TRUE(c.append("default"));
         EXPECT_TRUE(c.append("off"));
-        c.finalize();
+        c.finalize({});
 
         EXPECT_TRUE(c.isValid());
         EXPECT_EQ(c.option().name, "my-option");
