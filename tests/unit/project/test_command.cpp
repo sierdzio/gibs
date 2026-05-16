@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include <exceptions/commandexception.h>
+#include <gtest/gtest.h>
 
 #include <logger/log.h>
 #include <parsing/syntax.h>

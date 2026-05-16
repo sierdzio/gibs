@@ -2,7 +2,8 @@
 
 namespace
 {
-const bool g_loggerSilent = []() {
+const bool g_loggerSilent = []()
+{
     Log::setLogLevel(Log::Type::Silent);
     return true;
 }();
