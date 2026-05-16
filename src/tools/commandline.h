@@ -47,6 +47,7 @@ class CommandLine
         bool hasError = false;
         bool isFirstArgument = false;
         bool isLastArgument = false;
+        bool isParsingOtherArguments = false;
     };
 
     bool parse();
@@ -60,6 +61,7 @@ class CommandLine
 
     [[nodiscard]] std::string helpAppend(std::string &&string, const StringList &flags,
                                          const std::string &explanation) const;
+    std::string otherArgumentsText() const;
 
     StringList _args;
     std::string _executable;

@@ -238,4 +238,25 @@ TEST(commandline, otherArguments)
         const CommandLine cmd({"-q", "main.cpp"});
         EXPECT_TRUE(cmd.otherArguments().empty());
     }
+
+    {
+        const CommandLine cmd({"--", "--my-flag=ON"});
+        EXPECT_TRUE(cmd.isValid());
+        const auto arguments = cmd.otherArguments();
+        EXPECT_EQ(std::any_cast<bool>(arguments.at("my-flag")), true);
+    }
+
+    {
+        const CommandLine cmd({"--", "--my-flag=OFF"});
+        EXPECT_TRUE(cmd.isValid());
+        const auto arguments = cmd.otherArguments();
+        EXPECT_EQ(std::any_cast<bool>(arguments.at("my-flag")), false);
+    }
+
+    {
+        const CommandLine cmd({"--", "--no-my-flag"});
+        EXPECT_TRUE(cmd.isValid());
+        const auto arguments = cmd.otherArguments();
+        EXPECT_EQ(std::any_cast<bool>(arguments.at("my-flag")), false);
+    }
 }

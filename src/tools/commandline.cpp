@@ -2,9 +2,11 @@
 #include "tools/tools.h"
 #include "versioninfo.h"
 
+#include <cstring>
 #include <logger/log.h>
 
 #include <cassert>
+#include <cctype>
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
@@ -82,10 +84,25 @@ constexpr auto InputExplanation =
     "provided, gibs will try to build it. If no input is provided, gibs will try to "
     "build a file called 'main' with a supported extension in the current directory.";
 
+constexpr auto OtherArguments = "--";
+constexpr auto OtherArgumentsExplanation =
+    "Other, user-defined arguments passed to the program should be placed after this "
+    "separator. For example: 'gibs --main.cpp -- --my-flag' will enable feature "
+    "'my-flag', and 'gibs --main.cpp -- --my-flag=OFF' will disable it when compiling main.cpp.";
+
 constexpr auto DoubleSpace = "  ";
 constexpr auto Quote = "\"";
 constexpr auto DateTimeFormat = "%Y-%m-%dT%H:%M:%SZ";
-constexpr auto OtherArgumentsSeparator = "--";
+constexpr auto NegativeOptionBeginning = "no-";
+
+std::string toUpper(std::string string)
+{
+    for (auto &character : string)
+    {
+        character = static_cast<char>(std::toupper(static_cast<unsigned char>(character)));
+    }
+    return string;
+}
 }; // namespace
 
 StringList CommandLine::toStringList(int argc, char *argv[])
@@ -172,7 +189,7 @@ std::string CommandLine::parsedFlagsText() const
     appendIf(&result, isDryRun(), DryRun);
     appendIf(&result, isLogProcessOutput(), LogProcessOutput);
     appendIf(&result, true, Input, input());
-    // TODO: add other arguments
+    appendIf(&result, true, OtherArguments, otherArgumentsText());
 
     return result;
 }
@@ -199,7 +216,7 @@ std::string CommandLine::helpText() const
     result =
         helpAppend(std::move(result), {LogProcessOutput}, LogProcessOutputExplanation);
     result = helpAppend(std::move(result), {Input}, InputExplanation);
-    // TODO: add other arguments
+    result = helpAppend(std::move(result), {OtherArguments}, OtherArgumentsExplanation);
 
     return result;
 }
@@ -290,11 +307,75 @@ bool CommandLine::parse()
     {
         status.current = _args.at(i);
         status.isFirstArgument = (i == 0);
-        status.isLastArgument = (i == size - 1);
+        status.isLastArgument = (i == size - 1 or _args.at(i + 1) == OtherArguments);
 
         Tools::ScopeGuard guard([&status]() { status.previous = status.current; });
 
-        // TODO: add other arguments
+        if (status.current == OtherArguments)
+        {
+            status.isParsingOtherArguments = true;
+            continue;
+        }
+
+        if (status.isParsingOtherArguments)
+        {
+            // TODO: move to function
+
+            if (status.current.starts_with(OtherArguments))
+            {
+                const std::string rawName = status.current.substr(std::strlen(OtherArguments));
+                const auto equalIndex = rawName.find('=');
+                std::string name = rawName.substr(0, equalIndex);
+                std::string value;
+
+                if (equalIndex != std::string::npos)
+                {
+                    value = rawName.substr(equalIndex + 1);
+                }
+
+                bool isOn = true;
+                bool isNegative = false;
+
+                if (name.starts_with(NegativeOptionBeginning))
+                {
+                    isNegative = true;
+                    name = name.substr(std::strlen(NegativeOptionBeginning));
+                    isOn = false;
+                }
+
+                if (not value.empty())
+                {
+                    const auto normalizedValue = toUpper(value);
+
+                    if (normalizedValue == "ON")
+                    {
+                        isOn = not isNegative;
+                    }
+                    else if (normalizedValue == "OFF")
+                    {
+                        isOn = isNegative ? true : false;
+                    }
+                    else
+                    {
+                        Log::error("Unrecognized value:", value,
+                                   "for other argument:", status.current);
+                        return false;
+                    }
+                }
+
+                Log::verbose("Parsing other argument:", status.current,
+                             "parsed name:", name, "isOn:", isOn);
+
+                _otherArguments.emplace(name, isOn);
+            }
+            else
+            {
+                Log::error("Unrecognized other argument:", status.current);
+                return false;
+            }
+
+            continue;
+        }
 
         if (status.previous == LogFilePath and isFlag(status))
         {
@@ -532,4 +613,42 @@ std::string CommandLine::helpAppend(std::string &&string, const StringList &flag
     string.push_back('\n');
 
     return std::move(string);
+}
+
+std::string CommandLine::otherArgumentsText() const
+{
+    std::string result;
+
+    for (const auto &[name, value] : _otherArguments)
+    {
+        if (not result.empty())
+        {
+            result.append(", ");
+        }
+
+        result.append(Tools::inQuotes(name));
+        result.append(" = ");
+
+        std::string valueString;
+
+        if (value.has_value())
+        {
+            if (value.type() == typeid(bool))
+            {
+                valueString = Tools::boolToString(std::any_cast<bool>(value));
+            }
+            else if (value.type() == typeid(std::string))
+            {
+                valueString = std::any_cast<std::string>(value);
+            }
+            else
+            {
+                result.append("unsupported value type");
+            }
+
+            result.append(Tools::inQuotes(valueString));
+        }
+    }
+
+    return result;
 }

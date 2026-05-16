@@ -81,13 +81,12 @@ TEST(processing, CompilerDefines)
 
     ASSERT_EQ(commands.size(), 1u);
 
-    // Check that defines are present as -D flags
+    // Check that defines are present as -D<value> arguments
     const auto &args = commands[0].arguments;
 
-    EXPECT_TRUE(std::find(args.begin(), args.end(), "-D") != args.end());
-    EXPECT_TRUE(std::find(args.begin(), args.end(), "DEBUG") != args.end());
-    EXPECT_TRUE(std::find(args.begin(), args.end(), "MY_FEATURE") != args.end());
-    EXPECT_TRUE(std::find(args.begin(), args.end(), "VERSION=1") != args.end());
+    EXPECT_TRUE(std::find(args.begin(), args.end(), "-DDEBUG") != args.end());
+    EXPECT_TRUE(std::find(args.begin(), args.end(), "-DMY_FEATURE") != args.end());
+    EXPECT_TRUE(std::find(args.begin(), args.end(), "-DVERSION=1") != args.end());
 }
 
 TEST(processing, CompilerEmptyDefines)
@@ -107,8 +106,10 @@ TEST(processing, CompilerEmptyDefines)
 
     const auto &args = commands[0].arguments;
 
-    // Count -D flags
-    auto dCount = std::count(args.begin(), args.end(), "-D");
+    // Count defines emitted as -D<value> arguments.
+    auto dCount = std::count_if(args.begin(), args.end(), [](const std::string &arg) {
+        return arg.rfind("-D", 0) == 0 && arg.size() > 2;
+    });
     // Should be 2 (for DEBUG and MY_FEATURE), not 3
     EXPECT_EQ(dCount, 2);
 }

@@ -18,7 +18,9 @@ TEST(parsing, ParserInheritsFeatureDefinesToCompileCommands)
     const auto samplePath = std::filesystem::path(__FILE__).parent_path() /
                             std::filesystem::path("../../../samples/feature/main.cpp");
 
-    Parser parser(samplePath, true, {}, project);
+    ArgumentsList arguments;
+    arguments["my-feature"] = true;
+    Parser parser(samplePath, true, arguments, project);
     ASSERT_EQ(parser.status(), AppError::NoError);
 
     parser.parse();

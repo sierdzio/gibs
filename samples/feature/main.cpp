@@ -1,5 +1,5 @@
 //i executable name SimpleTestFeature
-//i feature name my-feature default on
+//i feature name my-feature default off
 
 #ifdef MY_FEATURE
 #include "someclass.h"
