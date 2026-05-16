@@ -9,7 +9,7 @@
 
 TEST(parsing, ParserInheritsFeatureDefinesToCompileCommands)
 {
-    Log::setLogLevel(Log::Type::Verbose);
+    Log::setLogLevel(Log::Type::Silent);
 
     std::shared_ptr<Processor> processor = std::make_shared<Processor>();
     processor->setDryRun(true);

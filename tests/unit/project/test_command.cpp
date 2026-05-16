@@ -36,7 +36,7 @@ TEST(command, Command)
 
 TEST(command, isValid)
 {
-    Log::setLogLevel(Log::Type::Verbose);
+    Log::setLogLevel(Log::Type::Silent);
 
     {
         Command c;
@@ -99,7 +99,7 @@ TEST(command, isValid)
 
 TEST(command, OptionComponentDefine)
 {
-    Log::setLogLevel(Log::Type::Verbose);
+    Log::setLogLevel(Log::Type::Silent);
 
     // Test simple option name conversion
     {
@@ -144,7 +144,7 @@ TEST(command, OptionComponentDefine)
 
 TEST(command, OptionFinalizeOverridesDefaultValue)
 {
-    Log::setLogLevel(Log::Type::Verbose);
+    Log::setLogLevel(Log::Type::Silent);
 
     ArgumentsList arguments;
     arguments["my-feature"] = true;
@@ -165,7 +165,7 @@ TEST(command, OptionFinalizeOverridesDefaultValue)
 
 TEST(command, OptionFinalizeUsesDefaultForNonBooleanOverride)
 {
-    Log::setLogLevel(Log::Type::Verbose);
+    Log::setLogLevel(Log::Type::Silent);
 
     ArgumentsList arguments;
     arguments["my-feature"] = std::string("not-a-bool");
@@ -243,7 +243,7 @@ TEST(command, PathSemantics)
 
 TEST(command, ObjectComponentDefines)
 {
-    Log::setLogLevel(Log::Type::Verbose);
+    Log::setLogLevel(Log::Type::Silent);
 
     // Test that ObjectComponent has defines field
     {
