@@ -205,5 +205,18 @@ void Project::logCommand(const int depth, const Command &command,
         string->append(Space + Space);
     }
 
-    string->append(Branch + command.whole() + Nl);
+    string->append(Branch + command.whole());
+
+    if (not command.object().defines.empty())
+    {
+        string->append(" [defines:");
+        for (const auto &define : command.object().defines)
+        {
+            string->append(" ");
+            string->append(define);
+        }
+        string->append("]");
+    }
+
+    string->append(Nl);
 }

@@ -4,6 +4,7 @@ add_executable(unit_tests_gibs
     tools/test_tools.cpp
     tools/test_commandline.cpp
     parsing/test_syntax.cpp
+    parsing/test_parser.cpp
     project/test_targetid.cpp
     project/test_command.cpp
     project/test_project.cpp

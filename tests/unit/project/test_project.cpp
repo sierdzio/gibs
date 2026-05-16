@@ -7,6 +7,7 @@
 #include <project/project.h>
 
 #include <memory>
+#include <sstream>
 #include <vector>
 
 // Helper to create a valid source command
@@ -249,4 +250,22 @@ TEST_F(ProjectDependencyTest, ComplexDAGWithMultipleLibrariesAndExecutables)
     EXPECT_TRUE(_project->commandRef(source1Id).isReadyToExecute());
     EXPECT_TRUE(_project->commandRef(source2Id).isReadyToExecute());
     EXPECT_TRUE(_project->commandRef(sourceMainId).isReadyToExecute());
+}
+
+TEST_F(ProjectDependencyTest, LogCommandTreeShowsDefines)
+{
+    Command compile = makeSourceCommand("main.cpp");
+    compile.objectReference().defines = {"DEBUG", "MY_FEATURE"};
+    _project->addCommand(compile);
+
+    Log::setLogLevel(Log::Type::Information);
+    Log::setUseColorfulLogs(false);
+
+    std::ostringstream buffer;
+    const auto previous = std::cout.rdbuf(buffer.rdbuf());
+    _project->logCommandTree();
+    std::cout.rdbuf(previous);
+
+    const auto output = buffer.str();
+    EXPECT_NE(output.find("[defines: DEBUG MY_FEATURE]"), std::string::npos);
 }

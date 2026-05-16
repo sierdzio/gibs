@@ -44,8 +44,7 @@ bool Compiler::setup(const Command &command)
             continue;
         }
 
-        commandData.arguments.emplace_back("-D");
-        commandData.arguments.emplace_back(current);
+        commandData.arguments.emplace_back("-D" + current);
     }
 
     commandData.arguments.emplace_back("-o");

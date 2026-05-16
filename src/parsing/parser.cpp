@@ -244,6 +244,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         compile.parentId = linkCommand->id();
         compile.finalize(_arguments);
         compile.objectReference().includePaths = Tools::pathsToStrings(_includePaths);
+        compile.objectReference().defines = linkCommand->object().defines;
 
         Log::debug("Adding object file to linker command:", compile.object().name);
 
@@ -579,7 +580,7 @@ void Parser::handleCommand(Command command, CppState *state)
         if (command.option().isOn)
         {
             auto &parent = _project->commandRef(command.parentId);
-            parent.objectReference().defines.emplace_back(command.option().name);
+            parent.objectReference().defines.emplace_back(command.option().define());
         }
     }
 
