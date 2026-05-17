@@ -131,9 +131,10 @@ bool Parser::scanProjectDirectoryForEntryPoints()
         }
         else if (type == Syntax::FileType::Cpp)
         {
-            if (it.path().filename() == Syntax::Extension::Main)
+            if (it.path().stem() == Syntax::Extension::Main)
             {
                 _projectEntryPoint = it.path();
+                break;
             }
         }
     }
