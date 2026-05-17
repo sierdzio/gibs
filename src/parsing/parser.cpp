@@ -85,7 +85,7 @@ Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode,
 
 AppError Parser::status() const
 {
-    return AppError();
+    return _status;
 }
 
 void Parser::parse()

@@ -152,6 +152,11 @@ void Project::logCommandTree() const
         const_cast<Project *>(this)->generateDepths();
     }
 
+    if (commands.empty())
+    {
+        return;
+    }
+
     std::string result;
 
     result.append("All project commands:");

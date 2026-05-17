@@ -122,6 +122,11 @@ std::shared_future<void> Processor::schedule(const Command &command)
 
 void Processor::waitForFinished()
 {
+    if (_runningCommands.empty())
+    {
+        return;
+    }
+
     forever
     {
         checkProcessStates();

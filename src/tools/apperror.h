@@ -3,7 +3,7 @@
 enum class AppError
 {
     NoError = 0,
-    WrongInputPath,
-    IncorrectInputFileType,
-    EntryPointNotFound,
+    WrongInputPath = -1,
+    IncorrectInputFileType = -2,
+    EntryPointNotFound = -3,
 };
