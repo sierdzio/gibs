@@ -69,9 +69,8 @@ bool Process::start()
         return false;
     }
 
-    Log::debug(Log::Color(Log::Standard::Foreground::Green),
-                     logIdentifier(), " -> Running process:",
-                     fullCommandLineCall(), "Extra info:", logMeta());
+    Log::debug(Log::Color(Log::Standard::Foreground::Green), logIdentifier(),
+               " -> Running process:", fullCommandLineCall(), "Extra info:", logMeta());
 
     _result.status = Exit::Status::InProgress;
     _thread = std::thread(&Process::performWork, this);
@@ -82,12 +81,14 @@ bool Process::start()
 
 bool Process::isFinished() const
 {
+    std::lock_guard lock(_mutex);
     return _result.status != Exit::Status::InProgress and
            _result.status != Exit::Status::NotExecuted;
 }
 
 Exit Process::result() const
 {
+    std::lock_guard lock(_mutex);
     return _result;
 }
 
@@ -95,7 +96,7 @@ std::string Process::fullCommandLineCall() const
 {
     if (executable().empty() or arguments().empty())
     {
-        return  {};
+        return {};
     }
 
     return executable() + ' ' + argsToString(arguments());
@@ -103,6 +104,9 @@ std::string Process::fullCommandLineCall() const
 
 void Process::finish(const int code, const Exit::Status status)
 {
+    const auto logId = logIdentifier();
+    const auto commandLine = fullCommandLineCall();
+
     // Update result under lock. Do not attempt to join the thread here — joining
     // from within the worker may attempt to join the current thread and throw
     // std::system_error. Thread lifetime is managed by either detaching (in
@@ -113,7 +117,7 @@ void Process::finish(const int code, const Exit::Status status)
         _result.status = status;
     }
 
-    Log::debug(logIdentifier(), " -> Process has finished:", fullCommandLineCall(), "with exit code:", code);
+    Log::debug(logId, " -> Process has finished:", commandLine, "with exit code:", code);
 }
 
 std::string Process::argsToString(const Arguments &args) const

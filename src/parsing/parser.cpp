@@ -27,7 +27,7 @@ constexpr auto Dot = ".";
 
 Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode,
                const ArgumentsList &arguments, std::shared_ptr<Project> project)
-    : _project(project), _isQuickMode(isQuickMode), _arguments(arguments)
+    : _arguments(arguments), _project(project), _isQuickMode(isQuickMode)
 {
     auto input = inputPath;
 

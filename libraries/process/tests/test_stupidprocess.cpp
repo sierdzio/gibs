@@ -35,7 +35,7 @@ TEST(stupidprocess, setExecutable)
 TEST(stupidprocess, setArguments)
 {
     StupidProcess process;
-    const std::vector<std::string> args {"a", "b", "cd"};
+    const std::vector<std::string> args{"a", "b", "cd"};
 
     process.setArguments(args);
 
@@ -90,4 +90,3 @@ TEST(stupidprocess, duration)
 
     EXPECT_TRUE(result);
 }
-

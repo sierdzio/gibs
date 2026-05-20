@@ -1,9 +1,9 @@
 #pragma once
 
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
-#include <mutex>
 
 struct Exit
 {
@@ -61,7 +61,7 @@ class Process
     std::string logIdentifier() const;
 
     Exit _result;
-    std::mutex _mutex;
+    mutable std::mutex _mutex;
 
   private:
     static uint _globalIdentifier;
