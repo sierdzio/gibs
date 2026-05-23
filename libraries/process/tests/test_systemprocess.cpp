@@ -31,7 +31,7 @@ TEST(systemprocess, printf)
     process.setArguments({"\"hello there!\""});
 
     const auto result = process.start();
-    std::this_thread::sleep_for(800ms);
+    std::this_thread::sleep_for(200ms);
 
     ASSERT_TRUE(result);
     ASSERT_TRUE(process.isFinished());
