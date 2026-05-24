@@ -6,6 +6,7 @@ set(gibs_srcs
     exceptions/targetidtypeexception.cpp exceptions/targetidtypeexception.h
     tools/commandline.cpp tools/commandline.h
     tools/tools.cpp tools/tools.h
+    tools/helpdata.cpp tools/helpdata.h
     parsing/syntax.cpp parsing/syntax.h
     parsing/parser.cpp parsing/parser.h
     project/project.cpp project/project.h

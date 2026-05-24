@@ -1,6 +1,7 @@
 #include "commandline.h"
+#include "helpdata.h"
 #include "processing/compilerset.h"
-#include "tools/tools.h"
+#include "tools.h"
 #include "versioninfo.h"
 
 #include <cstring>
@@ -17,35 +18,36 @@
 
 namespace
 {
-constexpr auto H = "-h";
-constexpr auto Help = "--help";
-constexpr auto HelpExplanation = "Displays this help information and exits.";
-constexpr auto V = "-v";
-constexpr auto Version = "--version";
-constexpr auto VersionExplanation = "Displays gibs version info and exits.";
-constexpr auto R = "-r";
-constexpr auto Run = "--run";
-constexpr auto RunExplanation = "Run the executable immediately after building.";
-constexpr auto D = "-d";
-constexpr auto Debug = "--debug";
-constexpr auto DebugExplanation =
+constexpr std::string_view H = "-h";
+constexpr std::string_view Help = "--help";
+constexpr std::string_view HelpExplanation = "Displays this help information and exits.";
+constexpr std::string_view V = "-v";
+constexpr std::string_view Version = "--version";
+constexpr std::string_view VersionExplanation = "Displays gibs version info and exits.";
+constexpr std::string_view R = "-r";
+constexpr std::string_view Run = "--run";
+constexpr std::string_view RunExplanation =
+    "Run the executable immediately after building.";
+constexpr std::string_view D = "-d";
+constexpr std::string_view Debug = "--debug";
+constexpr std::string_view DebugExplanation =
     "Compile in debug mode. By default, gibs compiles release binaries.";
-constexpr auto Q = "-q";
-constexpr auto Quick = "--quick";
-constexpr auto QuickExplanation =
+constexpr std::string_view Q = "-q";
+constexpr std::string_view Quick = "--quick";
+constexpr std::string_view QuickExplanation =
     "'Convention over configuration' mode - parse files only up to first line of "
     "'concrete code'. Do not check file checksums when doing incremental builds.";
-constexpr auto Verbose = "--verbose";
-constexpr auto VerboseExplanation =
+constexpr std::string_view Verbose = "--verbose";
+constexpr std::string_view VerboseExplanation =
     "Sets log level to 'Verbose'. "
     "If more than one log level is specified, or log level "
     "is combined with --verbose, only the last flag is "
     "taken nto account";
 
-constexpr auto L = "-l";
-constexpr auto LogLevel = "--log-level";
+constexpr std::string_view L = "-l";
+constexpr std::string_view LogLevel = "--log-level";
 // TODO: use the X macro to list all log levels automatically
-constexpr auto LogLevelExplanation =
+constexpr std::string_view LogLevelExplanation =
     "Sets log level to one of: silent, error, warning, information, debug, verbose. "
     "Logs are printed for selected level and all levels above it. For example, "
     "when information is set, all error, warning and information logs will be "
@@ -56,53 +58,53 @@ constexpr auto LogLevelExplanation =
     "is combined with --verbose, only the last flag is "
     "taken into account.";
 
-constexpr auto LogFilePath = "--log-file-path";
-constexpr auto LogFilePathExplanation =
+constexpr std::string_view LogFilePath = "--log-file-path";
+constexpr std::string_view LogFilePathExplanation =
     "Duplicates all console logs into this file. "
     "If the file does not exist, it will be created. "
     "If the file does exist, it will be cleared and written to. "
     "If a path to a directory is provided, a log file called 'gibs-<datetime>.log "
     "will be created.";
 
-constexpr auto NoColor = "--no-color";
-constexpr auto NoColorExplanation = "Disables color in log messages.";
+constexpr std::string_view NoColor = "--no-color";
+constexpr std::string_view NoColorExplanation = "Disables color in log messages.";
 
-constexpr auto DryRun = "--dry-run";
-constexpr auto DryRunExplanation =
+constexpr std::string_view DryRun = "--dry-run";
+constexpr std::string_view DryRunExplanation =
     "Does not actually run any compilation or linking commands. Commands are only "
     "printed out but not executed.";
 
-constexpr auto LogProcessOutput = "--log-process-output";
-constexpr auto LogProcessOutputExplanation =
+constexpr std::string_view LogProcessOutput = "--log-process-output";
+constexpr std::string_view LogProcessOutputExplanation =
     "Prints standard and error outputs from spawned processes "
     "(compiler, linker etc.).";
 
-constexpr auto C = "-c";
-constexpr auto Compiler = "--compiler";
-constexpr auto CompilerSetOption = "--compiler-set";
-constexpr auto CompilerExplanation =
+constexpr std::string_view C = "-c";
+constexpr std::string_view Compiler = "--compiler";
+constexpr std::string_view CompilerSetOption = "--compiler-set";
+constexpr std::string_view CompilerExplanation =
     "Selects the compiler set to use: gcc, clang, apple-clang. "
     "Defaults to apple-clang on macOS and gcc elsewhere.";
 
-constexpr auto Executable = "executable";
-constexpr auto Input = "input";
-constexpr auto InputExplanation =
+constexpr std::string_view Executable = "executable";
+constexpr std::string_view Input = "input";
+constexpr std::string_view InputExplanation =
     "Path to the input file or directory to build. If a directory is provided, gibs will "
     "look for files with supported extensions in it and its subdirectories. If a file is "
     "provided, gibs will try to build it. If no input is provided, gibs will try to "
     "build a file called 'main' with a supported extension in the current directory.";
 
-constexpr auto OtherArguments = "--";
-constexpr auto OtherArgumentsExplanation =
+constexpr std::string_view OtherArguments = "--";
+constexpr std::string_view OtherArgumentsExplanation =
     "Other, user-defined arguments passed to the program should be placed after this "
     "separator. For example: 'gibs --main.cpp -- --my-flag' will enable feature "
     "'my-flag', and 'gibs --main.cpp -- --my-flag=OFF' will disable it when compiling "
     "main.cpp.";
 
-constexpr auto DoubleSpace = "  ";
-constexpr auto Quote = "\"";
-constexpr auto DateTimeFormat = "%Y-%m-%dT%H:%M:%SZ";
-constexpr auto NegativeOptionBeginning = "no-";
+constexpr std::string_view DoubleSpace = "  ";
+constexpr std::string_view Quote = "\"";
+constexpr std::string_view DateTimeFormat = "%Y-%m-%dT%H:%M:%SZ";
+constexpr std::string_view NegativeOptionBeginning = "no-";
 
 std::string toUpper(std::string string)
 {
@@ -173,7 +175,8 @@ std::string CommandLine::parsedFlagsText() const
     std::string result = "Set flags:\n";
 
     const auto appendIf = [](std::string *result, const bool shouldAppend,
-                             const std::string &flag, const std::string &extraValue = {})
+                             const std::string_view &flag,
+                             const std::string_view &extraValue = {})
     {
         if (shouldAppend)
         {
@@ -207,31 +210,30 @@ std::string CommandLine::parsedFlagsText() const
 
 std::string CommandLine::helpText() const
 {
-    std::string result;
+    HelpData help;
 
-    result.append(
+    help.addIntro(
         "C++ in-source project builder. Compile your projects without all the hassle "
         "connected with preparing a project file. Just run 'gibs main.cpp' and enjoy "
-        "your "
-        "compiled binary! More info: https://github.com/sierdzio/gibs\n\nOptions:\n");
-    result = helpAppend(std::move(result), {H, Help}, HelpExplanation);
-    result = helpAppend(std::move(result), {V, Version}, VersionExplanation);
-    result = helpAppend(std::move(result), {R, Run}, RunExplanation);
-    result = helpAppend(std::move(result), {D, Debug}, DebugExplanation);
-    result = helpAppend(std::move(result), {Q, Quick}, QuickExplanation);
-    result = helpAppend(std::move(result), {Verbose}, VerboseExplanation);
-    result = helpAppend(std::move(result), {L, LogLevel}, LogLevelExplanation);
-    result = helpAppend(std::move(result), {LogFilePath}, LogFilePathExplanation);
-    result = helpAppend(std::move(result), {NoColor}, NoColorExplanation);
-    result = helpAppend(std::move(result), {DryRun}, DryRunExplanation);
-    result =
-        helpAppend(std::move(result), {LogProcessOutput}, LogProcessOutputExplanation);
-    result = helpAppend(std::move(result), {C, Compiler, CompilerSetOption},
-                        CompilerExplanation);
-    result = helpAppend(std::move(result), {Input}, InputExplanation);
-    result = helpAppend(std::move(result), {OtherArguments}, OtherArgumentsExplanation);
+        "your compiled binary! More info: "
+        "https://github.com/sierdzio/gibs\n\nOptions:\n");
+    help.addEntry({H, Help}, HelpExplanation);
+    help.addEntry({V, Version}, VersionExplanation);
+    help.addEntry({R, Run}, RunExplanation);
+    help.addEntry({D, Debug}, DebugExplanation);
+    help.addEntry({Q, Quick}, QuickExplanation);
+    help.addEntry({Verbose}, VerboseExplanation);
+    help.addEntry({L, LogLevel}, LogLevelExplanation);
+    help.addEntry({LogFilePath}, LogFilePathExplanation);
+    help.addEntry({NoColor}, NoColorExplanation);
+    help.addEntry({DryRun}, DryRunExplanation);
+    help.addEntry({LogProcessOutput}, LogProcessOutputExplanation);
+    help.addEntry({C, Compiler, CompilerSetOption}, CompilerExplanation);
+    help.addEntry({Input}, InputExplanation);
+    help.addEntry({OtherArguments}, OtherArgumentsExplanation);
 
-    return result;
+    // TODO: make width dynamic based on terminal width
+    return help.formatted(180);
 }
 
 const std::string &CommandLine::versionText() const
@@ -346,8 +348,7 @@ bool CommandLine::parse()
 
             if (status.current.starts_with(OtherArguments))
             {
-                const std::string rawName =
-                    status.current.substr(std::strlen(OtherArguments));
+                const std::string rawName = status.current.substr(OtherArguments.size());
                 const auto equalIndex = rawName.find('=');
                 std::string name = rawName.substr(0, equalIndex);
                 std::string value;
@@ -363,7 +364,7 @@ bool CommandLine::parse()
                 if (name.starts_with(NegativeOptionBeginning))
                 {
                     isNegative = true;
-                    name = name.substr(std::strlen(NegativeOptionBeginning));
+                    name = name.substr(NegativeOptionBeginning.size());
                     isOn = false;
                 }
 
@@ -421,7 +422,7 @@ bool CommandLine::parse()
     }
 
     // Set default log level:
-    if (not status.parsed.contains(LogLevel))
+    if (not status.parsed.contains(std::string(LogLevel)))
     {
         set(_logLevel, Log::Type::Information, status, LogLevel);
     }
@@ -563,7 +564,7 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
             const auto now = std::chrono::system_clock::now();
             const auto time = std::chrono::system_clock::to_time_t(now);
             std::ostringstream dateTimeStream;
-            dateTimeStream << std::put_time(std::localtime(&time), DateTimeFormat);
+            dateTimeStream << std::put_time(std::localtime(&time), DateTimeFormat.data());
             const auto dateTimeString = dateTimeStream.str();
             const auto path =
                 std::filesystem::current_path() / ("gibs-" + dateTimeString + ".log");
@@ -577,13 +578,13 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
     }
 
     // First positional argument is the executable
-    if (status.isFirstArgument and not status.parsed.contains(Executable))
+    if (status.isFirstArgument and not status.parsed.contains(std::string(Executable)))
     {
         return set(_executable, status.current, status, Executable);
     }
 
     // Second positional argument is the input file
-    if (not status.parsed.contains(Input))
+    if (not status.parsed.contains(std::string(Input)))
     {
         return set(_input, status.current, status, Input);
     }
@@ -593,13 +594,15 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
 }
 
 bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status,
-                      const std::string &name) const
+                      const std::string_view &name) const
 {
     value = toSet;
 
+    const std::string nameStr(name);
+
     if (name == LogLevel)
     {
-        const auto result = status.parsed.insert(name);
+        const auto result = status.parsed.insert(nameStr);
 
         if (not result.second)
         {
@@ -612,7 +615,7 @@ bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status,
         return true;
     }
 
-    const auto result = status.parsed.insert(name);
+    const auto result = status.parsed.insert(nameStr);
 
     if (not result.second)
     {
@@ -631,36 +634,6 @@ bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status,
 bool CommandLine::isFlag(const ParseStatus &status) const
 {
     return status.current.starts_with('-');
-}
-
-std::string CommandLine::helpAppend(std::string &&string, const StringList &flags,
-                                    const std::string &explanation) const
-{
-    assert(flags.size() > 0);
-
-    string.append(DoubleSpace);
-
-    bool isFirst = true;
-    for (const auto &flag : flags)
-    {
-        if (isFirst)
-        {
-            isFirst = false;
-        }
-        else
-        {
-            string.append(std::string(", "));
-        }
-
-        string.append(flag);
-    }
-
-    string.push_back('\t');
-    string.push_back('\t');
-    string.append(explanation);
-    string.push_back('\n');
-
-    return std::move(string);
 }
 
 std::string CommandLine::otherArgumentsText() const

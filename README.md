@@ -69,46 +69,68 @@ gibs --help
 Options:
 
 ```text
--h, --help                  Displays this help.
--v, --version               Displays version information.
--d, --debug                 Compile in debug mode. By default, gibs compiles
-                            release binaries
--r, --run                   Run the executable immediately after building
---qt-dir <Qt dir>           Specify Qt directory for Qt apps
--m, --auto-qt-modules       Automatically guess Qt modules used by the
-                            project. This is done using internal dictionary
-                            mapping Qt classes to modules.
---clean                     Clear build directory
--q, --quick                 'Convention over configuration' mode - parse
-                            files only up to first line of 'concrete code'. Do
-                            not check file checksums when doing incremental
-                            builds.
--a, --auto-include          Automatically scan source directory for include
-                            paths. This can be used instead of gibs command
-                            'include some/path' if the path is below input
-                            file.
--j, --jobs <threads>        Max number of threads used to compile and process
-                            the sources. If not specified, gibs will use max
-                            possible number of threads. If a fraction is
-                            specified, it will use given percentage of
-                            available cores (-j 0.5 means half of all CPU
-                            cores)
--c, --commands <commands>   gibs syntax commands - same you can specify in
-                            c++ commends. All commands are suppored on the
-                            command line as well
--w, --parse-whole-files     Parse whole files instead of just their
-                            beginning. By default, only code up to first class
-                            declaration or function definition is parsed.
---deploy-tool <path>        path to deployment tool to use, for example
-                            linuxdeployqt.AppImage
---compiler <compiler name>  compiler name. If specified, Gibs will search for
-                            compiler definitions in $HOME/.gibs/compilers.
-                            Built-in compiler definitions are: gcc, clang.
-                            Once Gibs learns to parse mkspecs, it will be a
-                            source of compiler configs as well
-
-Arguments:
-  inputFile                   Input file, usually main.cpp
+   -h, --help                      Displays this help information and
+                                  exits.
+  -v, --version                   Displays gibs version info and exits.
+  -r, --run                       Run the executable immediately after
+                                  building.
+  -d, --debug                     Compile in debug mode. By default,
+                                  gibs compiles release binaries.
+  -q, --quick                     'Convention over configuration' mode
+                                  - parse files only up to first line of
+                                  'concrete code'. Do not check file checksums
+                                  when doing incremental builds.
+  --verbose                       Sets log level to 'Verbose'. If more
+                                  than one log level is specified, or log
+                                  level is combined with --verbose, only
+                                  the last flag is taken nto account
+  -l, --log-level                 Sets log level to one of: silent,
+                                  error, warning, information, debug,
+                                  verbose. Logs are printed for selected
+                                  level and all levels above it. For example,
+                                  when information is set, all error,
+                                  warning and information logs will be
+                                  printed, but no debug or verbose ones.
+                                  'silent' setting will not print any logs
+                                  at all. Log level parser is case-sensitive,
+                                  please make sure to provide log levels
+                                  in lower case. If more than one log
+                                  level is specified, or log level is
+                                  combined with --verbose, only the last
+                                  flag is taken into account.
+  --log-file-path                 Duplicates all console logs into this
+                                  file. If the file does not exist, it will
+                                  be created. If the file does exist, it
+                                  will be cleared and written to. If a path
+                                  to a directory is provided, a log file
+                                  called 'gibs-<datetime>.log will be
+                                  created.
+  --no-color                      Disables color in log messages.
+  --dry-run                       Does not actually run any compilation
+                                  or linking commands. Commands are only
+                                  printed out but not executed.
+  --log-process-output            Prints standard and error outputs
+                                  from spawned processes (compiler, linker
+                                  etc.).
+  -c, --compiler, --compiler-set  Selects the compiler set to use: gcc,
+                                  clang, apple-clang. Defaults to apple-clang
+                                  on macOS and gcc elsewhere.
+  input                           Path to the input file or directory
+                                  to build. If a directory is provided,
+                                  gibs will look for files with supported
+                                  extensions in it and its subdirectories.
+                                  If a file is provided, gibs will try to
+                                  build it. If no input is provided, gibs
+                                  will try to build a file called 'main'
+                                  with a supported extension in the current
+                                  directory.
+  --                              Other, user-defined arguments passed
+                                  to the program should be placed after
+                                  this separator. For example: 'gibs
+                                  --main.cpp -- --my-flag' will enable feature
+                                  'my-flag', and 'gibs --main.cpp --
+                                  --my-flag=OFF' will disable it when compiling
+                                  main.cpp.
 ```
 
 Gibs builds in *release* mode by default. If you want to compile a debug build,

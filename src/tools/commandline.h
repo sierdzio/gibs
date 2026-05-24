@@ -7,6 +7,7 @@
 
 #include <set>
 #include <string>
+#include <string_view>
 
 class CommandLine
 {
@@ -57,11 +58,9 @@ class CommandLine
     bool handleOptionsWithValues(ParseStatus &status);
     bool handlePositionalArguments(ParseStatus &status);
     bool set(auto &value, const auto &toSet, ParseStatus &status,
-             const std::string &name) const;
+             const std::string_view &name) const;
     bool isFlag(const ParseStatus &status) const;
 
-    [[nodiscard]] std::string helpAppend(std::string &&string, const StringList &flags,
-                                         const std::string &explanation) const;
     std::string otherArgumentsText() const;
 
     StringList _args;
