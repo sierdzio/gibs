@@ -2,6 +2,7 @@ include(GoogleTest)
 
 add_executable(unit_tests_gibs
     tools/test_tools.cpp
+    tools/test_helpdata.cpp
     tools/test_commandline.cpp
     parsing/test_syntax.cpp
     parsing/test_parser.cpp
