@@ -146,6 +146,14 @@ TEST(tools, isWhitespace)
     EXPECT_FALSE(Tools::isWhitespace(-127));
 }
 
+TEST(tools, toLower)
+{
+    EXPECT_EQ(Tools::toLower("HELLO"), "hello");
+    EXPECT_EQ(Tools::toLower("HeLLo 123!"), "hello 123!");
+    EXPECT_EQ(Tools::toLower("already lowercase"), "already lowercase");
+    EXPECT_EQ(Tools::toLower(""), "");
+}
+
 TEST(tools, inQuotes)
 {
     EXPECT_EQ(Tools::inQuotes("abc"), "\"abc\"");

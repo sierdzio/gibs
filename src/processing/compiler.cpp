@@ -5,7 +5,8 @@
 
 #include <utility>
 
-Compiler::Compiler(const Command &command)
+Compiler::Compiler(const Command &command, const CompilerSet &compilerSet)
+    : _compilerSet(compilerSet)
 {
     Compiler::setup(command);
 }
@@ -24,7 +25,7 @@ bool Compiler::setup(const Command &command)
     }
 
     CommandData commandData;
-    commandData.command = "g++";
+    commandData.command = _compilerSet.compilerCommand;
 
     for (const auto &current : std::as_const(command.object().includePaths))
     {

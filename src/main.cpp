@@ -9,6 +9,7 @@
 #include "exceptions/commandnotfound.h"
 #include "exceptions/emptylinkobject.h"
 #include "parsing/parser.h"
+#include "processing/compilerset.h"
 #include "processing/processor.h"
 #include "project/project.h"
 #include "tools/commandline.h"
@@ -59,6 +60,7 @@ int main(int argc, char *argv[])
     auto processor = std::make_shared<Processor>();
     processor->setDryRun(cmd.isDryRun());
     processor->setLogProcessOutput(cmd.isLogProcessOutput());
+    processor->setCompilerSet(CompilerSet::fromName(cmd.compilerSet()));
 
     auto project = std::make_shared<Project>(processor);
 

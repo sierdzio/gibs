@@ -1,4 +1,5 @@
 #include "commandline.h"
+#include "processing/compilerset.h"
 #include "tools/tools.h"
 #include "versioninfo.h"
 
@@ -76,6 +77,13 @@ constexpr auto LogProcessOutputExplanation =
     "Prints standard and error outputs from spawned processes "
     "(compiler, linker etc.).";
 
+constexpr auto C = "-c";
+constexpr auto Compiler = "--compiler";
+constexpr auto CompilerSetOption = "--compiler-set";
+constexpr auto CompilerExplanation =
+    "Selects the compiler set to use: gcc, clang, apple-clang. "
+    "Defaults to apple-clang on macOS and gcc elsewhere.";
+
 constexpr auto Executable = "executable";
 constexpr auto Input = "input";
 constexpr auto InputExplanation =
@@ -88,7 +96,8 @@ constexpr auto OtherArguments = "--";
 constexpr auto OtherArgumentsExplanation =
     "Other, user-defined arguments passed to the program should be placed after this "
     "separator. For example: 'gibs --main.cpp -- --my-flag' will enable feature "
-    "'my-flag', and 'gibs --main.cpp -- --my-flag=OFF' will disable it when compiling main.cpp.";
+    "'my-flag', and 'gibs --main.cpp -- --my-flag=OFF' will disable it when compiling "
+    "main.cpp.";
 
 constexpr auto DoubleSpace = "  ";
 constexpr auto Quote = "\"";
@@ -99,7 +108,8 @@ std::string toUpper(std::string string)
 {
     for (auto &character : string)
     {
-        character = static_cast<char>(std::toupper(static_cast<unsigned char>(character)));
+        character =
+            static_cast<char>(std::toupper(static_cast<unsigned char>(character)));
     }
     return string;
 }
@@ -188,6 +198,7 @@ std::string CommandLine::parsedFlagsText() const
     appendIf(&result, not colorfulLogs(), NoColor);
     appendIf(&result, isDryRun(), DryRun);
     appendIf(&result, isLogProcessOutput(), LogProcessOutput);
+    appendIf(&result, true, CompilerSetOption, compilerSet());
     appendIf(&result, true, Input, input());
     appendIf(&result, true, OtherArguments, otherArgumentsText());
 
@@ -215,6 +226,8 @@ std::string CommandLine::helpText() const
     result = helpAppend(std::move(result), {DryRun}, DryRunExplanation);
     result =
         helpAppend(std::move(result), {LogProcessOutput}, LogProcessOutputExplanation);
+    result = helpAppend(std::move(result), {C, Compiler, CompilerSetOption},
+                        CompilerExplanation);
     result = helpAppend(std::move(result), {Input}, InputExplanation);
     result = helpAppend(std::move(result), {OtherArguments}, OtherArgumentsExplanation);
 
@@ -230,6 +243,16 @@ const std::string &CommandLine::input() const
 {
     Log::warning("Input file:", _input);
     return _input;
+}
+
+std::string CommandLine::compilerSet() const
+{
+    if (not _compilerSet.empty())
+    {
+        return _compilerSet;
+    }
+
+    return CompilerSet::defaultForPlatform().name;
 }
 
 const std::string &CommandLine::logFilePath() const
@@ -323,7 +346,8 @@ bool CommandLine::parse()
 
             if (status.current.starts_with(OtherArguments))
             {
-                const std::string rawName = status.current.substr(std::strlen(OtherArguments));
+                const std::string rawName =
+                    status.current.substr(std::strlen(OtherArguments));
                 const auto equalIndex = rawName.find('=');
                 std::string name = rawName.substr(0, equalIndex);
                 std::string value;
@@ -475,6 +499,30 @@ bool CommandLine::handleOptionsWithValues(ParseStatus &status)
     if (status.hasError)
     {
         return false;
+    }
+
+    if (status.current == Compiler or status.current == CompilerSetOption)
+    {
+        if (status.isLastArgument)
+        {
+            Log::error("Missing value for option:", status.current);
+            status.hasError = true;
+            return false;
+        }
+
+        return true;
+    }
+
+    if (status.previous == Compiler or status.previous == CompilerSetOption)
+    {
+        if (not CompilerSet::isKnownName(status.current))
+        {
+            Log::error("Unsupported compiler set:", status.current);
+            status.hasError = true;
+            return false;
+        }
+
+        return set(_compilerSet, status.current, status, CompilerSetOption);
     }
 
     if (status.previous == LogLevel)

@@ -3,7 +3,8 @@
 
 #include <logger/log.h>
 
-Linker::Linker(const Command &command)
+Linker::Linker(const Command &command, const CompilerSet &compilerSet)
+    : _compilerSet(compilerSet)
 {
     Linker::setup(command);
 }
@@ -26,7 +27,7 @@ bool Linker::setup(const Command &command)
     if (isExe)
     {
         CommandData commandData;
-        commandData.command = "g++";
+        commandData.command = _compilerSet.compilerCommand;
         for (const auto &current : objects)
         {
             commandData.arguments.emplace_back(current);
@@ -43,7 +44,7 @@ bool Linker::setup(const Command &command)
         const std::string archiveName = command.object().name;
 
         CommandData arCommand;
-        arCommand.command = "ar";
+        arCommand.command = _compilerSet.archiverCommand;
         arCommand.arguments.emplace_back("qc");
         arCommand.arguments.emplace_back(archiveName);
         for (const auto &current : objects)
@@ -52,7 +53,7 @@ bool Linker::setup(const Command &command)
         }
 
         CommandData ranlibCommand;
-        ranlibCommand.command = "ranlib";
+        ranlibCommand.command = _compilerSet.ranlibCommand;
         ranlibCommand.arguments.emplace_back(archiveName);
 
         _commands.emplace_back(std::move(arCommand));
@@ -63,7 +64,7 @@ bool Linker::setup(const Command &command)
 
     // Dynamic library path
     CommandData commandData;
-    commandData.command = "g++";
+    commandData.command = _compilerSet.compilerCommand;
     for (const auto &current : objects)
     {
         commandData.arguments.emplace_back(current);

@@ -21,6 +21,7 @@ class CommandLine
     const std::string &versionText() const;
 
     const std::string &input() const;
+    std::string compilerSet() const;
 
     const std::string &logFilePath() const;
     bool isLogFilePathSet() const;
@@ -66,6 +67,7 @@ class CommandLine
     StringList _args;
     std::string _executable;
     std::string _input;
+    std::string _compilerSet;
     std::string _logFilePath;
     ArgumentsList _otherArguments;
     Log::Type _logLevel = Log::Type::Information;

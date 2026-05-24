@@ -92,6 +92,15 @@ std::string Tools::boolToString(const bool value)
     return value ? True : False;
 }
 
+std::string Tools::toLower(const std::string &input)
+{
+    std::string result = input;
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](const unsigned char character)
+                   { return static_cast<char>(std::tolower(character)); });
+    return result;
+}
+
 bool Tools::isPathToFile(const std::string &path)
 {
     // TODO: these checks and results should be cached!

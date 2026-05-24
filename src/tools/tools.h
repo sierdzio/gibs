@@ -53,6 +53,7 @@ bool isPathToFile(const std::string &path);
 bool isHeaderFile(const std::string &path);
 
 bool isWhitespace(const char character);
+std::string toLower(const std::string &input);
 }; // namespace Tools
 
 #define forever while (true)

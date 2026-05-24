@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compilerset.h"
 #include "project/command.h"
 
 #include <future>
@@ -27,10 +28,12 @@ class Processor
 
     void setLogProcessOutput(const bool enabled);
     bool isLogProcessOutput() const;
+    void setCompilerSet(const CompilerSet &compilerSet);
 
     void checkProcessStates(); // Made public for Project to update futures
 
     std::vector<RunningCommand> _runningCommands;
     bool _dryRun = false;
     bool _logProcessOutput = false;
+    CompilerSet _compilerSet = CompilerSet::defaultForPlatform();
 };

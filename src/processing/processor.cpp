@@ -32,7 +32,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
     case Syntax::Command::Executable:
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
-            const Linker tool(command);
+            const Linker tool(command, _compilerSet);
 
             for (const auto &toolCommand : tool.commands())
             {
@@ -61,7 +61,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
     case Syntax::Command::Source:
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
-            const Compiler tool(command);
+            const Compiler tool(command, _compilerSet);
 
             for (const auto &toolCommand : tool.commands())
             {
@@ -161,6 +161,11 @@ void Processor::setLogProcessOutput(const bool enabled)
 bool Processor::isLogProcessOutput() const
 {
     return _logProcessOutput;
+}
+
+void Processor::setCompilerSet(const CompilerSet &compilerSet)
+{
+    _compilerSet = compilerSet;
 }
 
 void Processor::checkProcessStates()

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <logger/log.h>
+#include <processing/compilerset.h>
 #include <tools/commandline.h>
 #include <tools/stringlist.h>
 
@@ -133,6 +134,35 @@ TEST(commandline, CommandLine)
 
         EXPECT_TRUE(cmd.isValid());
         EXPECT_EQ(cmd.logLevel(), Log::Type::Verbose);
+    }
+
+    {
+        const CommandLine cmd({"--compiler", "clang"});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_EQ(cmd.compilerSet(), "clang");
+        EXPECT_NE(cmd.parsedFlagsText().find("clang"), std::string::npos);
+    }
+
+    {
+        const CommandLine cmd({"--compiler", "gcc", "main.cpp"});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_EQ(cmd.compilerSet(), "gcc");
+        EXPECT_EQ(cmd.input(), "main.cpp");
+    }
+
+    {
+        const CommandLine cmd({"--compiler", "unknown"});
+
+        EXPECT_FALSE(cmd.isValid());
+    }
+
+    {
+        const CommandLine cmd({});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_EQ(cmd.compilerSet(), CompilerSet::defaultForPlatform().name);
     }
 }
 

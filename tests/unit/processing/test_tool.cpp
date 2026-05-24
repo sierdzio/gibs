@@ -3,6 +3,7 @@
 
 #include "parsing/syntax.h"
 #include "processing/compiler.h"
+#include "processing/compilerset.h"
 #include "processing/linker.h"
 #include "project/command.h"
 
@@ -15,7 +16,7 @@ TEST(processing, CompilerCommands)
 
     command.objectReference().includePaths = {"include"};
 
-    Compiler tool(command);
+    Compiler tool(command, CompilerSet::fromName("gcc"));
     const auto &commands = tool.commands();
 
     ASSERT_EQ(commands.size(), 1u);
@@ -76,7 +77,7 @@ TEST(processing, CompilerDefines)
     command.objectReference().defines = {"DEBUG", "MY_FEATURE", "VERSION=1"};
     command.objectReference().includePaths = {"include"};
 
-    Compiler tool(command);
+    Compiler tool(command, CompilerSet::fromName("gcc"));
     const auto &commands = tool.commands();
 
     ASSERT_EQ(commands.size(), 1u);
@@ -89,6 +90,36 @@ TEST(processing, CompilerDefines)
     EXPECT_TRUE(std::find(args.begin(), args.end(), "-DVERSION=1") != args.end());
 }
 
+TEST(processing, CompilerUsesExplicitToolchain)
+{
+    Command command;
+    EXPECT_TRUE(command.append("source"));
+    EXPECT_TRUE(command.append("main.cpp"));
+    command.finalize({});
+
+    Compiler tool(command, CompilerSet::fromName("clang"));
+    const auto &commands = tool.commands();
+
+    ASSERT_EQ(commands.size(), 1u);
+    EXPECT_EQ(commands[0].command, "clang++");
+}
+
+TEST(processing, LinkerUsesExplicitToolchain)
+{
+    Command command;
+    EXPECT_TRUE(command.append("executable"));
+    EXPECT_TRUE(command.append("main"));
+    command.finalize({});
+
+    command.addLinkObject("main.o");
+
+    Linker tool(command, CompilerSet::fromName("clang"));
+    const auto &commands = tool.commands();
+
+    ASSERT_EQ(commands.size(), 1u);
+    EXPECT_EQ(commands[0].command, "clang++");
+}
+
 TEST(processing, CompilerEmptyDefines)
 {
     Command command;
@@ -99,7 +130,7 @@ TEST(processing, CompilerEmptyDefines)
     // Add includes with empty defines (to ensure empty defines are skipped)
     command.objectReference().defines = {"DEBUG", "", "MY_FEATURE"};
 
-    Compiler tool(command);
+    Compiler tool(command, CompilerSet::fromName("gcc"));
     const auto &commands = tool.commands();
 
     ASSERT_EQ(commands.size(), 1u);
@@ -107,9 +138,8 @@ TEST(processing, CompilerEmptyDefines)
     const auto &args = commands[0].arguments;
 
     // Count defines emitted as -D<value> arguments.
-    auto dCount = std::count_if(args.begin(), args.end(), [](const std::string &arg) {
-        return arg.rfind("-D", 0) == 0 && arg.size() > 2;
-    });
+    auto dCount = std::count_if(args.begin(), args.end(), [](const std::string &arg)
+                                { return arg.rfind("-D", 0) == 0 && arg.size() > 2; });
     // Should be 2 (for DEBUG and MY_FEATURE), not 3
     EXPECT_EQ(dCount, 2);
 }
