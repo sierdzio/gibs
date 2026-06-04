@@ -1,5 +1,5 @@
 #include "stupidprocess.h"
-#include "process/process.h"
+#include "processinterface.h"
 
 #include <logger/log.h>
 

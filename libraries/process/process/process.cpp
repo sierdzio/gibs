@@ -1,158 +1,107 @@
 #include "process.h"
 
+#include <iostream>
 #include <logger/log.h>
-#include <string>
 
-unsigned int Process::_globalIdentifier = 1;
+#if defined(__linux__)
+#include <cerrno>
+#include <cstring>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 
-Process::Process() : _identifier(_globalIdentifier++)
+void Process::performWork()
 {
-}
+    const auto fullInvocation = fullCommandLineCall();
 
-Process::~Process()
-{
-    if (_thread.joinable())
+    if (isLogProcessOutput())
     {
-        _thread.join();
+        Log::verbose(logIdentifier(), " -> Starting process:", fullInvocation);
     }
+
+    performWorkNatively();
 }
 
-void Process::setExecutable(const std::string &filePath)
+void Process::performWorkNatively()
 {
-    std::lock_guard lock(_mutex);
-    _executablePath = filePath;
-}
+#if defined(__linux__)
+    std::cout.flush();
 
-const std::string &Process::executable() const
-{
-    return _executablePath;
-}
-
-void Process::setArguments(const Arguments &args)
-{
-    std::lock_guard lock(_mutex);
-    _arguments = args;
-}
-
-const Arguments &Process::arguments() const
-{
-    return _arguments;
-}
-
-void Process::setMetaInformation(const std::string &information)
-{
-    std::lock_guard lock(_mutex);
-    _metaInformation = information;
-}
-
-const std::string &Process::metaInformation() const
-{
-    return _metaInformation;
-}
-
-void Process::setLogProcessOutput(const bool enabled)
-{
-    _logProcessOutput = enabled;
-}
-
-bool Process::isLogProcessOutput() const
-{
-    return _logProcessOutput;
-}
-
-bool Process::start()
-{
-    if (executable().empty())
+    const auto pid = fork();
+    if (pid < 0)
     {
-        Log::error(logIdentifier(), "Cannot run process when executable name is empty!");
+        Log::error(logIdentifier(), "Failed to fork process:", std::strerror(errno));
         finish(1, Exit::Status::FailedToExecute);
-        return false;
+        return;
     }
 
-    Log::debug(Log::Color(Log::Standard::Foreground::Green), logIdentifier(),
-               " -> Running process:", fullCommandLineCall(), "Extra info:", logMeta());
+    const auto executablePath = executable();
+    const auto argumentsCopy = arguments();
 
-    _result.status = Exit::Status::InProgress;
-    _thread = std::thread(&Process::performWork, this);
-    _thread.detach();
-
-    return true;
-}
-
-bool Process::isFinished() const
-{
-    std::lock_guard lock(_mutex);
-    return _result.status != Exit::Status::InProgress and
-           _result.status != Exit::Status::NotExecuted;
-}
-
-Exit Process::result() const
-{
-    std::lock_guard lock(_mutex);
-    return _result;
-}
-
-std::string Process::fullCommandLineCall() const
-{
-    if (executable().empty() or arguments().empty())
+    std::vector<std::string> argvStrings;
+    argvStrings.reserve(1 + argumentsCopy.size());
+    argvStrings.push_back(executablePath);
+    for (const auto &arg : argumentsCopy)
     {
-        return {};
+        argvStrings.push_back(arg);
     }
 
-    return executable() + ' ' + argsToString(arguments());
-}
-
-void Process::finish(const int code, const Exit::Status status)
-{
-    const auto logId = logIdentifier();
-    const auto commandLine = fullCommandLineCall();
-
-    // Update result under lock. Do not attempt to join the thread here — joining
-    // from within the worker may attempt to join the current thread and throw
-    // std::system_error. Thread lifetime is managed by either detaching (in
-    // start()) or joining in the destructor when appropriate.
+    std::vector<char *> argv;
+    argv.reserve(argvStrings.size() + 1);
+    for (auto &arg : argvStrings)
     {
-        std::lock_guard lock(_mutex);
-        _result.rawCode = code;
-        _result.status = status;
+        argv.push_back(arg.data());
+    }
+    argv.push_back(nullptr);
+
+    if (pid == 0)
+    {
+        execvp(argv[0], argv.data());
+        const int err = errno;
+        Log::error(logIdentifier(), "Failed to execute process:", executablePath,
+                   "errno:", err, std::strerror(err));
+        _exit(127);
     }
 
-    Log::debug(logId, " -> Process has finished:", commandLine, "with exit code:", code);
-}
-
-std::string Process::argsToString(const Arguments &args) const
-{
-    std::string result;
-
-    for (const auto &arg : args)
+    int status = 0;
+    while (true)
     {
-        if (not result.empty())
+        const auto result = waitpid(pid, &status, 0);
+        if (result == pid)
         {
-            result.push_back(' ');
+            break;
         }
 
-        result.append(arg);
+        if (result == -1)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+
+            Log::error(logIdentifier(), "waitpid failed:", std::strerror(errno));
+            finish(1, Exit::Status::FailedDuringExecution);
+            return;
+        }
     }
 
-    return result;
-}
+    if (WIFEXITED(status))
+    {
+        const int exitCode = WEXITSTATUS(status);
+        finish(exitCode, exitCode == 0 ? Exit::Status::Success
+                                       : Exit::Status::FailedDuringExecution);
+        return;
+    }
 
-bool Process::hasMeta() const
-{
-    return not _metaInformation.empty();
-}
+    if (WIFSIGNALED(status))
+    {
+        const int signalNumber = WTERMSIG(status);
+        finish(-signalNumber, Exit::Status::FailedDuringExecution);
+        return;
+    }
 
-std::string Process::logMeta() const
-{
-    return hasMeta() ? ("Meta: " + metaInformation()) : std::string();
-}
-
-unsigned int Process::identifier() const
-{
-    return _identifier;
-}
-
-std::string Process::logIdentifier() const
-{
-    return '(' + std::to_string(identifier()) + ')';
+    finish(status, Exit::Status::UndefinedFailure);
+#elif defined(_WIN32)
+#elif defined(__APPLE__)
+#endif
 }

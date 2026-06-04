@@ -1,6 +1,6 @@
 #pragma once
 
-#include "process.h"
+#include "processinterface.h"
 
 #include <chrono>
 
@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 
   Objects of this class will never actually run any real processes.
 */
-class StupidProcess : public Process
+class StupidProcess : public ProcessInterface
 {
   public:
     virtual ~StupidProcess() = default;
@@ -24,5 +24,5 @@ class StupidProcess : public Process
     void performWork() override;
 
   private:
-    std::chrono::milliseconds _duration { 500ms };
+    std::chrono::milliseconds _duration{500ms};
 };

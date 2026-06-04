@@ -137,7 +137,9 @@ bool Command::canBeProcessed() const
     return false;
 }
 
-void Command::finalize(const ArgumentsList &arguments)
+void Command::finalize(const ArgumentsList &arguments,
+                       [[maybe_unused]] const std::filesystem::path &projectDirectory,
+                       const std::filesystem::path &workingDirectory)
 {
     if (_modifiers.empty())
     {
@@ -182,7 +184,16 @@ void Command::finalize(const ArgumentsList &arguments)
                 }
                 else if (previous == Syntax::Modifier::Name)
                 {
-                    _library.name = current;
+                    const auto namePath = std::filesystem::path(current);
+                    if (namePath.is_absolute())
+                    {
+                        _library.name =
+                            std::filesystem::relative(namePath, workingDirectory);
+                    }
+                    else
+                    {
+                        _library.name = current;
+                    }
                     previous.clear();
                     continue;
                 }
@@ -193,15 +204,30 @@ void Command::finalize(const ArgumentsList &arguments)
             }
             else if (type == Syntax::Command::Include)
             {
+                const auto currentPath =
+                    std::filesystem::path(Tools::prepareIncludePath(current));
+                const auto absolutePath = currentPath.is_absolute()
+                                              ? currentPath
+                                              : workingDirectory / currentPath;
+
                 if (previous == Syntax::Modifier::Library)
                 {
                     _include.isLibrary = true;
-                    _include.path = current;
+                    _include.path =
+                        std::filesystem::relative(absolutePath, workingDirectory);
+                    if (not _modifiers.empty())
+                    {
+                        _modifiers.back() = _include.path;
+                    }
                     previous.clear();
                     continue;
                 }
 
-                _include.path = Tools::prepareIncludePath(current);
+                _include.path = std::filesystem::relative(absolutePath, workingDirectory);
+                if (not _modifiers.empty())
+                {
+                    _modifiers.back() = _include.path;
+                }
             }
             else if (type == Syntax::Command::Feature or type == Syntax::Command::Option)
             {
@@ -283,11 +309,19 @@ void Command::finalize(const ArgumentsList &arguments)
         if (type == Syntax::Command::Source)
         {
             std::filesystem::path filePath = _modifiers.back();
-            _object.source = filePath.string();
+            const auto absoluteSource =
+                filePath.is_absolute() ? filePath : workingDirectory / filePath;
+            _object.source = std::filesystem::relative(absoluteSource, workingDirectory);
+            if (not _modifiers.empty())
+            {
+                _modifiers.back() = _object.source;
+            }
+
+            filePath = absoluteSource;
             filePath.replace_extension(Syntax::Extension::ObjectFile1);
             // TODO: use different extension per platform!
             Log::verbose("Appending object file:", filePath.string());
-            _object.name = filePath.string();
+            _object.name = filePath.filename().string();
         }
     }
 

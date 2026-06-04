@@ -6,6 +6,7 @@
 #include "tools/argumentslist.h"
 #include "tools/stringlist.h"
 
+#include <filesystem>
 #include <optional>
 #include <string>
 
@@ -28,7 +29,9 @@ class Command
      * After calling append() to add data to the command, call this method
      * to do processing of all the modifiers.
      */
-    void finalize(const ArgumentsList &arguments);
+    void finalize(const ArgumentsList &arguments,
+                  const std::filesystem::path &projectDirectory,
+                  const std::filesystem::path &workingDirectory);
 
     bool isReadyToExecute() const;
     void setIsReadyToExecute(const bool ready);
@@ -36,7 +39,7 @@ class Command
     /*!
      Returns the entire Command as text.
 
-     \note This method constructs the text each time it is called. Use sparringly.
+     \note This method constructs the text each time it is called. Use sparingly.
      */
     std::string whole() const;
     std::string value() const;

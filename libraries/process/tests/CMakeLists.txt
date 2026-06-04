@@ -7,6 +7,7 @@ set(NAME unit_tests_process)
 add_executable(${NAME}
     test_stupidprocess.cpp
     test_systemprocess.cpp
+    test_process.cpp
 )
 
 target_link_libraries(${NAME}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "process.h"
+#include "processinterface.h"
 
 /*!
  * Executes a process using system() call.
@@ -9,7 +9,7 @@
  * Shares all limitations of system() - not much is known about execution other
  * than exit status, there are security concerns with it etc.
  */
-class SystemProcess : public Process
+class SystemProcess : public ProcessInterface
 {
   public:
     virtual ~SystemProcess() = default;

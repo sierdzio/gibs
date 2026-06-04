@@ -109,7 +109,7 @@ void Parser::parse()
         // TODO: executable or library or just target - decide
         link.type = Syntax::Command::Executable;
         link.append(_project->id.name());
-        link.finalize(_arguments);
+        link.finalize(_arguments, root(), workingDirectory());
         _project->addCommand(link);
         parseCppFile(_projectEntryPoint, _project->id);
     }
@@ -150,6 +150,36 @@ bool Parser::scanProjectDirectoryForEntryPoints()
 
     _status = AppError::EntryPointNotFound;
     return false;
+}
+
+std::string Parser::absoluteCommandModifierPath(const Command &command,
+                                                std::string modifier) const
+{
+    if (command.type == Syntax::Command::Source)
+    {
+        const auto path = std::filesystem::path(std::move(modifier));
+        if (path.is_absolute())
+        {
+            return path.string();
+        }
+
+        return std::filesystem::absolute(root() / path).string();
+    }
+
+    if (command.type == Syntax::Command::Include and
+        modifier != Syntax::Modifier::Library)
+    {
+        const auto cleaned = Tools::prepareIncludePath(modifier);
+        const auto path = std::filesystem::path(cleaned);
+        if (path.is_absolute())
+        {
+            return path.string();
+        }
+
+        return std::filesystem::absolute(root() / path).string();
+    }
+
+    return modifier;
 }
 
 void Parser::parseProjectFile(const std::filesystem::path &path, const TargetId &id)
@@ -231,7 +261,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                             : Syntax::Command::Library;
             link.targetId = id;
             link.append(std::filesystem::relative(state.id.name(), root()));
-            link.finalize(_arguments);
+            link.finalize(_arguments, root(), workingDirectory());
             _project->addCommand(link);
         }
 
@@ -240,10 +270,14 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         // Now, add compilation command for this cpp file:
         Command compile;
         compile.type = Syntax::Command::Source;
-        compile.append(std::filesystem::relative(path, root()));
+        {
+            const auto absolutePath =
+                path.is_absolute() ? path : workingDirectory() / path;
+            compile.append(std::filesystem::absolute(absolutePath).string());
+        }
         compile.targetId = state.id;
         compile.parentId = linkCommand->id();
-        compile.finalize(_arguments);
+        compile.finalize(_arguments, root(), workingDirectory());
         compile.objectReference().includePaths = Tools::pathsToStrings(_includePaths);
         compile.objectReference().defines = linkCommand->object().defines;
 
@@ -315,11 +349,12 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
                 continue;
             }
 
+            word = absoluteCommandModifierPath(command, std::move(word));
             command.append(word);
         }
     }
 
-    command.finalize(_arguments);
+    command.finalize(_arguments, root(), workingDirectory());
 
     CppState state;
     state.id = id;
@@ -408,6 +443,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             // TODO: c++20 modules
         )
         {
+            word = absoluteCommandModifierPath(command, std::move(word));
             command.append(word);
             return Action::Continue;
         }
@@ -466,7 +502,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
     if (command.isValid())
     {
-        command.finalize(_arguments);
+        command.finalize(_arguments, root(), workingDirectory());
 
         if (command.type == Syntax::Command::Include and
             not command.include().isLibrary and
@@ -532,7 +568,7 @@ void Parser::handleCommand(Command command, CppState *state)
                 command.targetId = TargetId(std::move(name), TargetId::Type::Library);
                 command.append(
                     std::filesystem::relative(command.targetId.name(), root()));
-                command.finalize(_arguments);
+                command.finalize(_arguments, root(), workingDirectory());
 
                 // Link this library together with parent target
                 auto linkCommand = &_project->commandRef(command.parentId);
@@ -638,6 +674,10 @@ void Parser::handleCommand(Command command, CppState *state)
                 TargetId libraryId(command.include().libraryName(),
                                    TargetId::Type::Library);
 
+                // Make library directory available as an include path so angle-bracket
+                // includes inside library files can be resolved relative to that folder.
+                addIncludePath(path);
+
                 if (Tools::isPathToFile(path))
                 {
                     Log::verbose("Parsing", path, "as entry point of of library:",
@@ -742,10 +782,35 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
 
     Log::verbose("Looking for:", name);
 
+    const std::filesystem::path namePath(name);
+
+    // If the name is absolute, check it directly
+    if (namePath.is_absolute())
+    {
+        if (std::filesystem::exists(namePath))
+        {
+            return std::filesystem::relative(namePath, workingDirectory());
+        }
+        return {};
+    }
+
+    // If the name contains a directory component, try resolving it relative to the
+    // working directory first (this covers cases where modifiers have already been
+    // converted to working-directory-relative paths).
+    if (namePath.has_parent_path())
+    {
+        const auto candidate = workingDirectory() / namePath;
+        if (std::filesystem::exists(candidate))
+        {
+            return std::filesystem::relative(candidate, workingDirectory());
+        }
+    }
+
+    // Fall back to resolving relative to project root
     if (const std::filesystem::path current(root() / name);
         std::filesystem::exists(current))
     {
-        return std::filesystem::relative(current, std::filesystem::current_path());
+        return std::filesystem::relative(current, workingDirectory());
     }
 
     for (const auto &dir : _includePaths)
@@ -767,9 +832,9 @@ std::optional<std::filesystem::path> Parser::findFile(const std::string &name) c
         {
             for (auto const &it : std::filesystem::directory_iterator(current))
             {
-                if (it.exists() && it.path().filename() == name)
+                if (it.exists() && it.path().filename() == namePath.filename())
                 {
-                    return std::filesystem::relative(it, std::filesystem::current_path());
+                    return std::filesystem::relative(it, workingDirectory());
                 }
             }
         }
@@ -817,13 +882,31 @@ std::optional<std::filesystem::path> Parser::findCppFile(const std::string &name
 
 void Parser::addIncludePath(const std::filesystem::path &path)
 {
-    auto result = std::filesystem::relative(path, root());
+    auto absolutePath = path.is_absolute() ? path : workingDirectory() / path;
 
-    // TODO: more concrete detection of files: is it really a file or just a file-like dir
-    // name?
-    if (result.has_filename() && result.has_extension())
+    // If path points to a file, use its parent directory.
+    if (std::filesystem::exists(absolutePath) &&
+        std::filesystem::is_regular_file(absolutePath))
     {
-        result = result.parent_path();
+        absolutePath = absolutePath.parent_path();
+    }
+
+    // Only add existing directories as include paths.
+    if (not std::filesystem::exists(absolutePath) ||
+        not std::filesystem::is_directory(absolutePath))
+    {
+        return;
+    }
+
+    auto result = std::filesystem::relative(absolutePath, workingDirectory());
+    // TODO: this will fail on Windows - fix
+    // Ensure small relative include dirs are explicit by adding `./` prefix when
+    // the relative path isn't already explicitly relative (starts with '.' or '/').
+    std::string resultStr = result.string();
+    if (!resultStr.empty() && resultStr.front() != '.' && resultStr.front() != '/')
+    {
+        resultStr = std::string("./") + resultStr;
+        result = std::filesystem::path(resultStr);
     }
 
     if (result.empty() or result == Dot)
@@ -846,4 +929,9 @@ void Parser::addIncludePath(const std::filesystem::path &path)
 const std::filesystem::path &Parser::root() const
 {
     return _projectDirectory;
+}
+
+const std::filesystem::path &Parser::workingDirectory() const
+{
+    return _workingDirectory;
 }

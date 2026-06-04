@@ -10,13 +10,19 @@
 #include <sstream>
 #include <vector>
 
+namespace
+{
+const auto ProjectDir = std::filesystem::current_path();
+const auto WorkingDir = std::filesystem::current_path();
+} // namespace
+
 // Helper to create a valid source command
 Command makeSourceCommand(const std::string &filename)
 {
     Command cmd;
     cmd.append("source");
     cmd.append(filename);
-    cmd.finalize({});
+    cmd.finalize({}, ProjectDir, WorkingDir);
     return cmd;
 }
 
@@ -29,7 +35,7 @@ Command makeLibraryCommand(const std::string &libname)
     cmd.append(libname);
     cmd.append("type");
     cmd.append("static");
-    cmd.finalize({});
+    cmd.finalize({}, ProjectDir, WorkingDir);
     return cmd;
 }
 
@@ -40,7 +46,7 @@ Command makeExecutableCommand(const std::string &exename)
     cmd.append("executable");
     cmd.append("name");
     cmd.append(exename);
-    cmd.finalize({});
+    cmd.finalize({}, ProjectDir, WorkingDir);
     return cmd;
 }
 

@@ -50,6 +50,7 @@ bool Compiler::setup(const Command &command)
 
     commandData.arguments.emplace_back("-o");
     commandData.arguments.emplace_back(command.object().name);
+    commandData.arguments.emplace_back("-c");
     commandData.arguments.emplace_back(command.object().source);
 
     _commands.clear();

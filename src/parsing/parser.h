@@ -39,15 +39,20 @@ class Parser
     // TODO: move command instead of copying
     void handleCommand(Command command, CppState *state);
 
+    std::string absoluteCommandModifierPath(const Command &command,
+                                            std::string modifier) const;
+
     Syntax::FileType fileType(const std::filesystem::path &path) const;
 
     std::optional<std::filesystem::path> findFile(const std::string &name) const;
     std::optional<std::filesystem::path> findCppFile(const std::string &name) const;
     void addIncludePath(const std::filesystem::path &path);
     const std::filesystem::path &root() const;
+    const std::filesystem::path &workingDirectory() const;
 
     // TODO: move to Project?
 
+    std::filesystem::path _workingDirectory = std::filesystem::current_path();
     std::filesystem::path _projectDirectory;
     std::filesystem::path _projectFile;
     std::filesystem::path _projectEntryPoint;

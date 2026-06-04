@@ -5,13 +5,13 @@
 
 #include <future>
 #include <memory>
-#include <process/process.h>
+#include <process/processinterface.h>
 #include <vector>
 
 struct RunningCommand
 {
     CommandId commandId;
-    std::vector<std::unique_ptr<Process>> processes;
+    std::vector<std::unique_ptr<ProcessInterface>> processes;
     std::shared_ptr<std::promise<void>> completion;
 };
 

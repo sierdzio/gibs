@@ -5,10 +5,11 @@ project(process VERSION 0.0.1
         LANGUAGES CXX)
 
 set(srcs
-    process/process.cpp process/process.h
+    process/processinterface.cpp process/processinterface.h
     process/stupidprocess.cpp process/stupidprocess.h
     process/dryrunprocess.cpp process/dryrunprocess.h
     process/systemprocess.h process/systemprocess.cpp
+    process/process.cpp process/process.h
 )
 
 add_library(${PROJECT_NAME}

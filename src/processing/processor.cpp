@@ -8,7 +8,7 @@
 
 #include <logger/log.h>
 #include <process/dryrunprocess.h>
-#include <process/stupidprocess.h>
+#include <process/process.h>
 
 #include <future>
 #include <memory>
@@ -24,7 +24,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
     const auto typeString = Syntax::commandString(command.type);
     auto completion = std::make_shared<std::promise<void>>();
     auto future = completion->get_future().share();
-    std::vector<std::unique_ptr<Process>> processes;
+    std::vector<std::unique_ptr<ProcessInterface>> processes;
 
     switch (command.type)
     {
@@ -36,7 +36,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
 
             for (const auto &toolCommand : tool.commands())
             {
-                std::unique_ptr<Process> process;
+                std::unique_ptr<ProcessInterface> process;
 
                 if (isDryRun())
                 {
@@ -44,7 +44,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
                 }
                 else
                 {
-                    process = std::make_unique<StupidProcess>();
+                    process = std::make_unique<Process>();
                 }
 
                 process->setExecutable(toolCommand.command);
@@ -65,7 +65,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
 
             for (const auto &toolCommand : tool.commands())
             {
-                std::unique_ptr<Process> process;
+                std::unique_ptr<ProcessInterface> process;
 
                 if (isDryRun())
                 {
@@ -73,7 +73,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
                 }
                 else
                 {
-                    process = std::make_unique<StupidProcess>();
+                    process = std::make_unique<Process>();
                 }
 
                 process->setExecutable(toolCommand.command);
@@ -177,8 +177,26 @@ void Processor::checkProcessStates()
         for (size_t processIndex = 0; processIndex < current.processes.size();
              /* nothing */)
         {
-            if (current.processes.at(processIndex)->isFinished())
+            const auto &process = current.processes.at(processIndex);
+
+            if (process->isFinished())
             {
+                if (process->result().status == Exit::Status::Success)
+                {
+                    Log::information("Process finished successfully for command id:",
+                                     current.commandId,
+                                     "executable:", process->executable(),
+                                     "arguments:", process->arguments());
+                }
+                else
+                {
+                    Log::error("Process failed for command id:", current.commandId,
+                               "executable:", process->executable(),
+                               "arguments:", process->arguments());
+                    // TODO: stop the gibs process, cleanup processes, set error status,
+                    // etc.
+                }
+
                 current.processes.erase(current.processes.begin() +
                                         static_cast<long>(processIndex));
             }

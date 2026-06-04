@@ -5,6 +5,12 @@
 #include <parsing/syntax.h>
 #include <project/command.h>
 
+namespace
+{
+const auto ProjectDir = std::filesystem::current_path();
+const auto WorkingDir = std::filesystem::current_path();
+} // namespace
+
 TEST(command, Command)
 {
     Command c1;
@@ -20,7 +26,7 @@ TEST(command, Command)
     EXPECT_FALSE(c1.include().isValid(Syntax::Command::Executable));
     EXPECT_FALSE(c1.option().isValid(Syntax::Command::Executable));
 
-    c1.finalize({});
+    c1.finalize({}, ProjectDir, WorkingDir);
 
     EXPECT_FALSE(c1.isValid());
     EXPECT_FALSE(c1.isReadyToExecute());
@@ -107,7 +113,7 @@ TEST(command, OptionComponentDefine)
         EXPECT_TRUE(c.append("feature"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("my-feature"));
-        c.finalize({});
+        c.finalize({}, ProjectDir, WorkingDir);
         EXPECT_EQ(c.option().define(), "MY_FEATURE");
     }
 
@@ -117,7 +123,7 @@ TEST(command, OptionComponentDefine)
         EXPECT_TRUE(c.append("option"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("my-long-option"));
-        c.finalize({});
+        c.finalize({}, ProjectDir, WorkingDir);
         EXPECT_EQ(c.option().define(), "MY_LONG_OPTION");
     }
 
@@ -127,7 +133,7 @@ TEST(command, OptionComponentDefine)
         EXPECT_TRUE(c.append("feature"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("MYFEATURE"));
-        c.finalize({});
+        c.finalize({}, ProjectDir, WorkingDir);
         EXPECT_EQ(c.option().define(), "MYFEATURE");
     }
 
@@ -137,7 +143,7 @@ TEST(command, OptionComponentDefine)
         EXPECT_TRUE(c.append("option"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("lowercase-option"));
-        c.finalize({});
+        c.finalize({}, ProjectDir, WorkingDir);
         EXPECT_EQ(c.option().define(), "LOWERCASE_OPTION");
     }
 }
@@ -155,7 +161,7 @@ TEST(command, OptionFinalizeOverridesDefaultValue)
     EXPECT_TRUE(c.append("my-feature"));
     EXPECT_TRUE(c.append("default"));
     EXPECT_TRUE(c.append("off"));
-    c.finalize(arguments);
+    c.finalize(arguments, ProjectDir, WorkingDir);
 
     EXPECT_TRUE(c.isValid());
     EXPECT_EQ(c.option().name, "my-feature");
@@ -176,7 +182,7 @@ TEST(command, OptionFinalizeUsesDefaultForNonBooleanOverride)
     EXPECT_TRUE(c.append("my-feature"));
     EXPECT_TRUE(c.append("default"));
     EXPECT_TRUE(c.append("on"));
-    c.finalize(arguments);
+    c.finalize(arguments, ProjectDir, WorkingDir);
 
     EXPECT_TRUE(c.isValid());
     EXPECT_EQ(c.option().name, "my-feature");
@@ -190,7 +196,7 @@ TEST(command, PathSemantics)
         Command c;
         EXPECT_TRUE(c.append("source"));
         EXPECT_TRUE(c.append("main.cpp"));
-        c.finalize({});
+        c.finalize({}, ProjectDir, WorkingDir);
 
         EXPECT_TRUE(c.hasPath());
         EXPECT_EQ(c.path(), "main.o");
@@ -200,7 +206,7 @@ TEST(command, PathSemantics)
         Command c;
         EXPECT_TRUE(c.append("include"));
         EXPECT_TRUE(c.append("file.h"));
-        c.finalize({});
+        c.finalize({}, ProjectDir, WorkingDir);
 
         EXPECT_TRUE(c.hasPath());
         EXPECT_EQ(c.path(), "file.h");
@@ -211,7 +217,7 @@ TEST(command, PathSemantics)
         EXPECT_TRUE(c.append("executable"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("app"));
-        c.finalize({});
+        c.finalize({}, ProjectDir, WorkingDir);
 
         EXPECT_TRUE(c.hasPath());
         EXPECT_EQ(c.path(), "app");
@@ -224,7 +230,7 @@ TEST(command, PathSemantics)
         EXPECT_TRUE(c.append("static"));
         EXPECT_TRUE(c.append("name"));
         EXPECT_TRUE(c.append("mylib"));
-        c.finalize({});
+        c.finalize({}, ProjectDir, WorkingDir);
 
         EXPECT_TRUE(c.hasPath());
         EXPECT_EQ(c.path(), "mylib");
@@ -250,7 +256,7 @@ TEST(command, ObjectComponentDefines)
         Command c;
         EXPECT_TRUE(c.append("source"));
         EXPECT_TRUE(c.append("test.cpp"));
-        c.finalize({});
+        c.finalize({}, ProjectDir, WorkingDir);
 
         // Initially empty
         EXPECT_TRUE(c.object().defines.empty());
