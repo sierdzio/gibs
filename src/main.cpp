@@ -21,17 +21,25 @@ int main(int argc, char *argv[])
     const auto begin = std::chrono::steady_clock::now();
     const CommandLine cmd(CommandLine::toStringList(argc, argv));
 
-    if (not cmd.isValid())
+    try
     {
-        std::cout << "Error when parsing command line!" << std::endl;
-        std::cout << cmd.helpText() << std::endl;
-        return -1;
-    }
+        if (not cmd.isValid())
+        {
+            std::cout << "Error when parsing command line!" << std::endl;
+            std::cout << cmd.helpText() << std::endl;
+            return -1;
+        }
 
-    if (cmd.hasHelp())
+        if (cmd.hasHelp())
+        {
+            std::cout << cmd.helpText() << std::endl;
+            return 0;
+        }
+    }
+    catch (const std::overflow_error &e)
     {
-        std::cout << cmd.helpText() << std::endl;
-        return 0;
+        std::cout << "Failed to generate help text:" << e.what() << std::endl;
+        return -2;
     }
 
     if (cmd.hasVersion())
@@ -52,7 +60,7 @@ int main(int argc, char *argv[])
         catch (const std::runtime_error &e)
         {
             Log::error("Failed to set log file path:", e.what());
-            return -2;
+            return -3;
         }
     }
     Log::debug(cmd.parsedFlagsText());
@@ -85,38 +93,38 @@ int main(int argc, char *argv[])
     catch (const CommandNotFound &e)
     {
         Log::error(e.what());
-        result = -3;
+        result = -4;
     }
     catch (const CommandDepthException &e)
     {
         // Warning because it is a missing functionality but not crucial
         Log::warning(e.what());
-        result = -4;
+        result = -5;
     }
     catch (const CommandException &e)
     {
         Log::error(e.what());
-        result = -5;
+        result = -6;
     }
     catch (const CommandStringException &e)
     {
         Log::error(e.what());
-        result = -6;
+        result = -7;
     }
     catch (const EmptyLinkObject &e)
     {
         Log::error(e.what());
-        result = -7;
+        result = -8;
     }
     catch (const std::runtime_error &e)
     {
         Log::error("Unknown error:", e.what());
-        result = -8;
+        result = -9;
     }
     catch (...)
     {
         Log::error("Unhandled exception");
-        result = -9;
+        result = -10;
     }
 
     processor->waitForFinished();

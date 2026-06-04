@@ -6,6 +6,7 @@
 namespace
 {
 const std::string_view Space = " ";
+const std::string_view Nl = "\n";
 constexpr std::string_view DoubleSpace = "  ";
 constexpr std::string_view FlagSeparator = ", ";
 
@@ -114,7 +115,7 @@ void HelpData::appendWordsWithWrapping(std::string &string,
 {
     const auto indent = currentColumn;
 
-    auto words = toAppend | std::views::split(std::string_view{Space}) |
+    auto words = toAppend | std::views::split(Space) |
                  std::views::transform([](auto &&str) { return std::string_view(str); });
 
     for (auto &&word : words)
@@ -123,13 +124,17 @@ void HelpData::appendWordsWithWrapping(std::string &string,
 
         if (currentColumn > maxWidth)
         {
-            string.push_back('\n');
+            string.append(Nl);
             string.append(std::string(indent, Space[0]));
             currentColumn = indent;
         }
 
         string.append(word);
-        string.append(Space);
-        currentColumn += toUint(word.size()) + 1;
+
+        if (not word.ends_with(Nl))
+        {
+            string.append(Space);
+            currentColumn += toUint(word.size()) + 1;
+        }
     }
 }
