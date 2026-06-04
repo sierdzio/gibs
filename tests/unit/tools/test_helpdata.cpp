@@ -28,9 +28,9 @@ TEST(helpdata, introAndWrappedDescription)
 
     const auto result = help.formatted(30);
     const std::string expected =
-        "Intro text that \nis longer than a \nnarrow width.\n   -a, --alpha  This is a "
-        "\n               long help \n               description \n               that "
-        "will \n               wrap. \n";
+        "Intro text that \nis longer than a \nnarrow width.\n  -a, --alpha  This is a \n "
+        "              long help \n               description \n               that will "
+        "\n               wrap. \n";
 
     EXPECT_EQ(result, expected);
 }
