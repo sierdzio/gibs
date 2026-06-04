@@ -1,4 +1,5 @@
 #include "helpdata.h"
+#include "logger/log.h"
 
 #include <limits>
 #include <ranges>
@@ -33,6 +34,8 @@ void HelpData::addEntry(const StringViewList &flags, const std::string_view &exp
 
 std::string HelpData::formatted(const unsigned int width) const
 {
+    //Log::error("Requested width:", width);
+
     const auto indent = calculateDescriptionIndent();
 
     std::string result;

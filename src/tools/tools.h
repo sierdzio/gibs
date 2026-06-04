@@ -54,6 +54,8 @@ bool isHeaderFile(const std::string &path);
 
 bool isWhitespace(const char character);
 std::string toLower(const std::string &input);
+
+unsigned int terminalWidth();
 }; // namespace Tools
 
 #define forever while (true)

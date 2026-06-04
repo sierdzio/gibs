@@ -5,12 +5,19 @@
 #include <cctype>
 #include <filesystem>
 
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
+
 namespace
 {
 constexpr auto Quote = '\"';
-constexpr auto ListSep = ", ";
-constexpr auto True = "true";
-constexpr auto False = "false";
+constexpr std::string_view ListSep = ", ";
+constexpr std::string_view True = "true";
+constexpr std::string_view False = "false";
 } // namespace
 
 Tools::ScopeGuard::ScopeGuard(const std::function<void()> &function) : _function(function)
@@ -56,8 +63,7 @@ bool Tools::contains(const StringList &list, const std::string &string)
 
 bool Tools::contains(const std::string &string, const std::string &toFind)
 {
-    // TODO: C++23 use contains()
-    return string.find(toFind) != std::string::npos;
+    return string.contains(toFind);
 }
 
 std::string Tools::listToString(const StringList &list)
@@ -89,16 +95,7 @@ std::string Tools::inQuotes(const std::string &string)
 
 std::string Tools::boolToString(const bool value)
 {
-    return value ? True : False;
-}
-
-std::string Tools::toLower(const std::string &input)
-{
-    std::string result = input;
-    std::transform(result.begin(), result.end(), result.begin(),
-                   [](const unsigned char character)
-                   { return static_cast<char>(std::tolower(character)); });
-    return result;
+    return std::string(value ? True : False);
 }
 
 bool Tools::isPathToFile(const std::string &path)
@@ -133,4 +130,40 @@ StringList Tools::pathsToStrings(const std::vector<std::filesystem::path> &paths
     }
 
     return result;
+}
+
+std::string Tools::toLower(const std::string &input)
+{
+    std::string result = input;
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](const unsigned char character)
+                   { return static_cast<char>(std::tolower(character)); });
+    return result;
+}
+
+unsigned int Tools::terminalWidth()
+{
+#if defined(_WIN32)
+    const auto handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (handle != INVALID_HANDLE_VALUE)
+    {
+        CONSOLE_SCREEN_BUFFER_INFO info{};
+        if (GetConsoleScreenBufferInfo(handle, &info))
+        {
+            const auto width = info.srWindow.Right - info.srWindow.Left + 1;
+            if (width > 0)
+            {
+                return static_cast<unsigned int>(width);
+            }
+        }
+    }
+#else
+    struct winsize windowSize{};
+    if (::ioctl(STDOUT_FILENO, TIOCGWINSZ, &windowSize) == 0 && windowSize.ws_col > 0)
+    {
+        return static_cast<unsigned int>(windowSize.ws_col);
+    }
+#endif
+
+    return 80;
 }

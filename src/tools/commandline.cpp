@@ -230,8 +230,7 @@ std::string CommandLine::helpText() const
     help.addEntry({Input}, InputExplanation);
     help.addEntry({OtherArguments}, OtherArgumentsExplanation);
 
-    // TODO: make width dynamic based on terminal width
-    return help.formatted(180);
+    return help.formatted(Tools::terminalWidth());
 }
 
 const std::string &CommandLine::versionText() const
