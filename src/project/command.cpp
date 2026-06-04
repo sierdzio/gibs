@@ -151,11 +151,19 @@ void Command::finalize(const ArgumentsList &arguments,
         std::string previous;
         for (const auto &current : std::as_const(_modifiers))
         {
-            if (type == Syntax::Command::Executable && previous == Syntax::Modifier::Name)
+            if (type == Syntax::Command::Executable)
             {
-                _executable.name = current;
-                previous.clear();
-                continue;
+                if (previous == Syntax::Modifier::Name)
+                {
+                    _executable.name = current;
+                    previous.clear();
+                    continue;
+                }
+                else if (_executable.name.empty() && current != Syntax::Modifier::Name)
+                {
+                    _executable.name = current;
+                    continue;
+                }
             }
             else if (type == Syntax::Command::Library)
             {
@@ -195,6 +203,13 @@ void Command::finalize(const ArgumentsList &arguments,
                         _library.name = current;
                     }
                     previous.clear();
+                    continue;
+                }
+                else if (_library.name.empty() && current != Syntax::Modifier::Name &&
+                         current != Syntax::Modifier::Type &&
+                         current != Syntax::Modifier::Library)
+                {
+                    _library.name = current;
                     continue;
                 }
                 else if (not previous.empty())
@@ -495,6 +510,33 @@ const ExecutableComponent &Command::executable() const
 void Command::setExecutableName(const std::string &name)
 {
     _executable.name = name;
+
+    if (type != Syntax::Command::Executable)
+    {
+        return;
+    }
+
+    if (_modifiers.empty())
+    {
+        _modifiers.emplace_back(name);
+        return;
+    }
+
+    const auto it =
+        std::find(_modifiers.begin(), _modifiers.end(), Syntax::Modifier::Name);
+    if (it != _modifiers.end() && std::next(it) != _modifiers.end())
+    {
+        *std::next(it) = name;
+        return;
+    }
+
+    if (_modifiers.size() == 1)
+    {
+        _modifiers[0] = name;
+        return;
+    }
+
+    _modifiers.back() = name;
 }
 
 const LibraryComponent &Command::library() const

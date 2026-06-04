@@ -28,10 +28,12 @@ bool Linker::setup(const Command &command)
     {
         CommandData commandData;
         commandData.command = _compilerSet.compilerCommand;
+
         for (const auto &current : objects)
         {
             commandData.arguments.emplace_back(current);
         }
+
         commandData.arguments.emplace_back("-o");
         commandData.arguments.emplace_back(command.executable().name);
 

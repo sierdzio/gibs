@@ -225,6 +225,16 @@ TEST(command, PathSemantics)
 
     {
         Command c;
+        EXPECT_TRUE(c.append("executable"));
+        EXPECT_TRUE(c.append("app"));
+        c.finalize({}, ProjectDir, WorkingDir);
+
+        EXPECT_TRUE(c.hasPath());
+        EXPECT_EQ(c.path(), "app");
+    }
+
+    {
+        Command c;
         EXPECT_TRUE(c.append("library"));
         EXPECT_TRUE(c.append("type"));
         EXPECT_TRUE(c.append("static"));

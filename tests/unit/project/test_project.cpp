@@ -69,6 +69,22 @@ class ProjectDependencyTest : public ::testing::Test
     std::shared_ptr<Project> _project;
 };
 
+TEST_F(ProjectDependencyTest, ExecutableNameOverrideUpdatesWholeCommand)
+{
+    Command exec;
+    exec.append("executable");
+    exec.append("samples");
+    exec.finalize({}, ProjectDir, WorkingDir);
+
+    _project->addCommand(exec);
+    const auto execId = _project->commands.back().id();
+
+    _project->commandRef(execId).setExecutableName("MultipleFiles");
+
+    EXPECT_EQ(_project->commandRef(execId).whole(), "executable MultipleFiles");
+    EXPECT_EQ(_project->commandRef(execId).path(), "MultipleFiles");
+}
+
 TEST_F(ProjectDependencyTest, SourceCommandsScheduledImmediately)
 {
     Command source = makeSourceCommand("main.cpp");
