@@ -14,6 +14,7 @@ struct ExecutableComponent : public Component
 
     std::string name;
     StringList objects;
+    StringList libraries;
 };
 
 struct LibraryComponent : public ExecutableComponent

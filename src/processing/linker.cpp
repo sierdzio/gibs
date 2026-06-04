@@ -34,6 +34,12 @@ bool Linker::setup(const Command &command)
         }
         commandData.arguments.emplace_back("-o");
         commandData.arguments.emplace_back(command.executable().name);
+
+        for (const auto &current : command.executable().libraries)
+        {
+            commandData.arguments.emplace_back(current);
+        }
+
         _commands.emplace_back(std::move(commandData));
 
         return true;

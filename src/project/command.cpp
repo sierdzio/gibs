@@ -458,7 +458,19 @@ bool Command::addLinkObject(const std::string &name)
 
     if (type == Syntax::Command::Executable)
     {
-        _executable.objects.emplace_back(name);
+        if (name.ends_with(Syntax::Extension::ObjectFile1) or
+            name.ends_with(Syntax::Extension::ObjectFile2))
+        {
+            Log::verbose("Appending object file:", name,
+                         "to executable command:", whole());
+            _executable.objects.emplace_back(name);
+        }
+        else
+        {
+            Log::verbose("Appending library file:", name,
+                         "to executable command:", whole());
+            _executable.libraries.emplace_back(name);
+        }
     }
     else if (type == Syntax::Command::Library)
     {
