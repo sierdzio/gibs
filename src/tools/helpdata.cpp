@@ -46,9 +46,13 @@ std::string HelpData::formatted(const unsigned int width) const
         appendWordsWithWrapping(result, intro, emptyIndent, width);
     }
 
-    for (const auto &entry : entries)
+    for (size_t i = 0; i < entries.size(); ++i)
     {
-        appendText(result, entry, indent, width);
+        appendText(result, entries.at(i), indent, width);
+        if (i < entries.size() - 1)
+        {
+            result.push_back('\n');
+        }
     }
 
     return result;
@@ -124,9 +128,10 @@ void HelpData::appendWordsWithWrapping(std::string &string,
 
     for (auto &&word : words)
     {
-        currentColumn += toUint(word.size());
+        // +1 for space after the word
+        const auto currentSize = toUint(word.size() + 1);
 
-        if (currentColumn > maxWidth)
+        if (currentColumn + currentSize > maxWidth)
         {
             string.append(Nl);
             string.append(std::string(indent, Space[0]));
@@ -138,7 +143,7 @@ void HelpData::appendWordsWithWrapping(std::string &string,
         if (not word.ends_with(Nl))
         {
             string.append(Space);
-            currentColumn += toUint(word.size()) + 1;
+            currentColumn += currentSize;
         }
     }
 }

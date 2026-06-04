@@ -4,6 +4,7 @@
 #include "tools.h"
 #include "versioninfo.h"
 
+#include <algorithm>
 #include <cstring>
 #include <logger/log.h>
 
@@ -230,7 +231,7 @@ std::string CommandLine::helpText() const
     help.addEntry({Input}, InputExplanation);
     help.addEntry({OtherArguments}, OtherArgumentsExplanation);
 
-    return help.formatted(Tools::terminalWidth());
+    return help.formatted(std::clamp(Tools::terminalWidth(), 60u, 140u));
 }
 
 const std::string &CommandLine::versionText() const
