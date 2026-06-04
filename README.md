@@ -253,7 +253,7 @@ and gibs commands.
 
 Gibs makes it easier to build other Qt projects.
 In order to compile a Qt application or library, you need to specify Qt
-directory by runnig gibs with `--qt-dir` flag:
+directory by running gibs with `--qt-dir` flag:
 
 ```bash
 gibs --qt-dir /home/qt/6.8.1/gcc_64 main.cpp

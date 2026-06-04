@@ -1,5 +1,7 @@
 #pragma once
 
+//i library name process type static
+
 #include <mutex>
 #include <string>
 #include <thread>

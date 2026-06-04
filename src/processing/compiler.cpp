@@ -27,6 +27,10 @@ bool Compiler::setup(const Command &command)
     CommandData commandData;
     commandData.command = _compilerSet.compilerCommand;
 
+    // TODO: add C++ version standard argument based on implementation in compiler
+    // set. Also, make it modifyable by gibs command line arguments
+    commandData.arguments.emplace_back("-std=c++23");
+
     for (const auto &current : std::as_const(command.object().includePaths))
     {
         if (current.empty())

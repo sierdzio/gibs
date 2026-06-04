@@ -16,6 +16,7 @@
 #include "project/project.h"
 #include "tools/commandline.h"
 
+//i include ../libraries/logger
 #include <logger/log.h>
 
 int main(int argc, char *argv[])
@@ -123,15 +124,20 @@ int main(int argc, char *argv[])
         Log::error(e.what());
         result = -9;
     }
+    catch (const TargetIdTypeException &e)
+    {
+        Log::error(e.what());
+        result = -10;
+    }
     catch (const std::runtime_error &e)
     {
         Log::error("Unknown error:", e.what());
-        result = -10;
+        result = -100;
     }
     catch (...)
     {
-        Log::error("Unhandled exception");
-        result = -11;
+        Log::error("Unknown exception");
+        result = -101;
     }
 
     processor->waitForFinished();

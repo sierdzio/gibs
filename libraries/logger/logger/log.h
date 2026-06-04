@@ -1,5 +1,7 @@
 #pragma once
 
+//i library name logger type static
+
 #include "color.h"
 
 #include <iostream>
