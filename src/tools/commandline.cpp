@@ -119,8 +119,6 @@ std::string toUpper(std::string string)
 
 StringList CommandLine::toStringList(int argc, char *argv[])
 {
-    Log::verbose("Arg. count:", argc, "args:", std::string(*argv));
-
     StringList result;
 
     std::string multipart;
@@ -546,9 +544,6 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
         return false;
     }
 
-    Log::debug("handlePositionalArguments:", "current:", status.current,
-               "previous:", status.previous, "isLastArgument:", status.isLastArgument);
-
     if (not status.isLastArgument and status.current == LogFilePath)
     {
         // LogFilePath is not the last argument, so we proceed to parse next arguments
@@ -611,7 +606,6 @@ bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status,
             return true;
         }
 
-        Log::verbose("Found argument:", name, "with value:", value);
         return true;
     }
 
@@ -622,10 +616,6 @@ bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status,
         Log::warning("Duplicated command line argument:", name, "with value:", toSet);
         status.hasError = true;
         return false;
-    }
-    else
-    {
-        Log::verbose("Found argument:", name, "with value:", value);
     }
 
     return true;
