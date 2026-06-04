@@ -8,6 +8,8 @@
 #include "exceptions/commandexception.h"
 #include "exceptions/commandnotfound.h"
 #include "exceptions/emptylinkobject.h"
+#include "exceptions/processexception.h"
+#include "exceptions/targetidtypeexception.h"
 #include "parsing/parser.h"
 #include "processing/compilerset.h"
 #include "processing/processor.h"
@@ -111,20 +113,25 @@ int main(int argc, char *argv[])
         Log::error(e.what());
         result = -7;
     }
-    catch (const EmptyLinkObject &e)
+    catch (const ProcessException &e)
     {
         Log::error(e.what());
         result = -8;
     }
+    catch (const EmptyLinkObject &e)
+    {
+        Log::error(e.what());
+        result = -9;
+    }
     catch (const std::runtime_error &e)
     {
         Log::error("Unknown error:", e.what());
-        result = -9;
+        result = -10;
     }
     catch (...)
     {
         Log::error("Unhandled exception");
-        result = -10;
+        result = -11;
     }
 
     processor->waitForFinished();

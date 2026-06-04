@@ -1,24 +1,16 @@
 #pragma once
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 
-class CommandException : public std::exception
+class CommandException : public std::runtime_error
 {
   public:
     CommandException(const size_t value);
-    const char *what() const noexcept override;
-
-  private:
-    const std::string message;
 };
 
-class CommandStringException : public std::exception
+class CommandStringException : public std::runtime_error
 {
   public:
     CommandStringException(const std::string &value);
-    const char *what() const noexcept override;
-
-  private:
-    const std::string message;
 };

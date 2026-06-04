@@ -1,16 +1,11 @@
 #pragma once
 
-#include <exception>
-#include <string>
+#include <stdexcept>
 
 class Command;
 
-class CommandDepthException : public std::exception
+class CommandDepthException : public std::runtime_error
 {
   public:
     CommandDepthException(const Command &command);
-    const char *what() const noexcept override;
-
-  private:
-    const std::string message;
 };

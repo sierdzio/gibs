@@ -1,5 +1,6 @@
 #include "processor.h"
 #include "compiler.h"
+#include "exceptions/processexception.h"
 #include "linker.h"
 #include "parsing/syntax.h"
 #include "tool.h"
@@ -181,6 +182,13 @@ void Processor::checkProcessStates()
 
             if (process->isFinished())
             {
+                Tools::ScopeGuard logGuard(
+                    [&]()
+                    {
+                        current.processes.erase(current.processes.begin() +
+                                                static_cast<long>(processIndex));
+                    });
+
                 if (process->result().status == Exit::Status::Success)
                 {
                     Log::information("Process finished successfully for command id:",
@@ -190,15 +198,8 @@ void Processor::checkProcessStates()
                 }
                 else
                 {
-                    Log::error("Process failed for command id:", current.commandId,
-                               "executable:", process->executable(),
-                               "arguments:", process->arguments());
-                    // TODO: stop the gibs process, cleanup processes, set error status,
-                    // etc.
+                    throw ProcessException(current.commandId, process.get());
                 }
-
-                current.processes.erase(current.processes.begin() +
-                                        static_cast<long>(processIndex));
             }
             else
             {

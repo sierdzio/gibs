@@ -91,6 +91,8 @@ void Project::onParsingFinished()
         bool madeProgress = false;
 
         // Update process states to ensure futures are set to ready
+        // TODO: perhaps catch the exception here and stop the process if any process
+        // failed
         _processor->checkProcessStates();
 
         for (const auto commandId :

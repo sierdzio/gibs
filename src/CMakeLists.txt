@@ -4,6 +4,7 @@ set(gibs_srcs
     exceptions/commanddepthexception.cpp exceptions/commanddepthexception.h
     exceptions/emptylinkobject.cpp exceptions/emptylinkobject.h
     exceptions/targetidtypeexception.cpp exceptions/targetidtypeexception.h
+    exceptions/processexception.cpp exceptions/processexception.h
     tools/commandline.cpp tools/commandline.h
     tools/tools.cpp tools/tools.h
     tools/helpdata.cpp tools/helpdata.h
