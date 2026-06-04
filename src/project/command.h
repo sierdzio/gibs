@@ -9,7 +9,7 @@
 #include <optional>
 #include <string>
 
-using CommandId = uint;
+using CommandId = unsigned int;
 constexpr CommandId NullCommandId = 0;
 
 class Command

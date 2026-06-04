@@ -35,7 +35,7 @@ struct TargetId
 
     std::string _name;
     Type _type = Type::Unknown;
-    uint _id = 0;
+    unsigned int _id = 0;
 };
 
 std::ostream &operator<<(std::ostream &stream, const TargetId &id);

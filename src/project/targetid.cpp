@@ -8,9 +8,9 @@
 
 namespace
 {
-static uint uniqueId = 0;
+static unsigned int uniqueId = 0;
 
-static uint nextId()
+static unsigned int nextId()
 {
     return uniqueId++;
 }

@@ -3,7 +3,7 @@
 #include <logger/log.h>
 #include <string>
 
-uint Process::_globalIdentifier = 1;
+unsigned int Process::_globalIdentifier = 1;
 
 Process::Process() : _identifier(_globalIdentifier++)
 {
@@ -147,7 +147,7 @@ std::string Process::logMeta() const
     return hasMeta() ? ("Meta: " + metaInformation()) : std::string();
 }
 
-uint Process::identifier() const
+unsigned int Process::identifier() const
 {
     return _identifier;
 }

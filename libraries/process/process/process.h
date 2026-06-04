@@ -57,19 +57,19 @@ class Process
     std::string argsToString(const Arguments &args) const;
     bool hasMeta() const;
     std::string logMeta() const;
-    uint identifier() const;
+    unsigned int identifier() const;
     std::string logIdentifier() const;
 
     Exit _result;
     mutable std::mutex _mutex;
 
   private:
-    static uint _globalIdentifier;
+    static unsigned int _globalIdentifier;
 
     std::string _executablePath;
     Arguments _arguments;
     std::string _metaInformation;
     std::thread _thread;
-    uint _identifier = 0;
+    unsigned int _identifier = 0;
     bool _logProcessOutput = false;
 };
