@@ -1,5 +1,6 @@
 #include "helpdata.h"
 
+#include <limits>
 #include <ranges>
 #include <string_view>
 
@@ -10,9 +11,9 @@ const std::string_view Nl = "\n";
 constexpr std::string_view DoubleSpace = "  ";
 constexpr std::string_view FlagSeparator = ", ";
 
-unsigned int toUint(const uint64_t value)
+unsigned int toUint(const unsigned long long value)
 {
-    if (value > static_cast<uint64_t>(std::numeric_limits<unsigned int>::max()))
+    if (value > static_cast<unsigned long long>(std::numeric_limits<unsigned int>::max()))
     {
         throw std::overflow_error("Value is too large to fit in unsigned int");
     }
