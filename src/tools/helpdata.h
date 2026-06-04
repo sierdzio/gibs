@@ -13,14 +13,15 @@ class HelpData
   public:
     void addIntro(const std::string_view &introText);
     void addEntry(const StringViewList &flags, const std::string_view &explanation);
-    std::string formatted(const uint width) const;
+    std::string formatted(const unsigned int width) const;
 
   private:
-    uint calculateDescriptionIndent() const;
-    void appendText(std::string &string, const HelpEntry &entry, const uint indent,
-                    const uint width) const;
+    unsigned int calculateDescriptionIndent() const;
+    void appendText(std::string &string, const HelpEntry &entry,
+                    const unsigned int indent, const unsigned int width) const;
     void appendWordsWithWrapping(std::string &string, const std::string_view &toAppend,
-                                 uint &currentColumn, const uint maxWidth) const;
+                                 unsigned int &currentColumn,
+                                 const unsigned int maxWidth) const;
 
     std::string_view intro;
     std::vector<HelpEntry> entries;

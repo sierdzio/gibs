@@ -8,6 +8,15 @@ namespace
 const std::string_view Space = " ";
 constexpr std::string_view DoubleSpace = "  ";
 constexpr std::string_view FlagSeparator = ", ";
+
+unsigned int toUint(const uint64_t value)
+{
+    if (value > static_cast<uint64_t>(std::numeric_limits<unsigned int>::max()))
+    {
+        throw std::overflow_error("Value is too large to fit in unsigned int");
+    }
+    return static_cast<unsigned int>(value);
+}
 }; //namespace
 
 void HelpData::addIntro(const std::string_view &introText)
@@ -20,7 +29,7 @@ void HelpData::addEntry(const StringViewList &flags, const std::string_view &exp
     entries.push_back({flags, explanation});
 }
 
-std::string HelpData::formatted(const uint width) const
+std::string HelpData::formatted(const unsigned int width) const
 {
     const auto indent = calculateDescriptionIndent();
 
@@ -28,7 +37,7 @@ std::string HelpData::formatted(const uint width) const
 
     if (not intro.empty())
     {
-        uint emptyIndent = 0;
+        unsigned int emptyIndent = 0;
         appendWordsWithWrapping(result, intro, emptyIndent, width);
     }
 
@@ -40,35 +49,34 @@ std::string HelpData::formatted(const uint width) const
     return result;
 }
 
-uint HelpData::calculateDescriptionIndent() const
+unsigned int HelpData::calculateDescriptionIndent() const
 {
-    uint result = 0;
+    unsigned int result = 0;
 
     for (const auto &entry : entries)
     {
-        uint flagsLength = 0;
+        unsigned int flagsLength = 0;
 
         for (const auto &flag : entry.flags)
         {
-            flagsLength +=
-                static_cast<uint>(flag.size()) + static_cast<uint>(FlagSeparator.size());
+            flagsLength += toUint(flag.size()) + toUint(FlagSeparator.size());
         }
 
         result = std::max(result, flagsLength);
     }
 
-    return result + static_cast<uint>(DoubleSpace.size());
+    return result + toUint(DoubleSpace.size());
 }
 
-void HelpData::appendText(std::string &string, const HelpEntry &entry, const uint indent,
-                          const uint width) const
+void HelpData::appendText(std::string &string, const HelpEntry &entry,
+                          const unsigned int indent, const unsigned int width) const
 {
-    uint currentColumn = 0;
+    unsigned int currentColumn = 0;
 
     if (not entry.flags.empty())
     {
         string.append(DoubleSpace);
-        currentColumn = static_cast<uint>(DoubleSpace.size());
+        currentColumn = toUint(DoubleSpace.size());
     }
 
     bool isFirst = true;
@@ -81,11 +89,11 @@ void HelpData::appendText(std::string &string, const HelpEntry &entry, const uin
         else
         {
             string.append(FlagSeparator);
-            currentColumn += static_cast<uint>(FlagSeparator.size());
+            currentColumn += toUint(FlagSeparator.size());
         }
 
         string.append(flag);
-        currentColumn += static_cast<uint>(flag.size());
+        currentColumn += toUint(flag.size());
     }
 
     if (not entry.flags.empty())
@@ -101,7 +109,8 @@ void HelpData::appendText(std::string &string, const HelpEntry &entry, const uin
 
 void HelpData::appendWordsWithWrapping(std::string &string,
                                        const std::string_view &toAppend,
-                                       uint &currentColumn, const uint maxWidth) const
+                                       unsigned int &currentColumn,
+                                       const unsigned int maxWidth) const
 {
     const auto indent = currentColumn;
 
@@ -110,7 +119,7 @@ void HelpData::appendWordsWithWrapping(std::string &string,
 
     for (auto &&word : words)
     {
-        currentColumn += static_cast<uint>(word.size());
+        currentColumn += toUint(word.size());
 
         if (currentColumn > maxWidth)
         {
@@ -121,6 +130,6 @@ void HelpData::appendWordsWithWrapping(std::string &string,
 
         string.append(word);
         string.append(Space);
-        currentColumn += static_cast<uint>(word.size()) + 1;
+        currentColumn += toUint(word.size()) + 1;
     }
 }
