@@ -149,3 +149,9 @@ TEST(processing, CompilerEmptyDefines)
     // Should be 2 (for DEBUG and MY_FEATURE), not 3
     EXPECT_EQ(dCount, 2);
 }
+
+TEST(processing, CompilerSetSequentialCommandsDefault)
+{
+    const auto set = CompilerSet::fromName("gcc");
+    EXPECT_EQ(set.commandExecution, CompilerSet::CommandExecution::Sequential);
+}

@@ -26,6 +26,32 @@ std::shared_future<void> Processor::schedule(const Command &command)
     auto completion = std::make_shared<std::promise<void>>();
     auto future = completion->get_future().share();
     std::vector<std::unique_ptr<ProcessInterface>> processes;
+    std::vector<CommandData> pendingCommands;
+    const auto sequential =
+        _compilerSet.commandExecution == CompilerSet::CommandExecution::Sequential;
+
+    const auto createProcess =
+        [&](const CommandData &toolCommand) -> std::unique_ptr<ProcessInterface>
+    {
+        std::unique_ptr<ProcessInterface> process;
+
+        if (isDryRun())
+        {
+            process = std::make_unique<DryRunProcess>();
+        }
+        else
+        {
+            process = std::make_unique<Process>();
+        }
+
+        process->setExecutable(toolCommand.command);
+        process->setArguments(toolCommand.arguments);
+        process->setMetaInformation(std::to_string(command.id()) + " " +
+                                    Syntax::commandString(command.type));
+        process->setLogProcessOutput(isLogProcessOutput());
+
+        return process;
+    };
 
     switch (command.type)
     {
@@ -34,28 +60,26 @@ std::shared_future<void> Processor::schedule(const Command &command)
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
             const Linker tool(command, _compilerSet);
+            const auto toolCommands = tool.commands();
 
-            for (const auto &toolCommand : tool.commands())
+            if (sequential && !toolCommands.empty())
             {
-                std::unique_ptr<ProcessInterface> process;
+                processes.emplace_back(createProcess(toolCommands.front()));
+                processes.back()->start();
 
-                if (isDryRun())
+                for (size_t index = 1; index < toolCommands.size(); ++index)
                 {
-                    process = std::make_unique<DryRunProcess>();
+                    pendingCommands.emplace_back(toolCommands.at(index));
                 }
-                else
+            }
+            else
+            {
+                for (const auto &toolCommand : toolCommands)
                 {
-                    process = std::make_unique<Process>();
+                    auto process = createProcess(toolCommand);
+                    process->start();
+                    processes.emplace_back(std::move(process));
                 }
-
-                process->setExecutable(toolCommand.command);
-                process->setArguments(toolCommand.arguments);
-                process->setMetaInformation(std::to_string(command.id()) + " " +
-                                            Syntax::commandString(command.type));
-
-                process->setLogProcessOutput(isLogProcessOutput());
-                process->start();
-                processes.emplace_back(std::move(process));
             }
         }
         break;
@@ -63,28 +87,26 @@ std::shared_future<void> Processor::schedule(const Command &command)
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
             const Compiler tool(command, _compilerSet);
+            const auto toolCommands = tool.commands();
 
-            for (const auto &toolCommand : tool.commands())
+            if (sequential && !toolCommands.empty())
             {
-                std::unique_ptr<ProcessInterface> process;
+                processes.emplace_back(createProcess(toolCommands.front()));
+                processes.back()->start();
 
-                if (isDryRun())
+                for (size_t index = 1; index < toolCommands.size(); ++index)
                 {
-                    process = std::make_unique<DryRunProcess>();
+                    pendingCommands.emplace_back(toolCommands.at(index));
                 }
-                else
+            }
+            else
+            {
+                for (const auto &toolCommand : toolCommands)
                 {
-                    process = std::make_unique<Process>();
+                    auto process = createProcess(toolCommand);
+                    process->start();
+                    processes.emplace_back(std::move(process));
                 }
-
-                process->setExecutable(toolCommand.command);
-                process->setArguments(toolCommand.arguments);
-                process->setMetaInformation(std::to_string(command.id()) + " " +
-                                            Syntax::commandString(command.type));
-
-                process->setLogProcessOutput(isLogProcessOutput());
-                process->start();
-                processes.emplace_back(std::move(process));
             }
         }
         break;
@@ -109,13 +131,18 @@ std::shared_future<void> Processor::schedule(const Command &command)
         return future;
     }
 
-    if (processes.empty())
+    const auto commandMeta =
+        std::to_string(command.id()) + " " + Syntax::commandString(command.type);
+
+    if (processes.empty() && pendingCommands.empty())
     {
         completion->set_value();
     }
     else
     {
-        _runningCommands.push_back({command.id(), std::move(processes), completion});
+        _runningCommands.push_back(
+            {command.id(), std::move(processes), std::move(pendingCommands), 0,
+             _compilerSet.commandExecution, commandMeta, completion});
     }
 
     return future;
@@ -207,7 +234,33 @@ void Processor::checkProcessStates()
             }
         }
 
-        if (current.processes.empty())
+        if (current.processes.empty() &&
+            current.commandExecution == CompilerSet::CommandExecution::Sequential &&
+            current.nextCommandToStart < current.pendingCommands.size())
+        {
+            const auto &toolCommand =
+                current.pendingCommands.at(current.nextCommandToStart++);
+
+            std::unique_ptr<ProcessInterface> process;
+            if (isDryRun())
+            {
+                process = std::make_unique<DryRunProcess>();
+            }
+            else
+            {
+                process = std::make_unique<Process>();
+            }
+
+            process->setExecutable(toolCommand.command);
+            process->setArguments(toolCommand.arguments);
+            process->setMetaInformation(current.commandMeta);
+            process->setLogProcessOutput(isLogProcessOutput());
+            process->start();
+            current.processes.emplace_back(std::move(process));
+        }
+
+        if (current.processes.empty() &&
+            (current.nextCommandToStart >= current.pendingCommands.size()))
         {
             current.completion->set_value();
             _runningCommands.erase(_runningCommands.begin() + static_cast<long>(index));

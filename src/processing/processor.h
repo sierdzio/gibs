@@ -2,6 +2,7 @@
 
 #include "compilerset.h"
 #include "project/command.h"
+#include "tool.h"
 
 #include <future>
 #include <memory>
@@ -13,6 +14,11 @@ struct RunningCommand
 {
     CommandId commandId;
     std::vector<std::unique_ptr<ProcessInterface>> processes;
+    std::vector<CommandData> pendingCommands;
+    std::size_t nextCommandToStart = 0;
+    CompilerSet::CommandExecution commandExecution =
+        CompilerSet::CommandExecution::Sequential;
+    std::string commandMeta;
     std::shared_ptr<std::promise<void>> completion;
 };
 
