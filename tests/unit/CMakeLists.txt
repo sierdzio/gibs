@@ -11,6 +11,7 @@ add_executable(unit_tests_gibs
     project/test_project.cpp
     processing/test_tool.cpp
     test_log_silence.cpp
+    parsing/test_paths.cpp
 )
 
 # TODO: investigate, should not be needed
