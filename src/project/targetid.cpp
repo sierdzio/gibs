@@ -62,6 +62,16 @@ TargetId::TargetId(std::string &&name, const Type type) : _type(type)
     setName(name);
 }
 
+std::filesystem::path TargetId::rootDirectory() const
+{
+    return _rootDirectory;
+}
+
+void TargetId::setRootDirectory(const std::filesystem::path &path)
+{
+    _rootDirectory = path;
+}
+
 bool TargetId::isNull() const
 {
     return _name.empty();

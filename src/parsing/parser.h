@@ -40,7 +40,7 @@ class Parser
     void handleCommand(Command command, CppState *state);
 
     std::string absoluteCommandModifierPath(const Command &command,
-                                            std::string modifier) const;
+                                            const std::string &modifier) const;
 
     Syntax::FileType fileType(const std::filesystem::path &path) const;
 

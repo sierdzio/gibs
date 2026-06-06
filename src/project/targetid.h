@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <filesystem>
 #include <ostream>
 #include <string>
 
@@ -24,6 +26,12 @@ struct TargetId
     TargetId();
     TargetId(std::string &&name, const Type type);
 
+    // TODO: Add root directory for targets, option to set them exclusive or not.
+    // Then in Parser take settings into consideration when resolving command inheritance.
+    // Note: not sure if this is the right place for this, performance might be hit
+    std::filesystem::path rootDirectory() const;
+    void setRootDirectory(const std::filesystem::path &path);
+
     bool operator<=>(const TargetId &other) const = default;
     bool isNull() const;
 
@@ -34,6 +42,7 @@ struct TargetId
     void setName(const std::string &name);
 
     std::string _name;
+    std::filesystem::path _rootDirectory;
     Type _type = Type::Unknown;
     unsigned int _id = 0;
 };

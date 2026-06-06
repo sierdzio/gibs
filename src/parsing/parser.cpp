@@ -153,17 +153,17 @@ bool Parser::scanProjectDirectoryForEntryPoints()
 }
 
 std::string Parser::absoluteCommandModifierPath(const Command &command,
-                                                std::string modifier) const
+                                                const std::string &modifier) const
 {
     if (command.type == Syntax::Command::Source)
     {
-        const auto path = std::filesystem::path(std::move(modifier));
+        const auto path = std::filesystem::path(modifier);
         if (path.is_absolute())
         {
             return path.string();
         }
 
-        return std::filesystem::absolute(root() / path).string();
+        return _paths.absolutePath(path).string();
     }
 
     if (command.type == Syntax::Command::Include and
@@ -256,6 +256,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             link.targetId = id;
             link.append(std::filesystem::relative(state.id.name(), root()));
             link.finalize(_arguments, _paths);
+            //_paths.targetPaths.emplace(link.path(), id);
             _project->addCommand(link);
         }
 

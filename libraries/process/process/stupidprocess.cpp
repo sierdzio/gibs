@@ -3,6 +3,7 @@
 
 #include <logger/log.h>
 
+#include <filesystem>
 #include <ranges>
 #include <thread>
 
