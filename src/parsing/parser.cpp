@@ -295,7 +295,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         // TODO: handle case where source file is in a different directory... maybe cache
         // the dir structure ?
         // }
-        const auto cppPathOptional = findCppFile(path.filename());
+        const auto cppPathOptional = findCppFile(path);
 
         if (cppPathOptional.has_value()) [[likely]]
         {
@@ -309,7 +309,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         }
         else [[unlikely]]
         {
-            Log::debug("Not found!");
+            Log::information("Cpp file not found for header:", path.filename());
         }
     }
 }
@@ -546,7 +546,7 @@ void Parser::handleCommand(Command command, CppState *state)
         //it is naming the whole project and executable
         if (not _projectIdAlreadySet and state->id == _project->id)
         {
-            Log::information("Autop-setting project name and executable name to:",
+            Log::information("Auto-setting project name and executable name to:",
                              command.executable().name);
             const auto &commandId = _project->linkCommandIdFor(state->id);
             _project->commandRef(commandId).setExecutableName(command.executable().name);
