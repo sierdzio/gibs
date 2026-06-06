@@ -1,6 +1,7 @@
 #pragma once
 
 #include "commandcomponents.h"
+#include "parsing/paths.h"
 #include "parsing/syntax.h"
 #include "targetid.h"
 #include "tools/argumentslist.h"
@@ -29,9 +30,7 @@ class Command
      * After calling append() to add data to the command, call this method
      * to do processing of all the modifiers.
      */
-    void finalize(const ArgumentsList &arguments,
-                  const std::filesystem::path &projectDirectory,
-                  const std::filesystem::path &workingDirectory);
+    void finalize(const ArgumentsList &arguments, const Paths &paths);
 
     bool isReadyToExecute() const;
     void setIsReadyToExecute(const bool ready);

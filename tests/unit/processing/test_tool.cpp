@@ -9,8 +9,8 @@
 
 namespace
 {
-const auto ProjectDir = std::filesystem::current_path();
-const auto WorkingDir = std::filesystem::current_path();
+const Paths DefaultPaths = {
+    std::filesystem::current_path(), std::filesystem::current_path(), {}, {}, {}};
 } // namespace
 
 TEST(processing, CompilerCommands)
@@ -18,7 +18,7 @@ TEST(processing, CompilerCommands)
     Command command;
     EXPECT_TRUE(command.append("source"));
     EXPECT_TRUE(command.append("main.cpp"));
-    command.finalize({}, ProjectDir, WorkingDir);
+    command.finalize({}, DefaultPaths);
 
     command.objectReference().includePaths = {"include"};
 
@@ -47,7 +47,7 @@ TEST(processing, LinkerStaticLibraryMultiCommand)
     EXPECT_TRUE(command.append("static"));
     EXPECT_TRUE(command.append("name"));
     EXPECT_TRUE(command.append("mylib"));
-    command.finalize({}, ProjectDir, WorkingDir);
+    command.finalize({}, DefaultPaths);
 
     EXPECT_TRUE(command.addLinkObject("file1.o"));
     EXPECT_TRUE(command.addLinkObject("file2.o"));
@@ -77,7 +77,7 @@ TEST(processing, CompilerDefines)
     Command command;
     EXPECT_TRUE(command.append("source"));
     EXPECT_TRUE(command.append("main.cpp"));
-    command.finalize({}, ProjectDir, WorkingDir);
+    command.finalize({}, DefaultPaths);
 
     // Add some defines
     command.objectReference().defines = {"DEBUG", "MY_FEATURE", "VERSION=1"};
@@ -101,7 +101,7 @@ TEST(processing, CompilerUsesExplicitToolchain)
     Command command;
     EXPECT_TRUE(command.append("source"));
     EXPECT_TRUE(command.append("main.cpp"));
-    command.finalize({}, ProjectDir, WorkingDir);
+    command.finalize({}, DefaultPaths);
 
     Compiler tool(command, CompilerSet::fromName("clang"));
     const auto &commands = tool.commands();
@@ -115,7 +115,7 @@ TEST(processing, LinkerUsesExplicitToolchain)
     Command command;
     EXPECT_TRUE(command.append("executable"));
     EXPECT_TRUE(command.append("main"));
-    command.finalize({}, ProjectDir, WorkingDir);
+    command.finalize({}, DefaultPaths);
 
     command.addLinkObject("main.o");
 
@@ -131,7 +131,7 @@ TEST(processing, CompilerEmptyDefines)
     Command command;
     EXPECT_TRUE(command.append("source"));
     EXPECT_TRUE(command.append("test.cpp"));
-    command.finalize({}, ProjectDir, WorkingDir);
+    command.finalize({}, DefaultPaths);
 
     // Add includes with empty defines (to ensure empty defines are skipped)
     command.objectReference().defines = {"DEBUG", "", "MY_FEATURE"};

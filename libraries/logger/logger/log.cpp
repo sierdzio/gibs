@@ -5,7 +5,6 @@
 #include <array>
 #include <fstream>
 #include <iosfwd>
-#include <sstream>
 
 static Log::Type RuntimeLogLevel = Log::Type::Verbose;
 static bool UseColors = true;

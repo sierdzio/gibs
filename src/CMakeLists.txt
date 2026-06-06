@@ -10,6 +10,7 @@ set(gibs_srcs
     tools/helpdata.cpp tools/helpdata.h
     parsing/syntax.cpp parsing/syntax.h
     parsing/parser.cpp parsing/parser.h
+    parsing/paths.cpp parsing/paths.h
     project/project.cpp project/project.h
     project/commandcomponents.cpp project/commandcomponents.h
     project/command.cpp project/command.h

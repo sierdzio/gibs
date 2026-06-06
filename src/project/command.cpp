@@ -137,9 +137,7 @@ bool Command::canBeProcessed() const
     return false;
 }
 
-void Command::finalize(const ArgumentsList &arguments,
-                       [[maybe_unused]] const std::filesystem::path &projectDirectory,
-                       const std::filesystem::path &workingDirectory)
+void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
 {
     if (_modifiers.empty())
     {
@@ -196,7 +194,7 @@ void Command::finalize(const ArgumentsList &arguments,
                     if (namePath.is_absolute())
                     {
                         _library.name =
-                            std::filesystem::relative(namePath, workingDirectory);
+                            std::filesystem::relative(namePath, paths.workingDirectory);
                     }
                     else
                     {
@@ -221,15 +219,13 @@ void Command::finalize(const ArgumentsList &arguments,
             {
                 const auto currentPath =
                     std::filesystem::path(Tools::prepareIncludePath(current));
-                const auto absolutePath = currentPath.is_absolute()
-                                              ? currentPath
-                                              : workingDirectory / currentPath;
+                const auto path = paths.absolutePath(currentPath);
 
                 if (previous == Syntax::Modifier::Library)
                 {
                     _include.isLibrary = true;
                     _include.path =
-                        std::filesystem::relative(absolutePath, workingDirectory);
+                        std::filesystem::relative(path, paths.workingDirectory);
                     if (not _modifiers.empty())
                     {
                         _modifiers.back() = _include.path;
@@ -238,7 +234,7 @@ void Command::finalize(const ArgumentsList &arguments,
                     continue;
                 }
 
-                _include.path = std::filesystem::relative(absolutePath, workingDirectory);
+                _include.path = std::filesystem::relative(path, paths.workingDirectory);
                 if (not _modifiers.empty())
                 {
                     _modifiers.back() = _include.path;
@@ -325,8 +321,9 @@ void Command::finalize(const ArgumentsList &arguments,
         {
             std::filesystem::path filePath = _modifiers.back();
             const auto absoluteSource =
-                filePath.is_absolute() ? filePath : workingDirectory / filePath;
-            _object.source = std::filesystem::relative(absoluteSource, workingDirectory);
+                filePath.is_absolute() ? filePath : paths.workingDirectory / filePath;
+            _object.source =
+                std::filesystem::relative(absoluteSource, paths.workingDirectory);
             if (not _modifiers.empty())
             {
                 _modifiers.back() = _object.source;

@@ -12,8 +12,8 @@
 
 namespace
 {
-const auto ProjectDir = std::filesystem::current_path();
-const auto WorkingDir = std::filesystem::current_path();
+const Paths DefaultPaths = {
+    std::filesystem::current_path(), std::filesystem::current_path(), {}, {}, {}};
 } // namespace
 
 // Helper to create a valid source command
@@ -22,7 +22,7 @@ Command makeSourceCommand(const std::string &filename)
     Command cmd;
     cmd.append("source");
     cmd.append(filename);
-    cmd.finalize({}, ProjectDir, WorkingDir);
+    cmd.finalize({}, DefaultPaths);
     return cmd;
 }
 
@@ -35,7 +35,7 @@ Command makeLibraryCommand(const std::string &libname)
     cmd.append(libname);
     cmd.append("type");
     cmd.append("static");
-    cmd.finalize({}, ProjectDir, WorkingDir);
+    cmd.finalize({}, DefaultPaths);
     return cmd;
 }
 
@@ -46,7 +46,7 @@ Command makeExecutableCommand(const std::string &exename)
     cmd.append("executable");
     cmd.append("name");
     cmd.append(exename);
-    cmd.finalize({}, ProjectDir, WorkingDir);
+    cmd.finalize({}, DefaultPaths);
     return cmd;
 }
 
@@ -74,7 +74,7 @@ TEST_F(ProjectDependencyTest, ExecutableNameOverrideUpdatesWholeCommand)
     Command exec;
     exec.append("executable");
     exec.append("samples");
-    exec.finalize({}, ProjectDir, WorkingDir);
+    exec.finalize({}, DefaultPaths);
 
     _project->addCommand(exec);
     const auto execId = _project->commands.back().id();

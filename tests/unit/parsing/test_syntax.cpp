@@ -6,8 +6,8 @@
 
 namespace
 {
-const auto ProjectDir = std::filesystem::current_path();
-const auto WorkingDir = std::filesystem::current_path();
+const Paths DefaultPaths = {
+    std::filesystem::current_path(), std::filesystem::current_path(), {}, {}, {}};
 } // namespace
 
 // TODO: MetaEnum? EnumClass? Come up with some clever thingy
@@ -66,7 +66,7 @@ TEST(syntax, OptionComponentParsing)
         EXPECT_TRUE(c.append("my-feature"));
         EXPECT_TRUE(c.append("default"));
         EXPECT_TRUE(c.append("on"));
-        c.finalize({}, ProjectDir, WorkingDir);
+        c.finalize({}, DefaultPaths);
 
         EXPECT_TRUE(c.isValid());
         EXPECT_EQ(c.option().name, "my-feature");
@@ -82,7 +82,7 @@ TEST(syntax, OptionComponentParsing)
         EXPECT_TRUE(c.append("my-option"));
         EXPECT_TRUE(c.append("default"));
         EXPECT_TRUE(c.append("off"));
-        c.finalize({}, ProjectDir, WorkingDir);
+        c.finalize({}, DefaultPaths);
 
         EXPECT_TRUE(c.isValid());
         EXPECT_EQ(c.option().name, "my-option");

@@ -92,6 +92,7 @@ constexpr auto Include = "#include";
 constexpr auto Main = "main";
 constexpr auto Int = "int";
 constexpr auto Char = "char";
+constexpr auto Namespace = "namespace";
 constexpr auto DoubleColon = "::";
 constexpr auto RoundBrackets = "()";
 constexpr auto OpenLibraryInclude = '<';

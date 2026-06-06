@@ -1,8 +1,12 @@
 //i executable name gibs
+//i include ../libraries/logger
+//i include ../libraries/process
 
 #include <chrono>
 #include <iostream>
 #include <stdexcept>
+
+#include <logger/log.h>
 
 #include "exceptions/commanddepthexception.h"
 #include "exceptions/commandexception.h"
@@ -15,9 +19,6 @@
 #include "processing/processor.h"
 #include "project/project.h"
 #include "tools/commandline.h"
-
-//i include ../libraries/logger
-#include <logger/log.h>
 
 int main(int argc, char *argv[])
 {

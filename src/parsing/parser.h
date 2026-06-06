@@ -1,5 +1,6 @@
 #pragma once
 
+#include "paths.h"
 #include "project/command.h"
 #include "syntax.h"
 #include "tools/apperror.h"
@@ -10,7 +11,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
 class CommandLine;
 class Project;
@@ -50,15 +50,7 @@ class Parser
     const std::filesystem::path &root() const;
     const std::filesystem::path &workingDirectory() const;
 
-    // TODO: move to Project?
-
-    std::filesystem::path _workingDirectory = std::filesystem::current_path();
-    std::filesystem::path _projectDirectory;
-    std::filesystem::path _projectFile;
-    std::filesystem::path _projectEntryPoint;
-    // TODO: should be per target (library, executable) or even more granular to speed
-    // things up?
-    std::vector<std::filesystem::path> _includePaths;
+    Paths _paths;
 
     // TODO: move to project?
     // TODO: separate list per-target and project; optimize lookup
