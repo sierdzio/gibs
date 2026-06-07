@@ -392,8 +392,15 @@ std::string Command::whole() const
         break;
     }
 
-    return Tools::inSquareBrackets(targetId.name()) + Space +
-           Syntax::commandString(type) + mods + extra;
+    std::string target = targetId.name();
+
+    if (Log::isWithinLogLevel(Log::Type::Verbose))
+    {
+        target += Space + targetId.rootDirectory().string();
+    }
+
+    return Tools::inSquareBrackets(target) + Space + Syntax::commandString(type) + mods +
+           extra;
 }
 
 std::string Command::value() const

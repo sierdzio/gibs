@@ -94,6 +94,7 @@ void Parser::parse()
     // "target name" command is found inside project files
     _project->id = TargetId(_paths.projectDirectory.parent_path().filename(),
                             TargetId::Type::Executable);
+    _project->id.setRootDirectory(_paths.projectDirectory);
 
     Log::information("Project name:", _project->id.name());
 
@@ -568,6 +569,8 @@ void Parser::handleCommand(Command command, CppState *state)
                 command.type = Syntax::Command::Library;
                 command.parentId = _project->linkCommandIdFor(state->id);
                 command.targetId = TargetId(std::move(name), TargetId::Type::Library);
+                command.targetId.setRootDirectory(
+                    _paths.absolutePath(command.targetId.name()));
                 command.append(
                     std::filesystem::relative(command.targetId.name(), root()));
                 command.finalize(_arguments, _paths);
@@ -670,6 +673,8 @@ void Parser::handleCommand(Command command, CppState *state)
                 // this library and folder is already known
                 TargetId libraryId(command.include().libraryName(),
                                    TargetId::Type::Library);
+                libraryId.setRootDirectory(
+                    _paths.absolutePath(command.include().libraryName()));
 
                 // Make library directory available as an include path so angle-bracket
                 // includes inside library files can be resolved relative to that folder.
