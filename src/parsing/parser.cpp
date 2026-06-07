@@ -224,6 +224,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     CppState state;
     state.id = id;
+    state.currentFile = path.is_absolute() ? path : workingDirectory() / path;
 
     std::string line;
 
@@ -247,7 +248,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     if (type == Syntax::FileType::Cpp)
     {
         // Prepare link command if not already present:
-        auto linkId = _project->linkCommandIdFor(state.id);
+        auto linkId = _project->linkCommandIdFor(state.id, state.currentFile);
         if (linkId == 0) [[unlikely]]
         {
             Command link;
@@ -257,7 +258,6 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             link.targetId = id;
             link.append(std::filesystem::relative(state.id.name(), root()));
             link.finalize(_arguments, _paths);
-            //_paths.targetPaths.emplace(link.path(), id);
             _project->addCommand(link);
         }
 
@@ -299,9 +299,43 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             const auto &cppPath = cppPathOptional.value();
             if (fileType(cppPath) == Syntax::FileType::Cpp)
             {
+                // If a library target already exists for the folder containing this
+                // cpp file, prefer parsing under that library target so object files
+                // are assigned correctly. This handles headers that are included
+                // from other targets but actually belong to a library.
                 Log::information("Parsing cpp file for header:", path.filename(),
                                  "under target ID:", state.id);
-                parseCppFile(cppPath, state.id);
+
+                // Determine absolute path of the cpp file
+                const auto cppAbs = (workingDirectory() / cppPath).lexically_normal();
+
+                // Look for an existing library command whose target root directory
+                // is a parent of this cpp file. If found, parse under that target.
+                TargetId parseId = state.id;
+                for (const auto &cmd : _project->commands)
+                {
+                    if (cmd.type == Syntax::Command::Library &&
+                        not cmd.targetId.rootDirectory().empty())
+                    {
+                        const auto libRoot =
+                            cmd.targetId.rootDirectory().lexically_normal();
+                        // If cppAbs is inside libRoot, use library's target id
+                        const auto relative = cppAbs.lexically_relative(libRoot);
+                        if (!relative.empty())
+                        {
+                            const auto first = *relative.begin();
+                            if (first != ".." && first != ".")
+                            {
+                                parseId = cmd.targetId;
+                                Log::verbose("Detected existing library target for cpp:",
+                                             cppPath, "using target:", parseId);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                parseCppFile(cppPath, parseId);
             }
         }
         else [[unlikely]]
@@ -549,10 +583,12 @@ void Parser::handleCommand(Command command, CppState *state)
         //it is naming the whole project and executable
         if (not _projectIdAlreadySet and state->id == _project->id)
         {
-            Log::information("Auto-setting project name and executable name to:",
-                             command.executable().name);
-            const auto &commandId = _project->linkCommandIdFor(state->id);
-            _project->commandRef(commandId).setExecutableName(command.executable().name);
+            const auto name = command.executable().name;
+            Log::information("Auto-setting project name and executable name to:", name,
+                             "based on command path:", command.path());
+            const auto &commandId =
+                _project->linkCommandIdFor(state->id, state->currentFile);
+            _project->commandRef(commandId).setExecutableName(name);
             _projectIdAlreadySet = true;
         }
         else
@@ -563,11 +599,13 @@ void Parser::handleCommand(Command command, CppState *state)
             {
                 // TODO: wrong library name is parsed
                 auto name = command.library().name;
-                Log::verbose("Preparing library target:", name);
+                Log::verbose("Preparing library target:", name,
+                             "with path:", command.path());
 
                 // Command link;
                 command.type = Syntax::Command::Library;
-                command.parentId = _project->linkCommandIdFor(state->id);
+                command.parentId =
+                    _project->linkCommandIdFor(state->id, state->currentFile);
                 command.targetId = TargetId(std::move(name), TargetId::Type::Library);
                 command.targetId.setRootDirectory(
                     _paths.absolutePath(command.targetId.name()));
@@ -604,7 +642,7 @@ void Parser::handleCommand(Command command, CppState *state)
     else if (command.type == Syntax::Command::Feature or
              command.type == Syntax::Command::Option)
     {
-        command.parentId = _project->linkCommandIdFor(state->id);
+        command.parentId = _project->linkCommandIdFor(state->id, state->currentFile);
 
         Log::information(
             "Found an option:", Tools::inQuotes(command.option().name),

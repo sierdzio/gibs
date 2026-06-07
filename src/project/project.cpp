@@ -20,6 +20,22 @@ constexpr std::string Branch = "|--";
 constexpr std::string Vertical = "|";
 constexpr std::string Space = " ";
 constexpr std::string Nl = "\n";
+
+bool isSubdirectoryOf(const std::filesystem::path &path,
+                      const std::filesystem::path &base)
+{
+    const auto normalizedPath = path.lexically_normal();
+    const auto normalizedBase = base.lexically_normal();
+    const auto relative = normalizedPath.lexically_relative(normalizedBase);
+
+    if (relative.empty())
+    {
+        return false;
+    }
+
+    const auto firstElement = *relative.begin();
+    return firstElement != ".." && firstElement != ".";
+}
 } //namespace
 
 Project::Project(std::shared_ptr<Processor> processor) : _processor(processor)
@@ -39,11 +55,32 @@ bool Project::addCommand(const Command &command)
     return true;
 }
 
-CommandId Project::linkCommandIdFor(const TargetId &id) const
+CommandId Project::linkCommandIdFor(const TargetId &id,
+                                    const std::filesystem::path &path) const
 {
-    const auto it =
-        std::find_if(commands.cbegin(), commands.cend(),
-                     [id](const Command &command) { return command.targetId == id; });
+    const auto directory =
+        std::filesystem::is_directory(path) ? path : path.parent_path();
+
+    const auto comparator = [id, path](const Command &command)
+    {
+        const auto idMatches = command.targetId == id;
+
+        if (command.type == Syntax::Command::Library or
+            command.type == Syntax::Command::Executable)
+        {
+            return idMatches;
+        }
+
+        if (not idMatches)
+        {
+            return false;
+        }
+
+        const auto isSubdir = isSubdirectoryOf(path, command.targetId.rootDirectory());
+        return isSubdir;
+    };
+
+    const auto it = std::find_if(commands.cbegin(), commands.cend(), comparator);
 
     return it == commands.cend() ? CommandId() : it->id();
 }
@@ -164,9 +201,98 @@ void Project::logCommandTree() const
     result.append("All project commands:");
     result.append(Nl);
 
+    // Group link commands (libraries/executables) and their source files by target
+    auto keyOf = [](const TargetId &t)
+    { return t.name() + ":" + TargetId::typeString(t.type()); };
+
+    std::unordered_map<std::string, const Command *> linkByKey;
+    std::vector<const Command *> linkCommands;
     for (const auto &command : commands)
     {
-        logCommand(depth(command), command, &result);
+        if (command.type == Syntax::Command::Library ||
+            command.type == Syntax::Command::Executable)
+        {
+            const auto key = keyOf(command.targetId);
+            linkByKey[key] = &command;
+            linkCommands.push_back(&command);
+        }
+    }
+
+    std::unordered_map<std::string, std::vector<const Command *>> sourcesByKey;
+    std::vector<const Command *> unassignedSources;
+    for (const auto &command : commands)
+    {
+        if (command.type == Syntax::Command::Source)
+        {
+            const auto key = keyOf(command.targetId);
+            if (linkByKey.find(key) != linkByKey.end())
+            {
+                sourcesByKey[key].push_back(&command);
+            }
+            else
+            {
+                unassignedSources.push_back(&command);
+            }
+        }
+    }
+
+    // Build parent->children mapping among link commands only
+    std::unordered_map<CommandId, std::vector<const Command *>> linkChildren;
+    std::vector<const Command *> linkRoots;
+    for (const auto *link : linkCommands)
+    {
+        if (link->parentId == NullCommandId)
+        {
+            linkRoots.push_back(link);
+        }
+        else
+        {
+            linkChildren[link->parentId].push_back(link);
+        }
+    }
+
+    auto sortByWhole = [](std::vector<const Command *> &vec)
+    {
+        std::sort(vec.begin(), vec.end(), [](const Command *a, const Command *b)
+                  { return a->whole() < b->whole(); });
+    };
+
+    // Print all link commands in a stable order: executables first, then libraries
+    std::sort(linkCommands.begin(), linkCommands.end(),
+              [](const Command *a, const Command *b)
+              {
+                  if (a->type != b->type)
+                  {
+                      return a->type == Syntax::Command::Executable;
+                  }
+                  return a->whole() < b->whole();
+              });
+
+    for (const auto *link : linkCommands)
+    {
+        logCommand(depth(*link), *link, &result);
+
+        // Print source files that belong to this target
+        const auto key = keyOf(link->targetId);
+        if (const auto it = sourcesByKey.find(key); it != sourcesByKey.end())
+        {
+            auto files = it->second; // copy to sort
+            sortByWhole(files);
+            for (const auto *fileCmd : files)
+            {
+                logCommand(depth(*fileCmd), *fileCmd, &result);
+            }
+        }
+    }
+
+    // Print any unassigned source files (fallback)
+    if (!unassignedSources.empty())
+    {
+        sortByWhole(unassignedSources);
+        for (const auto *fileCmd : unassignedSources)
+        {
+            logCommand(depth(*fileCmd), *fileCmd, &result);
+        }
     }
 
     Log::information(Log::Color(Log::Standard::Foreground::Green), result);

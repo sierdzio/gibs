@@ -32,7 +32,8 @@ struct TargetId
     std::filesystem::path rootDirectory() const;
     void setRootDirectory(const std::filesystem::path &path);
 
-    bool operator<=>(const TargetId &other) const = default;
+    auto operator<=>(const TargetId &other) const = default;
+    bool operator==(const TargetId &other) const;
     bool isNull() const;
 
     const std::string &name() const;

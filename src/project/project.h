@@ -3,6 +3,7 @@
 #include "project/command.h"
 #include "targetid.h"
 
+#include <filesystem>
 #include <future>
 #include <memory>
 #include <string>
@@ -18,7 +19,8 @@ class Project
 
     bool addCommand(const Command &command);
 
-    CommandId linkCommandIdFor(const TargetId &id) const;
+    CommandId linkCommandIdFor(const TargetId &id,
+                               const std::filesystem::path &path) const;
     Command &commandRef(const CommandId id);
 
     void onParsingFinished();

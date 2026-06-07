@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <mach/message.h>
 
 namespace
 {
@@ -100,6 +101,12 @@ void TargetId::setName(const std::string &name)
         Log::error("Cannot set target name twice. Attempting to change target name from:",
                    _name, "to:", name);
     }
+}
+
+bool TargetId::operator==(const TargetId &other) const
+{
+    return _name == other._name && _type == other._type &&
+           _rootDirectory == other._rootDirectory;
 }
 
 std::ostream &operator<<(std::ostream &stream, const TargetId &id)
