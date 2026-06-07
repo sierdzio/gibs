@@ -88,6 +88,11 @@ std::string Tools::inBrackets(const std::string &string)
     return '(' + string + ')';
 }
 
+std::string Tools::inSquareBrackets(const std::string &string)
+{
+    return '[' + string + ']';
+}
+
 std::string Tools::inQuotes(const std::string &string)
 {
     return Quote + string + Quote;

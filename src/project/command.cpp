@@ -362,41 +362,38 @@ std::string Command::whole() const
 
     std::string extra;
 
-    if (Log::isWithinLogLevel(Log::Type::Verbose))
+    switch (type)
     {
-        switch (type)
-        {
-        case Syntax::Command::Executable:
-            extra = Space + Tools::inBrackets(Tools::listToString(_executable.objects));
-            break;
-        case Syntax::Command::Library:
-            extra = Space + Tools::inBrackets(Tools::listToString(_library.objects));
-            break;
-        case Syntax::Command::Source:
-            extra = Space + Tools::inBrackets(_object.name);
-            break;
-        case Syntax::Command::Include:
-            if (_include.isLibrary)
-                extra = Space + Tools::inBrackets(
-                                    Syntax::commandString(Syntax::Command::Library));
-            break;
-        case Syntax::Command::Feature:
-        case Syntax::Command::Option:
-            extra =
-                Space + Tools::inBrackets(std::string(Syntax::Modifier::Default) + Space +
+    case Syntax::Command::Executable:
+        extra = Space + Tools::inBrackets(Tools::listToString(_executable.objects));
+        break;
+    case Syntax::Command::Library:
+        extra = Space + Tools::inBrackets(Tools::listToString(_library.objects));
+        break;
+    case Syntax::Command::Source:
+        extra = Space + Tools::inBrackets(_object.name);
+        break;
+    case Syntax::Command::Include:
+        if (_include.isLibrary)
+            extra = Space +
+                    Tools::inBrackets(Syntax::commandString(Syntax::Command::Library));
+        break;
+    case Syntax::Command::Feature:
+    case Syntax::Command::Option:
+        extra = Space + Tools::inBrackets(std::string(Syntax::Modifier::Default) + Space +
                                           Tools::boolToString(_option.defaultValue));
-            break;
-        case Syntax::Command::Define:
-        case Syntax::Command::Subproject:
-        case Syntax::Command::Tool:
-        case Syntax::Command::Qt:
-        case Syntax::Command::Invalid:
-        case Syntax::Command::Unknown:
-            break;
-        }
+        break;
+    case Syntax::Command::Define:
+    case Syntax::Command::Subproject:
+    case Syntax::Command::Tool:
+    case Syntax::Command::Qt:
+    case Syntax::Command::Invalid:
+    case Syntax::Command::Unknown:
+        break;
     }
 
-    return Syntax::commandString(type) + mods + extra;
+    return Tools::inSquareBrackets(targetId.name()) + Space +
+           Syntax::commandString(type) + mods + extra;
 }
 
 std::string Command::value() const
@@ -560,22 +557,6 @@ const OptionComponent &Command::option() const
 {
     return _option;
 }
-
-// General members
-// const TargetId &Command::targetId() const
-// {
-//     return _targetId;
-// }
-
-// const CommandId &Command::parentId() const
-// {
-//     return _parentId;
-// }
-
-// const Syntax::Command &Command::type() const
-// {
-//     return _type;
-// }
 
 std::optional<Syntax::Command> Command::getCommand(const std::string &command) const
 {

@@ -61,11 +61,6 @@ class Command
     const OptionComponent &option() const;
 
     // General members
-    // const TargetId &targetId() const;
-    // const CommandId &parentId() const;
-    // const Syntax::Command &type() const;
-
-    // General members
     TargetId targetId;
     CommandId parentId = NullCommandId;
     Syntax::Command type = Syntax::Command::Unknown;

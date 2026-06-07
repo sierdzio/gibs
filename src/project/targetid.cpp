@@ -104,7 +104,8 @@ void TargetId::setName(const std::string &name)
 
 std::ostream &operator<<(std::ostream &stream, const TargetId &id)
 {
-    stream << id.name() << ':' << TargetId::typeString(id.type());
+    stream << id.name() << ':' << TargetId::typeString(id.type()) << ':'
+           << id.rootDirectory();
 
     return stream;
 }
