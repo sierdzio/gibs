@@ -8,7 +8,7 @@ GIBS - *Generally In-source Build System*
 
 Note: *This branch contains gibs written in pure C++ and is a WORK IN PROGRESS*
 
-If you look for something that can be used, check out *master_qt* branch.
+If you look for something that can be used, check out *master_qt* branch, although it is heavily outdated!
 
 ## Intro
 
@@ -248,6 +248,33 @@ and gibs commands.
 //i include library some/path
 //i include library -Lsome/path -llibrary1 -llibrary2
 ```
+
+#### Configuration files
+
+This command allows to generate an output file (which can be compiled if
+necessary) based on an input schema - with predefined variables replacing
+templates with real values.
+
+This is a very similar concept to CMake's
+[configure_file()](https://cmake.org/cmake/help/latest/command/configure_file.html).
+
+```text
+//i configure file input something.h.in output something.h
+//i replace "some-text" with target.main.name()
+```
+
+The first line above specifies the input file and the generated file path.
+The following lines (read until the end of comment block, or first empty line)
+specify which text should be replaced with which values.
+
+Built-in gibs values and functions are matched and replaced automatically, so
+there is no need to write for example:
+
+```text
+//i replace ${gibs.main.name()} with gibs.main.name()
+```
+
+because the value will be replaced automatically.
 
 #### Qt support
 
