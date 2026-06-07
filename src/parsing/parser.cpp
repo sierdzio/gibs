@@ -394,6 +394,9 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
 
 void Parser::parseCppLine(std::string &&line, CppState *state)
 {
+    // TODO: move command parsing to a separate class. Keep this class only
+    // for orchestrating the parsing of files and handling of commands, but
+    // not for the actual parsing of text into commands
     assert(state);
 
     if (line.size() == 0)
