@@ -8,7 +8,7 @@
 
 namespace
 {
-static unsigned int uniqueId = 0;
+static unsigned int uniqueId = 1;
 
 static unsigned int nextId()
 {
@@ -104,6 +104,11 @@ void TargetId::setName(const std::string &name)
 
 bool TargetId::operator==(const TargetId &other) const
 {
+    if (_id != 0 || other._id != 0)
+    {
+        return _id != 0 && other._id != 0 && _id == other._id;
+    }
+
     return _name == other._name && _type == other._type &&
            _rootDirectory == other._rootDirectory;
 }

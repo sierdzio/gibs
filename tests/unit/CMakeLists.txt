@@ -26,6 +26,9 @@ target_link_libraries(unit_tests_gibs
     GTest::gtest_main
 )
 
-gtest_discover_tests(unit_tests_gibs)
-
-add_test(NAME unit_tests_gibs COMMAND $<TARGET_FILE:unit_tests_gibs>)
+if (ENABLE_ASAN AND APPLE)
+    add_test(NAME unit_tests_gibs COMMAND $<TARGET_FILE:unit_tests_gibs>)
+else ()
+    gtest_discover_tests(unit_tests_gibs)
+    add_test(NAME unit_tests_gibs COMMAND $<TARGET_FILE:unit_tests_gibs>)
+endif ()

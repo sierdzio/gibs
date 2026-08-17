@@ -365,10 +365,16 @@ std::string Command::whole() const
     switch (type)
     {
     case Syntax::Command::Executable:
-        extra = Space + Tools::inBrackets(Tools::listToString(_executable.objects));
+        if (not _executable.objects.empty())
+        {
+            extra = Space + Tools::inBrackets(Tools::listToString(_executable.objects));
+        }
         break;
     case Syntax::Command::Library:
-        extra = Space + Tools::inBrackets(Tools::listToString(_library.objects));
+        if (not _library.objects.empty())
+        {
+            extra = Space + Tools::inBrackets(Tools::listToString(_library.objects));
+        }
         break;
     case Syntax::Command::Source:
         extra = Space + Tools::inBrackets(_object.name);
@@ -390,6 +396,11 @@ std::string Command::whole() const
     case Syntax::Command::Invalid:
     case Syntax::Command::Unknown:
         break;
+    }
+
+    if (targetId.isNull())
+    {
+        return Syntax::commandString(type) + mods + extra;
     }
 
     std::string target = targetId.name();

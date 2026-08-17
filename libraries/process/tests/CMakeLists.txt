@@ -16,6 +16,9 @@ target_link_libraries(${NAME}
     GTest::gtest_main
 )
 
-gtest_discover_tests(${NAME})
-
-add_test(NAME ${NAME} COMMAND $<TARGET_FILE:${NAME}>)
+if (ENABLE_ASAN AND APPLE)
+    add_test(NAME ${NAME} COMMAND $<TARGET_FILE:${NAME}>)
+else ()
+    gtest_discover_tests(${NAME})
+    add_test(NAME ${NAME} COMMAND $<TARGET_FILE:${NAME}>)
+endif ()

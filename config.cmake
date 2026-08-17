@@ -39,6 +39,21 @@ if (ENABLE_ASAN)
       message("No ASAN for you, my boy!") # But! modern MSVC does support asan!
     endif ()
   else ()
+    # GoogleTest's discovery mode triggers a libc++ false positive on macOS when
+    # ASan is enabled. Disabling container overflow detection avoids the abort
+    # without affecting the sanitizer instrumentation used by the project itself.
+    if (APPLE)
+      set(ASAN_OPTIONS_ENV "$ENV{ASAN_OPTIONS}")
+      if (ASAN_OPTIONS_ENV)
+        string(REPLACE ":" ";" ASAN_OPTIONS_LIST "${ASAN_OPTIONS_ENV}")
+        if (NOT "${ASAN_OPTIONS_LIST}" MATCHES "detect_container_overflow")
+          set(ENV{ASAN_OPTIONS} "${ASAN_OPTIONS_ENV}:detect_container_overflow=0")
+        endif ()
+      else ()
+        set(ENV{ASAN_OPTIONS} "detect_container_overflow=0")
+      endif ()
+    endif ()
+
     add_definitions("-fsanitize=address" "-fno-optimize-sibling-calls" "-fsanitize-address-use-after-scope" "-fno-omit-frame-pointer")
     add_link_options("-fsanitize=address" "-fno-optimize-sibling-calls" "-fsanitize-address-use-after-scope" "-fno-omit-frame-pointer")
     message("Building using asan")
