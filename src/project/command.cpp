@@ -359,6 +359,11 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
             Log::verbose("Appending library file:", filePath.string());
             _object.name = filePath.string();
         }
+        else if (type == Syntax::Command::Executable and not _executable.name.empty())
+        {
+            _executable.outputPath =
+                (paths.buildDirectory / _executable.name).lexically_normal();
+        }
     }
     else
     {
@@ -573,6 +578,12 @@ const ExecutableComponent &Command::executable() const
 void Command::setExecutableName(const std::string &name)
 {
     _executable.name = name;
+
+    if (not _executable.outputPath.empty())
+    {
+        _executable.outputPath =
+            (_executable.outputPath.parent_path() / name).lexically_normal();
+    }
 
     if (type != Syntax::Command::Executable)
     {

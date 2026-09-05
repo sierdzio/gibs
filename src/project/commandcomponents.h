@@ -3,6 +3,7 @@
 #include "parsing/syntax.h"
 #include "tools/stringlist.h"
 
+#include <filesystem>
 #include <vector>
 
 struct Component
@@ -16,6 +17,7 @@ struct ExecutableComponent : public Component
 
     std::string name;
     std::string version;
+    std::filesystem::path outputPath;
     StringList objects;
     StringList libraries;
 };

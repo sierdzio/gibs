@@ -82,6 +82,14 @@ Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode,
     }
 
     addIncludePath(_paths.projectDirectory);
+
+    std::error_code buildDirectoryError;
+    std::filesystem::create_directories(_paths.buildDirectory, buildDirectoryError);
+    if (buildDirectoryError)
+    {
+        Log::error("Could not create build directory:", _paths.buildDirectory);
+        _status = AppError::ConfigurationError;
+    }
 }
 
 AppError Parser::status() const

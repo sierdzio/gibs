@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 
-#include "parsing/syntax.h"
 #include "processing/compiler.h"
 #include "processing/compilerset.h"
 #include "processing/linker.h"
@@ -128,6 +127,26 @@ TEST(processing, LinkerUsesExplicitToolchain)
 
     ASSERT_EQ(commands.size(), 1u);
     EXPECT_EQ(commands[0].command, "clang++");
+}
+
+TEST(processing, ExecutableLinkOutputUsesBuildDirectory)
+{
+    Command command;
+    EXPECT_TRUE(command.append("executable"));
+    EXPECT_TRUE(command.append("gibs"));
+    command.finalize({}, DefaultPaths);
+    command.addLinkObject("main.o");
+
+    Linker tool(command);
+    const auto &commands = tool.commands();
+
+    ASSERT_EQ(commands.size(), 1u);
+    const auto output =
+        std::find(commands[0].arguments.begin(), commands[0].arguments.end(), "-o");
+    ASSERT_NE(output, commands[0].arguments.end());
+    ASSERT_NE(std::next(output), commands[0].arguments.end());
+    EXPECT_EQ(*std::next(output),
+              (DefaultPaths.buildDirectory / "gibs").lexically_normal().string());
 }
 
 TEST(processing, CompilerEmptyDefines)

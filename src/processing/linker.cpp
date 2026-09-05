@@ -35,7 +35,10 @@ bool Linker::setup(const Command &command)
         }
 
         commandData.arguments.emplace_back("-o");
-        commandData.arguments.emplace_back(command.executable().name);
+        commandData.arguments.emplace_back(
+            command.executable().outputPath.empty()
+                ? command.executable().name
+                : command.executable().outputPath.string());
 
         for (const auto &current : command.executable().libraries)
         {
