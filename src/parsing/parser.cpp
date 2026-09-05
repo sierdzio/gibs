@@ -44,6 +44,8 @@ Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode,
         return;
     }
 
+    input = std::filesystem::absolute(input).lexically_normal();
+
     const auto dir = std::filesystem::directory_entry(input);
 
     if (dir.is_regular_file())
@@ -58,6 +60,7 @@ Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode,
         if (type == Syntax::FileType::Project)
         {
             _paths.projectFile = dir;
+            _paths.projectEntryPoint.clear();
         }
         else if (type == Syntax::FileType::Cpp)
         {
@@ -111,6 +114,16 @@ void Parser::parse()
 
     if (_paths.projectFile.has_filename())
     {
+        if (not _paths.projectEntryPoint.has_filename())
+        {
+            Command link;
+            link.targetId = _project->id;
+            link.type = Syntax::Command::Executable;
+            link.append(_project->id.name());
+            link.finalize(_arguments, _paths);
+            _project->addCommand(link);
+        }
+
         parseProjectFile(_paths.projectFile, _project->id);
     }
 
@@ -272,6 +285,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
             link.targetId = id;
             link.append(std::filesystem::relative(state.id.name(), root()));
             link.finalize(_arguments, _paths);
+            linkId = link.id();
             _project->addCommand(link);
         }
 
@@ -400,6 +414,16 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
             word = absoluteCommandModifierPath(command, std::move(word));
             command.append(word);
         }
+        else
+        {
+            word.push_back(character);
+        }
+    }
+
+    if (not word.empty())
+    {
+        word = absoluteCommandModifierPath(command, std::move(word));
+        command.append(word);
     }
 
     command.finalize(_arguments, _paths);
@@ -424,6 +448,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     std::string word;
     Command command;
     bool isOneLineCommand = false;
+    bool isCppInclude = false;
 
     enum class Action
     {
@@ -473,6 +498,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
         if (word == Syntax::CppKeywords::Include)
         {
             isOneLineCommand = true;
+            isCppInclude = true;
             command.type = Syntax::Command::Include;
             return Action::Continue;
         }
@@ -494,7 +520,17 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             // TODO: c++20 modules
         )
         {
-            word = absoluteCommandModifierPath(command, std::move(word));
+            if (command.type == Syntax::Command::Include && !isCppInclude &&
+                !state->currentFile.empty())
+            {
+                word =
+                    (state->currentFile.parent_path() / Tools::prepareIncludePath(word))
+                        .lexically_normal();
+            }
+            else
+            {
+                word = absoluteCommandModifierPath(command, std::move(word));
+            }
             command.append(word);
             return Action::Continue;
         }
@@ -666,7 +702,7 @@ void Parser::handleCommand(Command command, CppState *state)
     }
     else if (command.type == Syntax::Command::Source)
     {
-        shouldAdd = true;
+        shouldAdd = not state->currentFile.empty();
         hasPath = true;
     }
     else if (command.type == Syntax::Command::Library or
@@ -773,7 +809,9 @@ void Parser::handleCommand(Command command, CppState *state)
 
     if (hasPath and hasModifiers)
     {
-        const auto &toFind = command.path();
+        const auto &toFind = command.type == Syntax::Command::Source
+                                 ? command.object().source
+                                 : command.path();
 
         Log::verbose("Command:", command.whole(), "has path:", hasPath,
                      "has mods:", Tools::boolToString(hasModifiers),

@@ -62,3 +62,37 @@ TEST(parsing, ParserInheritsFeatureDefinesToCompileCommands)
 
     EXPECT_TRUE(executableOutputFound);
 }
+
+TEST(parsing, ParserReadsFinalProjectCommandToken)
+{
+    Log::setLogLevel(Log::Type::Silent);
+
+    std::shared_ptr<Processor> processor = std::make_shared<Processor>();
+    processor->setDryRun(true);
+    auto project = std::make_shared<Project>(processor);
+
+    const auto projectPath = std::filesystem::path(__FILE__).parent_path() /
+                             std::filesystem::path("../../../main.gibs");
+
+    Parser parser(projectPath, true, {}, project);
+    ASSERT_EQ(parser.status(), AppError::NoError);
+
+    parser.parse();
+
+    bool sourceCommandFound = false;
+    bool loggerIncludePathFound = false;
+    for (const auto &command : project->commands)
+    {
+        if (command.type == Syntax::Command::Source)
+        {
+            sourceCommandFound = true;
+            for (const auto &includePath : command.object().includePaths)
+            {
+                loggerIncludePathFound |= includePath.ends_with("libraries/logger");
+            }
+        }
+    }
+
+    EXPECT_TRUE(sourceCommandFound);
+    EXPECT_TRUE(loggerIncludePathFound);
+}

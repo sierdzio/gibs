@@ -70,10 +70,11 @@ TEST(processing, LinkerStaticLibraryMultiCommand)
 
     EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
                           "qc") != commands[0].arguments.end());
-    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
-                          (DefaultPaths.buildDirectory / "mylib.a")
-                              .lexically_normal()
-                              .string()) != commands[0].arguments.end());
+    EXPECT_TRUE(
+        std::find(
+            commands[0].arguments.begin(), commands[0].arguments.end(),
+            (DefaultPaths.buildDirectory / "mylib.a").lexically_normal().string()) !=
+        commands[0].arguments.end());
     EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
                           "file1.o") != commands[0].arguments.end());
     EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
