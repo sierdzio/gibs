@@ -1,8 +1,10 @@
 #pragma once
 
+#include "project/commandcomponents.h"
 #include "project/targetid.h"
 
 #include <filesystem>
+#include <optional>
 
 struct CppState
 {
@@ -11,4 +13,5 @@ struct CppState
     bool isCommentBlock = false;
     bool isProjectCommentBlock = false;
     bool shouldFinish = false;
+    std::optional<ConfigurationComponent> configuration;
 };

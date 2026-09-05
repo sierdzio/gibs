@@ -10,6 +10,7 @@ add_executable(unit_tests_gibs
     project/test_command.cpp
     project/test_project.cpp
     processing/test_tool.cpp
+    processing/test_configuration.cpp
     test_log_silence.cpp
     parsing/test_paths.cpp
 )

@@ -37,12 +37,15 @@ struct TargetId
     bool isNull() const;
 
     const std::string &name() const;
+    const std::string &version() const;
+    void setVersion(const std::string &version);
     Type type() const;
 
   private:
     void setName(const std::string &name);
 
     std::string _name;
+    std::string _version;
     std::filesystem::path _rootDirectory;
     Type _type = Type::Unknown;
     unsigned int _id = 0;

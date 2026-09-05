@@ -5,6 +5,7 @@
 #include "tools/commandline.h"
 #include "tools/tools.h"
 
+#include "processing/configuration.h"
 #include "project/command.h"
 #include "project/project.h"
 #include "project/targetid.h"
@@ -574,7 +575,71 @@ void Parser::handleCommand(Command command, CppState *state)
     bool hasPath = false;
     bool shouldAdd = false;
 
-    if (command.type == Syntax::Command::Source)
+    if (command.type == Syntax::Command::Configure)
+    {
+        const auto base = state->currentFile.empty() ? workingDirectory()
+                                                     : state->currentFile.parent_path();
+        state->configuration = command.configuration();
+
+        auto &configuration = state->configuration.value();
+        const auto inputPath = std::filesystem::path(configuration.input);
+        const auto outputPath = std::filesystem::path(configuration.output);
+        configuration.input =
+            (inputPath.is_absolute() ? inputPath : base / inputPath).lexically_normal();
+        configuration.output = (outputPath.is_absolute() ? outputPath : base / outputPath)
+                                   .lexically_normal();
+    }
+    else if (command.type == Syntax::Command::Replace)
+    {
+        if (not state->configuration.has_value())
+        {
+            Log::error("Found replacement without an active configuration:",
+                       command.whole());
+            _status = AppError::ConfigurationError;
+            return;
+        }
+
+        auto &configuration = state->configuration.value();
+        const auto &replacement = command.replacement();
+        for (const auto &existing : configuration.replacements)
+        {
+            if (existing.token == replacement.token)
+            {
+                Log::error("Duplicate configuration replacement token:", existing.token);
+                _status = AppError::ConfigurationError;
+                return;
+            }
+        }
+
+        auto replacementValue = replacement.value;
+        if (replacementValue == "target.gibs.version()" or
+            replacementValue == "target.version()")
+        {
+            replacementValue = state->id.version();
+        }
+        else if (replacementValue == "target.name()")
+        {
+            replacementValue = state->id.name();
+        }
+        else if (replacementValue.starts_with("target."))
+        {
+            Log::error("Unknown target configuration expression:", replacementValue);
+            _status = AppError::ConfigurationError;
+            return;
+        }
+
+        configuration.replacements.push_back({replacement.token, replacementValue});
+
+        std::string error;
+        if (not ConfigurationGenerator::generate(configuration.input,
+                                                 configuration.output,
+                                                 configuration.replacements, &error))
+        {
+            Log::error(error);
+            _status = AppError::ConfigurationError;
+        }
+    }
+    else if (command.type == Syntax::Command::Source)
     {
         shouldAdd = true;
         hasPath = true;
@@ -582,6 +647,17 @@ void Parser::handleCommand(Command command, CppState *state)
     else if (command.type == Syntax::Command::Library or
              command.type == Syntax::Command::Executable)
     {
+        if (command.type == Syntax::Command::Executable and
+            not command.executable().version.empty())
+        {
+            command.targetId.setVersion(command.executable().version);
+            if (state->id == _project->id)
+            {
+                _project->id.setVersion(command.executable().version);
+                state->id.setVersion(command.executable().version);
+            }
+        }
+
         //if this is first Target command, and/ or it is issued in main.cpp, assume
         //it is naming the whole project and executable
         if (not _projectIdAlreadySet and state->id == _project->id)
@@ -610,6 +686,7 @@ void Parser::handleCommand(Command command, CppState *state)
                 command.parentId =
                     _project->linkCommandIdFor(state->id, state->currentFile);
                 command.targetId = TargetId(std::move(name), TargetId::Type::Library);
+                command.targetId.setVersion(command.library().version);
                 command.targetId.setRootDirectory(
                     _paths.absolutePath(command.targetId.name()));
                 command.append(

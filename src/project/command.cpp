@@ -124,6 +124,8 @@ bool Command::canBeProcessed() const
     case Syntax::Command::Qt:
     case Syntax::Command::Source:
     case Syntax::Command::Tool:
+    case Syntax::Command::Configure:
+    case Syntax::Command::Replace:
         return true;
     case Syntax::Command::Include:
     case Syntax::Command::Feature:
@@ -157,7 +159,14 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
                     previous.clear();
                     continue;
                 }
-                else if (_executable.name.empty() && current != Syntax::Modifier::Name)
+                else if (previous == Syntax::Modifier::Version)
+                {
+                    _executable.version = current;
+                    previous.clear();
+                    continue;
+                }
+                else if (_executable.name.empty() && current != Syntax::Modifier::Name &&
+                         current != Syntax::Modifier::Version)
                 {
                     _executable.name = current;
                     continue;
@@ -200,6 +209,12 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
                     {
                         _library.name = current;
                     }
+                    previous.clear();
+                    continue;
+                }
+                else if (previous == Syntax::Modifier::Version)
+                {
+                    _library.version = current;
                     previous.clear();
                     continue;
                 }
@@ -289,6 +304,36 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
                 else if (previous == Syntax::Modifier::Name)
                 {
                     _option.name = current;
+                    previous.clear();
+                    continue;
+                }
+            }
+            else if (type == Syntax::Command::Configure)
+            {
+                if (previous == Syntax::Modifier::Input)
+                {
+                    _configuration.input = current;
+                    previous.clear();
+                    continue;
+                }
+                else if (previous == Syntax::Modifier::Output)
+                {
+                    _configuration.output = current;
+                    previous.clear();
+                    continue;
+                }
+            }
+            else if (type == Syntax::Command::Replace)
+            {
+                if (_replacement.token.empty() and current != Syntax::Modifier::With)
+                {
+                    _replacement.token = current;
+                    previous.clear();
+                    continue;
+                }
+                else if (previous == Syntax::Modifier::With)
+                {
+                    _replacement.value = current;
                     previous.clear();
                     continue;
                 }
@@ -393,6 +438,8 @@ std::string Command::whole() const
     case Syntax::Command::Subproject:
     case Syntax::Command::Tool:
     case Syntax::Command::Qt:
+    case Syntax::Command::Configure:
+    case Syntax::Command::Replace:
     case Syntax::Command::Invalid:
     case Syntax::Command::Unknown:
         break;
@@ -440,6 +487,8 @@ const std::string &Command::path() const
     case Syntax::Command::Feature:
     case Syntax::Command::Option:
     case Syntax::Command::Qt:
+    case Syntax::Command::Configure:
+    case Syntax::Command::Replace:
     case Syntax::Command::Subproject:
     case Syntax::Command::Tool:
     case Syntax::Command::Invalid:
@@ -466,6 +515,8 @@ bool Command::hasPath() const
     case Syntax::Command::Feature:
     case Syntax::Command::Option:
     case Syntax::Command::Qt:
+    case Syntax::Command::Configure:
+    case Syntax::Command::Replace:
     case Syntax::Command::Subproject:
     case Syntax::Command::Tool:
     case Syntax::Command::Invalid:
@@ -576,6 +627,16 @@ const OptionComponent &Command::option() const
     return _option;
 }
 
+const ConfigurationComponent &Command::configuration() const
+{
+    return _configuration;
+}
+
+const ReplacementComponent &Command::replacement() const
+{
+    return _replacement;
+}
+
 std::optional<Syntax::Command> Command::getCommand(const std::string &command) const
 {
     try
@@ -599,6 +660,8 @@ bool Command::supportsModifiers(const Syntax::Command command) const
     case Syntax::Command::Include:
     case Syntax::Command::Feature:
     case Syntax::Command::Option:
+    case Syntax::Command::Configure:
+    case Syntax::Command::Replace:
         return true;
     case Syntax::Command::Unknown:
     case Syntax::Command::Invalid:

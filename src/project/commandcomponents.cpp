@@ -61,3 +61,14 @@ std::string OptionComponent::define() const
     std::transform(result.begin(), result.end(), result.begin(), ::toupper);
     return result;
 }
+
+bool ConfigurationComponent::isValid(const Syntax::Command type) const
+{
+    return type == Syntax::Command::Configure and not input.empty() and
+           not output.empty();
+}
+
+bool ReplacementComponent::isValid(const Syntax::Command type) const
+{
+    return type == Syntax::Command::Replace and not token.empty() and not value.empty();
+}

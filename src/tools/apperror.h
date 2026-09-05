@@ -6,4 +6,5 @@ enum class AppError
     WrongInputPath = -1,
     IncorrectInputFileType = -2,
     EntryPointNotFound = -3,
+    ConfigurationError = -4,
 };

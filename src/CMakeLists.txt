@@ -19,6 +19,7 @@ set(gibs_srcs
     processing/tool.h
     processing/compiler.cpp processing/compiler.h
     processing/compilerset.cpp processing/compilerset.h
+    processing/configuration.cpp processing/configuration.h
     processing/linker.cpp processing/linker.h
     processing/processor.cpp processing/processor.h
     )

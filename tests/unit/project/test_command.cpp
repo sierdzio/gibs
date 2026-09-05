@@ -259,6 +259,60 @@ TEST(command, PathSemantics)
     }
 }
 
+TEST(command, TargetVersion)
+{
+    Command executable;
+    EXPECT_TRUE(executable.append("executable"));
+    EXPECT_TRUE(executable.append("name"));
+    EXPECT_TRUE(executable.append("app"));
+    EXPECT_TRUE(executable.append("version"));
+    EXPECT_TRUE(executable.append("1.2.3"));
+    executable.finalize({}, DefaultPaths);
+
+    EXPECT_TRUE(executable.isValid());
+    EXPECT_EQ(executable.executable().name, "app");
+    EXPECT_EQ(executable.executable().version, "1.2.3");
+
+    Command versionFirst;
+    EXPECT_TRUE(versionFirst.append("executable"));
+    EXPECT_TRUE(versionFirst.append("version"));
+    EXPECT_TRUE(versionFirst.append("2.0.0"));
+    EXPECT_TRUE(versionFirst.append("name"));
+    EXPECT_TRUE(versionFirst.append("other-app"));
+    versionFirst.finalize({}, DefaultPaths);
+
+    EXPECT_TRUE(versionFirst.isValid());
+    EXPECT_EQ(versionFirst.executable().name, "other-app");
+    EXPECT_EQ(versionFirst.executable().version, "2.0.0");
+}
+
+TEST(command, ConfigurationAndReplacement)
+{
+    Command configuration;
+    EXPECT_TRUE(configuration.append("configure"));
+    EXPECT_TRUE(configuration.append("file"));
+    EXPECT_TRUE(configuration.append("input"));
+    EXPECT_TRUE(configuration.append("template.h.in"));
+    EXPECT_TRUE(configuration.append("output"));
+    EXPECT_TRUE(configuration.append("generated.h"));
+    configuration.finalize({}, DefaultPaths);
+
+    EXPECT_TRUE(configuration.isValid());
+    EXPECT_EQ(configuration.configuration().input, "template.h.in");
+    EXPECT_EQ(configuration.configuration().output, "generated.h");
+
+    Command replacement;
+    EXPECT_TRUE(replacement.append("replace"));
+    EXPECT_TRUE(replacement.append("${VALUE}"));
+    EXPECT_TRUE(replacement.append("with"));
+    EXPECT_TRUE(replacement.append("target.name()"));
+    replacement.finalize({}, DefaultPaths);
+
+    EXPECT_TRUE(replacement.isValid());
+    EXPECT_EQ(replacement.replacement().token, "${VALUE}");
+    EXPECT_EQ(replacement.replacement().value, "target.name()");
+}
+
 TEST(command, ObjectComponentDefines)
 {
     Log::setLogLevel(Log::Type::Silent);

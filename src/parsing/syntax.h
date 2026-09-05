@@ -14,7 +14,9 @@
     X(Option, "option")                                                                  \
     X(Subproject, "subproject")                                                          \
     X(Tool, "tool")                                                                      \
-    X(Qt, "qt")
+    X(Qt, "qt")                                                                          \
+    X(Configure, "configure")                                                            \
+    X(Replace, "replace")
 
 namespace Syntax
 {
@@ -72,6 +74,11 @@ constexpr auto App = "app";
 constexpr auto Static = "static";
 constexpr auto Dynamic = "dynamic";
 constexpr auto Name = "name";
+constexpr auto Version = "version";
+constexpr auto Input = "input";
+constexpr auto Output = "output";
+constexpr auto Replace = "replace";
+constexpr auto With = "with";
 constexpr auto Library = "library";
 constexpr auto Default = "default";
 constexpr auto On = "on";

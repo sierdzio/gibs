@@ -82,6 +82,16 @@ const std::string &TargetId::name() const
     return _name;
 }
 
+const std::string &TargetId::version() const
+{
+    return _version;
+}
+
+void TargetId::setVersion(const std::string &version)
+{
+    _version = version;
+}
+
 TargetId::Type TargetId::type() const
 {
     return _type;

@@ -122,6 +122,8 @@ std::shared_future<void> Processor::schedule(const Command &command)
     case Syntax::Command::Option:
     case Syntax::Command::Include:
     case Syntax::Command::Feature:
+    case Syntax::Command::Configure:
+    case Syntax::Command::Replace:
     case Syntax::Command::Subproject:
     case Syntax::Command::Define:
     case Syntax::Command::Invalid:

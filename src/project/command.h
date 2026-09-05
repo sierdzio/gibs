@@ -58,6 +58,8 @@ class Command
     ObjectComponent &objectReference();
     const IncludeComponent &include() const;
     const OptionComponent &option() const;
+    const ConfigurationComponent &configuration() const;
+    const ReplacementComponent &replacement() const;
 
     // General members
     TargetId targetId;
@@ -78,6 +80,8 @@ class Command
     ObjectComponent _object;
     IncludeComponent _include;
     OptionComponent _option;
+    ConfigurationComponent _configuration;
+    ReplacementComponent _replacement;
 
     bool _parsingFailed = false;
     bool _isReadyToExe = false;

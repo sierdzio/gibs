@@ -25,6 +25,8 @@ TEST(syntax, commandString)
     EXPECT_EQ(Syntax::commandString(Syntax::Command::Subproject), "subproject");
     EXPECT_EQ(Syntax::commandString(Syntax::Command::Tool), "tool");
     EXPECT_EQ(Syntax::commandString(Syntax::Command::Qt), "qt");
+    EXPECT_EQ(Syntax::commandString(Syntax::Command::Configure), "configure");
+    EXPECT_EQ(Syntax::commandString(Syntax::Command::Replace), "replace");
     EXPECT_THROW(Syntax::commandString(static_cast<Syntax::Command>(123)),
                  CommandException);
 }
@@ -43,6 +45,8 @@ TEST(syntax, commandValue)
     EXPECT_EQ(Syntax::commandValue("subproject"), Syntax::Command::Subproject);
     EXPECT_EQ(Syntax::commandValue("tool"), Syntax::Command::Tool);
     EXPECT_EQ(Syntax::commandValue("qt"), Syntax::Command::Qt);
+    EXPECT_EQ(Syntax::commandValue("configure"), Syntax::Command::Configure);
+    EXPECT_EQ(Syntax::commandValue("replace"), Syntax::Command::Replace);
 
     EXPECT_THROW(Syntax::commandValue("abc"), CommandStringException);
     EXPECT_THROW(Syntax::commandValue("Qt"), CommandStringException);
@@ -53,7 +57,7 @@ TEST(syntax, commandValue)
 
 TEST(syntax, commandCount)
 {
-    EXPECT_EQ(Syntax::commandCount(), 12);
+    EXPECT_EQ(Syntax::commandCount(), 14);
 }
 
 TEST(syntax, OptionComponentParsing)

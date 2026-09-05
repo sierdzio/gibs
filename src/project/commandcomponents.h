@@ -3,6 +3,8 @@
 #include "parsing/syntax.h"
 #include "tools/stringlist.h"
 
+#include <vector>
+
 struct Component
 {
     virtual bool isValid(const Syntax::Command type) const = 0;
@@ -13,6 +15,7 @@ struct ExecutableComponent : public Component
     bool isValid(const Syntax::Command type) const override;
 
     std::string name;
+    std::string version;
     StringList objects;
     StringList libraries;
 };
@@ -55,4 +58,27 @@ struct OptionComponent : public Component
     std::string name;
     bool defaultValue = false;
     bool isOn = false;
+};
+
+struct ConfigurationReplacement
+{
+    std::string token;
+    std::string value;
+};
+
+struct ConfigurationComponent final : public Component
+{
+    bool isValid(const Syntax::Command type) const override;
+
+    std::string input;
+    std::string output;
+    std::vector<ConfigurationReplacement> replacements;
+};
+
+struct ReplacementComponent final : public Component
+{
+    bool isValid(const Syntax::Command type) const override;
+
+    std::string token;
+    std::string value;
 };

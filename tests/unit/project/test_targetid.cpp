@@ -34,13 +34,20 @@ TEST(targetid, TargetId)
     EXPECT_EQ(t1.name(), "");
     EXPECT_EQ(t1.type(), TargetId::Type::Unknown);
 
-    const TargetId t3("abc", TargetId::Type::Library);
+    TargetId t3("abc", TargetId::Type::Library);
 
     EXPECT_NE(t3, t1);
     EXPECT_NE(t3, t2);
     EXPECT_FALSE(t3.isNull());
     EXPECT_EQ(t3.name(), "abc");
+    EXPECT_EQ(t3.version(), "");
     EXPECT_EQ(t3.type(), TargetId::Type::Library);
+
+    t3.setVersion("1.2.3");
+    EXPECT_EQ(t3.version(), "1.2.3");
+
+    const TargetId t5 = t3;
+    EXPECT_EQ(t5.version(), "1.2.3");
 
     const TargetId t4("abc", TargetId::Type::Library);
 
