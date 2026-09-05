@@ -34,6 +34,7 @@ struct ObjectComponent : public Component
     bool isValid(const Syntax::Command type) const override;
 
     std::string source;
+    std::filesystem::path sourcePath;
     std::string name;
     StringList includePaths;
     StringList defines;

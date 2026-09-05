@@ -25,12 +25,21 @@ TEST(parsing, ParserInheritsFeatureDefinesToCompileCommands)
 
     parser.parse();
 
+    const auto buildDirectory = std::filesystem::current_path() / "build";
     bool compileCommandFound = false;
+    bool mainObjectFound = false;
     for (const auto &command : project->commands)
     {
         if (command.type == Syntax::Command::Source)
         {
             compileCommandFound = true;
+            EXPECT_TRUE(command.object().name.starts_with(buildDirectory.string() + "/"));
+            if (command.object().sourcePath.filename() == "main.cpp")
+            {
+                mainObjectFound = true;
+                EXPECT_EQ(command.object().name,
+                          (buildDirectory / "main.o").lexically_normal());
+            }
             const auto &defines = command.object().defines;
             EXPECT_NE(std::find(defines.begin(), defines.end(), "MY_FEATURE"),
                       defines.end());
@@ -38,4 +47,18 @@ TEST(parsing, ParserInheritsFeatureDefinesToCompileCommands)
     }
 
     EXPECT_TRUE(compileCommandFound);
+    EXPECT_TRUE(mainObjectFound);
+
+    bool executableOutputFound = false;
+    for (const auto &command : project->commands)
+    {
+        if (command.type == Syntax::Command::Executable)
+        {
+            executableOutputFound = true;
+            EXPECT_EQ(command.executable().outputPath,
+                      (buildDirectory / "SimpleTestFeature").lexically_normal());
+        }
+    }
+
+    EXPECT_TRUE(executableOutputFound);
 }

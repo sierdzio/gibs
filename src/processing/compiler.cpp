@@ -55,7 +55,9 @@ bool Compiler::setup(const Command &command)
     commandData.arguments.emplace_back("-o");
     commandData.arguments.emplace_back(command.object().name);
     commandData.arguments.emplace_back("-c");
-    commandData.arguments.emplace_back(command.object().source);
+    commandData.arguments.emplace_back(command.object().sourcePath.empty()
+                                           ? command.object().source
+                                           : command.object().sourcePath.string());
 
     _commands.clear();
     _commands.emplace_back(std::move(commandData));

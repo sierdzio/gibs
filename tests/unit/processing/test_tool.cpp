@@ -36,10 +36,15 @@ TEST(processing, CompilerCommands)
                           "include") != commands[0].arguments.end());
     EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
                           "-o") != commands[0].arguments.end());
-    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
-                          "main.o") != commands[0].arguments.end());
-    EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
-                          "main.cpp") != commands[0].arguments.end());
+    EXPECT_TRUE(
+        std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
+                  (DefaultPaths.buildDirectory / "main.o").lexically_normal().string()) !=
+        commands[0].arguments.end());
+    EXPECT_TRUE(
+        std::find(
+            commands[0].arguments.begin(), commands[0].arguments.end(),
+            (DefaultPaths.workingDirectory / "main.cpp").lexically_normal().string()) !=
+        commands[0].arguments.end());
 }
 
 TEST(processing, LinkerStaticLibraryMultiCommand)

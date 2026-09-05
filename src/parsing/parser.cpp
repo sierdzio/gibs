@@ -81,6 +81,8 @@ Parser::Parser(const std::filesystem::path &inputPath, const bool isQuickMode,
         scanProjectDirectoryForEntryPoints();
     }
 
+    _paths.workingDirectory = _paths.projectDirectory;
+
     addIncludePath(_paths.projectDirectory);
 
     std::error_code buildDirectoryError;
@@ -212,24 +214,27 @@ void Parser::parseProjectFile(const std::filesystem::path &path, const TargetId 
 
 void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 {
-    if (Tools::contains(_compiledFiles, path.string()))
+    const auto absolutePath =
+        path.is_absolute() ? path : (_paths.workingDirectory / path).lexically_normal();
+
+    if (Tools::contains(_compiledFiles, absolutePath.string()))
     {
-        Log::verbose("Skipping, already parsed:", path);
+        Log::verbose("Skipping, already parsed:", absolutePath);
         return;
     }
 
-    addIncludePath(path);
+    addIncludePath(absolutePath);
 
-    std::ifstream file(path, std::iostream::in);
+    std::ifstream file(absolutePath, std::iostream::in);
 
     if (not file.is_open())
     {
-        Log::error("Could not open file for reading:", path);
+        Log::error("Could not open file for reading:", absolutePath);
         return;
     }
 
-    Log::debug("Reading file:", path);
-    _compiledFiles.emplace_back(path);
+    Log::debug("Reading file:", absolutePath);
+    _compiledFiles.emplace_back(absolutePath);
 
     CppState state;
     state.id = id;
@@ -241,7 +246,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     // parse on the fly
     while (std::getline(file, line))
     {
-        Log::verbose("Read:", path.filename(), ":", line);
+        Log::verbose("Read:", absolutePath.filename(), ":", line);
         parseCppLine(std::move(line), &state);
 
         if (state.shouldFinish)
@@ -252,7 +257,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     file.close();
 
-    const auto type = fileType(path);
+    const auto type = fileType(absolutePath);
 
     if (type == Syntax::FileType::Cpp)
     {
@@ -276,32 +281,35 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         Command compile;
         compile.type = Syntax::Command::Source;
         {
-            const auto absolutePath =
-                path.is_absolute() ? path : workingDirectory() / path;
-            compile.append(std::filesystem::absolute(absolutePath).string());
+            compile.append(absolutePath.string());
         }
         compile.targetId = state.id;
         compile.parentId = linkCommand->id();
         compile.finalize(_arguments, _paths);
-        compile.objectReference().includePaths =
-            Tools::pathsToStrings(_paths.includePaths);
+        compile.objectReference().includePaths.emplace_back(
+            _paths.workingDirectory.lexically_normal().string());
+        for (const auto &includePath : _paths.includePaths)
+        {
+            compile.objectReference().includePaths.emplace_back(
+                (_paths.workingDirectory / includePath).lexically_normal().string());
+        }
         compile.objectReference().defines = linkCommand->object().defines;
 
         Log::debug("Adding object file to linker command:", compile.object().name);
 
         linkCommand->addLinkObject(compile.object().name);
 
-        Log::information("Compiling cpp file:", path.filename());
+        Log::information("Compiling cpp file:", absolutePath.filename());
         _project->addCommand(compile);
     }
     else if (type == Syntax::FileType::H)
     {
         Log::debug("Looking for a source file accompanying this header:",
-                   path.filename());
+                   absolutePath.filename());
         // TODO: handle case where source file is in a different directory... maybe cache
         // the dir structure ?
         // }
-        const auto cppPathOptional = findCppFile(path);
+        const auto cppPathOptional = findCppFile(absolutePath);
 
         if (cppPathOptional.has_value()) [[likely]]
         {
@@ -784,7 +792,10 @@ void Parser::handleCommand(Command command, CppState *state)
             return;
         }
 
-        const auto &path = pathOptional.value();
+        const auto path =
+            pathOptional->is_absolute()
+                ? pathOptional.value()
+                : (_paths.workingDirectory / pathOptional.value()).lexically_normal();
 
         if (std::filesystem::path(path).extension() == Syntax::Extension::ProjectFile)
         {
