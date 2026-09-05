@@ -260,21 +260,34 @@ This is a very similar concept to CMake's
 
 ```text
 //i configure file input something.h.in output something.h
-//i replace "some-text" with target.main.name()
+//i replace "some-text" with target.main.version()
+//i replace "another_text" with "hello, config file!"
 ```
 
 The first line above specifies the input file and the generated file path.
-The following lines (read until the end of comment block, or first empty line)
-specify which text should be replaced with which values.
+The following lines (read until the end of comment block, first empty line
+or detection of a different command) specify which text should be replaced
+with which values.
+
+`replace` will match exact strings from input file and replace them with either
+hardcoded values (provided in quotes) or with built-in gibs methods.
 
 Built-in gibs values and functions are matched and replaced automatically, so
 there is no need to write for example:
 
 ```text
-//i replace ${gibs.main.name()} with gibs.main.name()
+//i replace ${target.gibs.name()} with target.gibs.name()
 ```
 
 because the value will be replaced automatically.
+
+##### Built-in values
+
+* `target.name()` - name of current target (library or executable)
+* `target.version()` - version of current target (library or executable)
+* `target.<name>.name()` - name of a specified target (library or executable)
+* `target.<name>.version()` - version of a specified target (library or executable)
+* TODO: more...
 
 #### Qt support
 

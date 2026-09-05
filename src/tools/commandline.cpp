@@ -2,7 +2,7 @@
 #include "helpdata.h"
 #include "processing/compilerset.h"
 #include "tools.h"
-//i configure file input ../versioninfo.h.in output versioninfo.h
+//i configure file input ../versioninfo.h.in output ../versioninfo.h
 //i replace ${PROJECT_VERSION} with target.gibs.version()
 #include "versioninfo.h"
 
