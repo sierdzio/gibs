@@ -6,8 +6,12 @@
 
 namespace
 {
-const Paths DefaultPaths = {
-    std::filesystem::current_path(), std::filesystem::current_path(), {}, {}, {}};
+const Paths DefaultPaths = {std::filesystem::current_path(),
+                            std::filesystem::current_path(),
+                            {},
+                            {},
+                            std::filesystem::current_path() / "build",
+                            {}};
 } // namespace
 
 // TODO: MetaEnum? EnumClass? Come up with some clever thingy

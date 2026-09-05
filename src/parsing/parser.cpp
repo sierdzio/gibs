@@ -586,8 +586,13 @@ void Parser::handleCommand(Command command, CppState *state)
         const auto outputPath = std::filesystem::path(configuration.output);
         configuration.input =
             (inputPath.is_absolute() ? inputPath : base / inputPath).lexically_normal();
-        configuration.output = (outputPath.is_absolute() ? outputPath : base / outputPath)
-                                   .lexically_normal();
+        const auto sourceOutput =
+            (outputPath.is_absolute() ? outputPath : base / outputPath)
+                .lexically_normal();
+        const auto relativeOutput =
+            std::filesystem::relative(sourceOutput, workingDirectory());
+        configuration.output =
+            (_paths.buildDirectory / relativeOutput).lexically_normal();
     }
     else if (command.type == Syntax::Command::Replace)
     {
@@ -637,6 +642,10 @@ void Parser::handleCommand(Command command, CppState *state)
         {
             Log::error(error);
             _status = AppError::ConfigurationError;
+        }
+        else
+        {
+            addIncludePath(std::filesystem::path(configuration.output).parent_path());
         }
     }
     else if (command.type == Syntax::Command::Source)

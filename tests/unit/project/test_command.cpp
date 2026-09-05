@@ -9,8 +9,12 @@
 
 namespace
 {
-const Paths DefaultPaths = {
-    std::filesystem::current_path(), std::filesystem::current_path(), {}, {}, {}};
+const Paths DefaultPaths = {std::filesystem::current_path(),
+                            std::filesystem::current_path(),
+                            {},
+                            {},
+                            std::filesystem::current_path() / "build",
+                            {}};
 } // namespace
 
 TEST(command, Command)
