@@ -205,7 +205,18 @@ TEST(command, PathSemantics)
         c.finalize({}, DefaultPaths);
 
         EXPECT_TRUE(c.hasPath());
-        EXPECT_EQ(c.path(), "main.o");
+        EXPECT_EQ(c.path(), (DefaultPaths.buildDirectory / "main.o").string());
+    }
+
+    {
+        Command c;
+        EXPECT_TRUE(c.append("source"));
+        EXPECT_TRUE(c.append("src/main.cpp"));
+        c.finalize({}, DefaultPaths);
+
+        EXPECT_TRUE(c.hasPath());
+        EXPECT_EQ(c.path(),
+                  (DefaultPaths.buildDirectory / "src/main.o").string());
     }
 
     {

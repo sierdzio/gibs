@@ -46,6 +46,31 @@ bool Project::addCommand(const Command &command)
 {
     commands.emplace_back(command);
 
+    const auto &added = commands.back();
+    std::filesystem::path output;
+    if (added.type == Syntax::Command::Source)
+    {
+        output = added.object().name;
+    }
+    else if (added.type == Syntax::Command::Executable)
+    {
+        output = added.executable().outputPath;
+    }
+    else if (added.type == Syntax::Command::Library)
+    {
+        output = added.object().name;
+    }
+
+    if (not output.empty())
+    {
+        std::error_code outputDirectoryError;
+        std::filesystem::create_directories(output.parent_path(), outputDirectoryError);
+        if (outputDirectoryError)
+        {
+            Log::error("Could not create output directory:", output.parent_path());
+        }
+    }
+
     if (command.type == Syntax::Command::Source)
     {
         _commandCompletionFutures[command.id()] = _processor->schedule(commands.back());

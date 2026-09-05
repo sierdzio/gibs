@@ -357,7 +357,7 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
 
             // TODO: use different extension per platform!
             Log::verbose("Appending library file:", filePath.string());
-            _object.name = filePath.string();
+            _object.name = (paths.buildDirectory / filePath).lexically_normal().string();
         }
         else if (type == Syntax::Command::Executable and not _executable.name.empty())
         {
@@ -383,7 +383,9 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
             filePath.replace_extension(Syntax::Extension::ObjectFile1);
             // TODO: use different extension per platform!
             Log::verbose("Appending object file:", filePath.string());
-            _object.name = filePath.filename().string();
+            _object.name =
+                (paths.buildDirectory / _object.source).replace_extension(
+                    Syntax::Extension::ObjectFile1);
         }
     }
 
