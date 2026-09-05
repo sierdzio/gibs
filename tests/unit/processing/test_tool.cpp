@@ -71,14 +71,17 @@ TEST(processing, LinkerStaticLibraryMultiCommand)
     EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
                           "qc") != commands[0].arguments.end());
     EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
-                          "mylib.a") != commands[0].arguments.end());
+                          (DefaultPaths.buildDirectory / "mylib.a")
+                              .lexically_normal()
+                              .string()) != commands[0].arguments.end());
     EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
                           "file1.o") != commands[0].arguments.end());
     EXPECT_TRUE(std::find(commands[0].arguments.begin(), commands[0].arguments.end(),
                           "file2.o") != commands[0].arguments.end());
 
     EXPECT_EQ(commands[1].arguments.size(), 1u);
-    EXPECT_EQ(commands[1].arguments[0], "mylib.a");
+    EXPECT_EQ(commands[1].arguments[0],
+              (DefaultPaths.buildDirectory / "mylib.a").lexically_normal().string());
 }
 TEST(processing, CompilerDefines)
 {
