@@ -14,6 +14,8 @@ target_link_libraries(${NAME}
     GTest::gtest_main
 )
 
-gtest_discover_tests(${NAME})
+if (GTEST_DISCOVERY_EXECUTOR)
+    set_property(TARGET ${NAME} PROPERTY TEST_LAUNCHER "${GTEST_DISCOVERY_EXECUTOR}")
+endif ()
 
-add_test(NAME ${NAME} COMMAND $<TARGET_FILE:${NAME}>)
+gtest_discover_tests(${NAME})

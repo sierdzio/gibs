@@ -1,9 +1,27 @@
 #include <gtest/gtest.h>
 
+#include <logger/log.h>
 #include <process/process.h>
 
 #include <chrono>
 #include <thread>
+
+class ScopedLogLevel
+{
+  public:
+    explicit ScopedLogLevel(const Log::Type level) : _previousLevel(Log::logLevel())
+    {
+        Log::setLogLevel(level);
+    }
+
+    ~ScopedLogLevel()
+    {
+        Log::setLogLevel(_previousLevel);
+    }
+
+  private:
+    Log::Type _previousLevel;
+};
 
 static bool waitForProcessFinish(Process &process)
 {
@@ -22,6 +40,7 @@ static bool waitForProcessFinish(Process &process)
 TEST(process, executeCommandOnUnix)
 {
 #if defined(__unix__) || defined(__APPLE__)
+    ScopedLogLevel logLevel(Log::Type::Silent);
     Process process;
     process.setExecutable("printf");
     process.setArguments({"hello"});
@@ -40,6 +59,7 @@ TEST(process, executeCommandOnUnix)
 TEST(process, captureOutputWhenLoggingEnabled)
 {
 #if defined(__unix__) || defined(__APPLE__)
+    ScopedLogLevel logLevel(Log::Type::Silent);
     Process process;
     process.setExecutable("printf");
     process.setArguments({"hello"});
@@ -62,6 +82,7 @@ TEST(process, captureOutputWhenLoggingEnabled)
 TEST(process, suppressOutputWhenLoggingDisabled)
 {
 #if defined(__unix__) || defined(__APPLE__)
+    ScopedLogLevel logLevel(Log::Type::Silent);
     Process process;
     process.setExecutable("printf");
     process.setArguments({"hello"});
@@ -84,16 +105,17 @@ TEST(process, suppressOutputWhenLoggingDisabled)
 TEST(process, logBufferedOutputOnProcessFailureWhenLoggingDisabled)
 {
 #if defined(__unix__) || defined(__APPLE__)
+    ScopedLogLevel logLevel(Log::Type::Error);
     Process process;
     process.setExecutable("sh");
     process.setArguments({"-c", "echo error >&2; exit 42"});
     process.setLogProcessOutput(false);
 
-    testing::internal::CaptureStderr();
+    testing::internal::CaptureStdout();
     const auto result = process.start();
     ASSERT_TRUE(result);
     ASSERT_TRUE(waitForProcessFinish(process));
-    const auto output = testing::internal::GetCapturedStderr();
+    const auto output = testing::internal::GetCapturedStdout();
 
     EXPECT_EQ(process.result().rawCode, 42);
     EXPECT_EQ(process.result().status, Exit::Status::FailedDuringExecution);
