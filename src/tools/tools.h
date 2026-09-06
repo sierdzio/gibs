@@ -38,15 +38,16 @@ class ScopeGuard
   \note This function does not verify the actual path in any way, nor does it
   check if the file pointed to exists.
 */
-std::string prepareIncludePath(const std::string &input);
+std::string prepareIncludePath(std::string_view input);
 
 bool contains(const StringList &list, const std::string &string);
 bool contains(const std::string &string, const std::string &toFind);
+bool contains(const std::string_view &string, const std::string_view &toFind);
 
 std::string listToString(const StringList &list);
-std::string inBrackets(const std::string &string);
-std::string inSquareBrackets(const std::string &string);
-std::string inQuotes(const std::string &string);
+std::string inBrackets(std::string_view string);
+std::string inSquareBrackets(std::string_view string);
+std::string inQuotes(std::string_view string);
 std::string boolToString(const bool value);
 StringList pathsToStrings(const std::vector<std::filesystem::path> &paths);
 

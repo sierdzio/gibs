@@ -71,7 +71,7 @@ bool Command::isValid() const
     return true;
 }
 
-bool Command::append(const std::string &part)
+bool Command::append(const std::string_view part)
 {
     if (type == Syntax::Command::Unknown)
     {
@@ -111,7 +111,7 @@ bool Command::append(const std::string &part)
             return false;
         }
 
-        _modifiers.emplace_back(Tools::prepareIncludePath(std::move(part)));
+        _modifiers.emplace_back(Tools::prepareIncludePath(part));
 
         // TODO: check isValid() for given command type
 
@@ -469,7 +469,7 @@ std::string Command::whole() const
 
     if (targetId.isNull())
     {
-        return Syntax::commandString(type) + mods + extra;
+        return std::string(Syntax::commandString(type)) + mods + extra;
     }
 
     std::string target = targetId.name();
@@ -479,8 +479,8 @@ std::string Command::whole() const
         target += Space + targetId.rootDirectory().string();
     }
 
-    return Tools::inSquareBrackets(target) + Space + Syntax::commandString(type) + mods +
-           extra;
+    return Tools::inSquareBrackets(target) + Space +
+           std::string(Syntax::commandString(type)) + mods + extra;
 }
 
 std::string Command::value() const
@@ -665,7 +665,7 @@ const ReplacementComponent &Command::replacement() const
     return _replacement;
 }
 
-std::optional<Syntax::Command> Command::getCommand(const std::string &command) const
+std::optional<Syntax::Command> Command::getCommand(const std::string_view command) const
 {
     try
     {

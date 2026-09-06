@@ -283,7 +283,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                             ? Syntax::Command::Executable
                             : Syntax::Command::Library;
             link.targetId = id;
-            link.append(std::filesystem::relative(state.id.name(), root()));
+            link.append(std::filesystem::relative(state.id.name(), root()).string());
             link.finalize(_arguments, _paths);
             linkId = link.id();
             _project->addCommand(link);
@@ -751,7 +751,7 @@ void Parser::handleCommand(Command command, CppState *state)
                 command.targetId.setRootDirectory(
                     _paths.absolutePath(command.targetId.name()));
                 command.append(
-                    std::filesystem::relative(command.targetId.name(), root()));
+                    std::filesystem::relative(command.targetId.name(), root()).string());
                 command.finalize(_arguments, _paths);
 
                 // Link this library together with parent target

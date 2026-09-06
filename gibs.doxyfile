@@ -1,14 +1,14 @@
 DOXYFILE_ENCODING = UTF-8
 
 PROJECT_NAME = gibs
-PROJECT_NUMBER = 0.0.5
+PROJECT_NUMBER = 0.2.0
 PROJECT_BRIEF = "Generally In-source Build System"
-PROJECT_LOGO = gibs.png
+PROJECT_LOGO = deployment/gibs.png
 
 OUTPUT_DIRECTORY = doc/
 
-INPUT = license-Qt.txt AUTHORS.md README.md \
-        Release.md .gitignore gibs/ milo/
+INPUT = LICENSE.txt AUTHORS.md README.md .gitignore \
+        deployment/ libraries/ src/
 #EXCLUDE_PATTERNS = */something/*
 USE_MDFILE_AS_MAINPAGE = ./README.md
 MARKDOWN_SUPPORT = YES
@@ -32,11 +32,6 @@ GENERATE_XML = NO
 
 HTML_OUTPUT = html/
 HTML_FILE_EXTENSION = .html
-#HTML_HEADER = doc/branding/milo-doxy-header.html
-HTML_FOOTER = doc/branding/milo-doxy-footer.html
-HTML_EXTRA_STYLESHEET= doc/branding/milo-doxygen.css
-HTML_EXTRA_FILES = doc/branding/milo.js
-IMAGE_PATH = doc/img
 
 TAB_SIZE = 4
 INHERIT_DOCS = YES
@@ -47,6 +42,4 @@ ALLEXTERNALS = YES
 EXTERNAL_GROUPS = YES
 EXTERNAL_PAGES = YES
 
-HAVE_DOT = NO
-
-#TAGFILES = ../../../milocodedatabase.doxytag=../../../../../doc/html
+HAVE_DOT = YES

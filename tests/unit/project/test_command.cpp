@@ -215,8 +215,7 @@ TEST(command, PathSemantics)
         c.finalize({}, DefaultPaths);
 
         EXPECT_TRUE(c.hasPath());
-        EXPECT_EQ(c.path(),
-                  (DefaultPaths.buildDirectory / "src/main.o").string());
+        EXPECT_EQ(c.path(), (DefaultPaths.buildDirectory / "src/main.o").string());
     }
 
     {

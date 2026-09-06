@@ -47,7 +47,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
         process->setExecutable(toolCommand.command);
         process->setArguments(toolCommand.arguments);
         process->setMetaInformation(std::to_string(command.id()) + " " +
-                                    Syntax::commandString(command.type));
+                                    std::string(Syntax::commandString(command.type)));
         process->setLogProcessOutput(isLogProcessOutput());
 
         return process;
@@ -133,8 +133,8 @@ std::shared_future<void> Processor::schedule(const Command &command)
         return future;
     }
 
-    const auto commandMeta =
-        std::to_string(command.id()) + " " + Syntax::commandString(command.type);
+    const auto commandMeta = std::to_string(command.id()) + " " +
+                             std::string(Syntax::commandString(command.type));
 
     if (processes.empty() && pendingCommands.empty())
     {

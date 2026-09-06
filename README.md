@@ -302,6 +302,7 @@ because the value will be replaced automatically.
 * TODO: more...
 
 #### Qt support
+***Note: currently unsupported***
 
 Gibs makes it easier to build other Qt projects.
 In order to compile a Qt application or library, you need to specify Qt
@@ -338,33 +339,6 @@ and you don't need to specify their paths.
 ```text
 //i tool myexecutable.exe --some -a -r -g -s
 ```
-
-#### Subprojects
-
-Ibs can compile collections of projects in one go. This is especially useful
-in bigger projects, where you - for example - might have an application and a
-library used by that app.
-
-If a subproject is a library, it will be automatically linked with your main
-app. There is no need to manually specify include paths or lgibs in that case.
-
-(not implemented) If a subproject is another application, it will not be
-connected to the "main" app. The executables will be placed in the same
-directory.
-
-(not implemented) If a subproject is a plugin, gibs will create the plugin and
-copy it to the same directory as the main app. No further linking will be
-preformed.
-
-Specifying a subproject is extremely easy:
-
-```text
-//i subproject path/to/subproject.h
-```
-
-Ibs will not synchronise until it is absolutely necessary: main app and the
-subproject will be compiled in parallel. Only when linking, gibs will wait for
-the library to be ready before linking the app.
 
 #### Options
 

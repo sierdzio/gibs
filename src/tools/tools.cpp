@@ -30,16 +30,16 @@ Tools::ScopeGuard::~ScopeGuard()
     _function();
 }
 
-std::string Tools::prepareIncludePath(const std::string &input)
+std::string Tools::prepareIncludePath(const std::string_view input)
 {
     // Immediate return if path is correct and does not need cleaning
     if (not input.starts_with(Syntax::CppKeywords::OpenLibraryInclude) and
         not input.starts_with(Quote))
     {
-        return input;
+        return std::string(input);
     }
 
-    auto result = input;
+    auto result = std::string(input);
 
     if (result.starts_with(Syntax::CppKeywords::OpenLibraryInclude) or
         result.starts_with(Quote))
@@ -66,6 +66,11 @@ bool Tools::contains(const std::string &string, const std::string &toFind)
     return string.contains(toFind);
 }
 
+bool Tools::contains(const std::string_view &string, const std::string_view &toFind)
+{
+    return string.contains(toFind);
+}
+
 std::string Tools::listToString(const StringList &list)
 {
     std::string result;
@@ -83,19 +88,19 @@ std::string Tools::listToString(const StringList &list)
     return result;
 }
 
-std::string Tools::inBrackets(const std::string &string)
+std::string Tools::inBrackets(const std::string_view string)
 {
-    return '(' + string + ')';
+    return '(' + std::string(string) + ')';
 }
 
-std::string Tools::inSquareBrackets(const std::string &string)
+std::string Tools::inSquareBrackets(const std::string_view string)
 {
-    return '[' + string + ']';
+    return '[' + std::string(string) + ']';
 }
 
-std::string Tools::inQuotes(const std::string &string)
+std::string Tools::inQuotes(const std::string_view string)
 {
-    return Quote + string + Quote;
+    return Quote + std::string(string) + Quote;
 }
 
 std::string Tools::boolToString(const bool value)

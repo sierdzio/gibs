@@ -9,7 +9,7 @@ CommandException::CommandException(const size_t value)
 {
 }
 
-CommandStringException::CommandStringException(const std::string &value)
-    : std::runtime_error("Command exception: " + value)
+CommandStringException::CommandStringException(const std::string_view &value)
+    : std::runtime_error("Command exception: " + std::string(value))
 {
 }

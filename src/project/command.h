@@ -21,7 +21,7 @@ class Command
     CommandId id() const;
 
     bool isValid() const;
-    bool append(const std::string &part);
+    bool append(std::string_view part);
     bool hasModifiers() const;
     bool canBeProcessed() const;
 
@@ -67,7 +67,7 @@ class Command
     Syntax::Command type = Syntax::Command::Unknown;
 
   private:
-    std::optional<Syntax::Command> getCommand(const std::string &command) const;
+    std::optional<Syntax::Command> getCommand(std::string_view command) const;
     bool supportsModifiers(const Syntax::Command command) const;
 
     const CommandId _id = NullCommandId;

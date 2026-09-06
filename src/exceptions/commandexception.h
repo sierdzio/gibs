@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdexcept>
-#include <string>
+#include <string_view>
 
 class CommandException : public std::runtime_error
 {
@@ -12,5 +12,5 @@ class CommandException : public std::runtime_error
 class CommandStringException : public std::runtime_error
 {
   public:
-    CommandStringException(const std::string &value);
+    CommandStringException(const std::string_view &value);
 };

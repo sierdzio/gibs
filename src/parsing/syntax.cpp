@@ -11,7 +11,7 @@ constexpr std::array commandStrings = {COMMANDS};
 #undef X
 } //namespace
 
-const std::string Syntax::commandString(const Syntax::Command command)
+std::string_view Syntax::commandString(const Syntax::Command command)
 {
     const auto index = static_cast<size_t>(command);
 
@@ -23,7 +23,7 @@ const std::string Syntax::commandString(const Syntax::Command command)
     return commandStrings.at(index);
 }
 
-Syntax::Command Syntax::commandValue(const std::string &string)
+Syntax::Command Syntax::commandValue(const std::string_view string)
 {
     const auto it = std::find(commandStrings.cbegin(), commandStrings.cend(), string);
 

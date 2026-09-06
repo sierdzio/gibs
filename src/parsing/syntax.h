@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <string_view>
 
 #define COMMANDS                                                                         \
     X(Unknown, "unknown")                                                                \
@@ -22,18 +22,18 @@ namespace Syntax
 {
 namespace Extension
 {
-constexpr auto ProjectFile = ".gibs";
-constexpr auto CppFile1 = ".cpp";
-constexpr auto CppFile2 = ".cxx";
-constexpr auto HeaderFile1 = ".h";
-constexpr auto HeaderFile2 = ".hpp";
-constexpr auto HeaderFile3 = ".hxx";
-constexpr auto ObjectFile1 = ".o";
-constexpr auto ObjectFile2 = ".obj";
+constexpr std::string_view ProjectFile = ".gibs";
+constexpr std::string_view CppFile1 = ".cpp";
+constexpr std::string_view CppFile2 = ".cxx";
+constexpr std::string_view HeaderFile1 = ".h";
+constexpr std::string_view HeaderFile2 = ".hpp";
+constexpr std::string_view HeaderFile3 = ".hxx";
+constexpr std::string_view ObjectFile1 = ".o";
+constexpr std::string_view ObjectFile2 = ".obj";
 // TODO: make it platform-dependent!
-constexpr auto LibraryStatic = ".a";
-constexpr auto LibraryDynamic = ".so";
-constexpr auto Main = "main";
+constexpr std::string_view LibraryStatic = ".a";
+constexpr std::string_view LibraryDynamic = ".so";
+constexpr std::string_view Main = "main";
 }; // namespace Extension
 
 enum class FileType
@@ -47,13 +47,13 @@ enum class FileType
 
 namespace Comment
 {
-constexpr auto OneLineProject = "//i";
-constexpr auto MultilineBeginProject = "/*i";
-constexpr auto Project = '#';
+constexpr std::string_view OneLineProject = "//i";
+constexpr std::string_view MultilineBeginProject = "/*i";
+constexpr char Project = '#';
 
-constexpr auto OneLine = "//";
-constexpr auto MultilineBegin = "/*";
-constexpr auto MultilineEnd = "*/";
+constexpr std::string_view OneLine = "//";
+constexpr std::string_view MultilineBegin = "/*";
+constexpr std::string_view MultilineEnd = "*/";
 }; // namespace Comment
 
 #define X(key, name) key,
@@ -63,26 +63,26 @@ enum class Command
 };
 #undef X
 
-const std::string commandString(const Command command);
-Command commandValue(const std::string &string);
+std::string_view commandString(const Command command);
+Command commandValue(std::string_view string);
 size_t commandCount();
 
 namespace Modifier
 {
-constexpr auto Type = "type";
-constexpr auto App = "app";
-constexpr auto Static = "static";
-constexpr auto Dynamic = "dynamic";
-constexpr auto Name = "name";
-constexpr auto Version = "version";
-constexpr auto Input = "input";
-constexpr auto Output = "output";
-constexpr auto Replace = "replace";
-constexpr auto With = "with";
-constexpr auto Library = "library";
-constexpr auto Default = "default";
-constexpr auto On = "on";
-constexpr auto Off = "off";
+constexpr std::string_view Type = "type";
+constexpr std::string_view App = "app";
+constexpr std::string_view Static = "static";
+constexpr std::string_view Dynamic = "dynamic";
+constexpr std::string_view Name = "name";
+constexpr std::string_view Version = "version";
+constexpr std::string_view Input = "input";
+constexpr std::string_view Output = "output";
+constexpr std::string_view Replace = "replace";
+constexpr std::string_view With = "with";
+constexpr std::string_view Library = "library";
+constexpr std::string_view Default = "default";
+constexpr std::string_view On = "on";
+constexpr std::string_view Off = "off";
 }; // namespace Modifier
 
 enum class LibraryType
@@ -93,16 +93,16 @@ enum class LibraryType
 
 namespace CppKeywords
 {
-constexpr auto Class = "class";
-constexpr auto Struct = "struct";
-constexpr auto Include = "#include";
-constexpr auto Main = "main";
-constexpr auto Int = "int";
-constexpr auto Char = "char";
-constexpr auto Namespace = "namespace";
-constexpr auto DoubleColon = "::";
-constexpr auto RoundBrackets = "()";
-constexpr auto OpenLibraryInclude = '<';
-constexpr auto CloseLibraryInclude = '>';
+constexpr std::string_view Class = "class";
+constexpr std::string_view Struct = "struct";
+constexpr std::string_view Include = "#include";
+constexpr std::string_view Main = "main";
+constexpr std::string_view Int = "int";
+constexpr std::string_view Char = "char";
+constexpr std::string_view Namespace = "namespace";
+constexpr std::string_view DoubleColon = "::";
+constexpr std::string_view RoundBrackets = "()";
+constexpr char OpenLibraryInclude = '<';
+constexpr char CloseLibraryInclude = '>';
 }; // namespace CppKeywords
 }; // namespace Syntax
