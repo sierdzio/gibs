@@ -41,6 +41,13 @@ class CommandLine
     bool isLogProcessOutput() const;
 
   private:
+    enum class HelpTopic
+    {
+        None,
+        Commands,
+        BuiltInFunctions
+    };
+
     struct ParseStatus
     {
         std::string current;
@@ -58,7 +65,7 @@ class CommandLine
     bool handleOptionsWithValues(ParseStatus &status);
     bool handlePositionalArguments(ParseStatus &status);
     bool set(auto &value, const auto &toSet, ParseStatus &status,
-             const std::string_view &name) const;
+             std::string_view name) const;
     bool isFlag(const ParseStatus &status) const;
 
     std::string otherArgumentsText() const;
@@ -70,6 +77,7 @@ class CommandLine
     std::string _logFilePath;
     ArgumentsList _otherArguments;
     Log::Type _logLevel = Log::Type::Information;
+    HelpTopic _helpTopic = HelpTopic::None;
 
     bool _isValid = false;
     bool _hasHelp = false;

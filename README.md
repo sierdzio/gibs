@@ -18,13 +18,15 @@ projects by using the information from source code to compile it.
 In short, to compile a project it is enough to run:
 
 ```bash
+gibs
+# or
 gibs main.cpp
 ```
 
 Instead of "the old way":
 
 ```bash
-qmake project.pro
+cmake
 make
 ```
 
@@ -33,7 +35,7 @@ make
 Precompiled gibs releases can be found on [releases page](https://github.com/sierdzio/gibs/releases)
 
 Alternatively, get the source code and compile gibs using cmake. C++20 is
-required.
+required. Gibs can also be compiled using and older version of gibs.
 
 To build and run the sample-based integration tests, configure with both
 `BUILD_TESTS` and `BUILD_SAMPLE_TESTS` enabled:
@@ -81,68 +83,50 @@ gibs --help
 Options:
 
 ```text
-   -h, --help                      Displays this help information and
-                                  exits.
+  -h, --help                      Optional values: [commands|readme]. Displays this help information and exits. If one of the arguments is
+                                  provided, displays help for that specific topic.
+
   -v, --version                   Displays gibs version info and exits.
-  -r, --run                       Run the executable immediately after
-                                  building.
-  -d, --debug                     Compile in debug mode. By default,
-                                  gibs compiles release binaries.
-  -q, --quick                     'Convention over configuration' mode
-                                  - parse files only up to first line of
-                                  'concrete code'. Do not check file checksums
-                                  when doing incremental builds.
-  --verbose                       Sets log level to 'Verbose'. If more
-                                  than one log level is specified, or log
-                                  level is combined with --verbose, only
-                                  the last flag is taken nto account
-  -l, --log-level                 Sets log level to one of: silent,
-                                  error, warning, information, debug,
-                                  verbose. Logs are printed for selected
-                                  level and all levels above it. For example,
-                                  when information is set, all error,
-                                  warning and information logs will be
-                                  printed, but no debug or verbose ones.
-                                  'silent' setting will not print any logs
-                                  at all. Log level parser is case-sensitive,
-                                  please make sure to provide log levels
-                                  in lower case. If more than one log
-                                  level is specified, or log level is
-                                  combined with --verbose, only the last
-                                  flag is taken into account.
-  --log-file-path                 Duplicates all console logs into this
-                                  file. If the file does not exist, it will
-                                  be created. If the file does exist, it
-                                  will be cleared and written to. If a path
-                                  to a directory is provided, a log file
-                                  called 'gibs-<datetime>.log will be
-                                  created.
+
+  -r, --run                       Run the executable immediately after building.
+
+  -d, --debug                     Compile in debug mode. By default, gibs compiles release binaries.
+
+  -q, --quick                     'Convention over configuration' mode - parse files only up to first line of 'concrete code'. Do not check
+                                  file checksums when doing incremental builds.
+
+  --verbose                       Sets log level to 'Verbose'. If more than one log level is specified, or log level is combined with
+                                  --verbose, only the last flag is taken nto account
+
+  -l, --log-level                 Sets log level to one of: silent, error, warning, information, debug, verbose. Logs are printed for
+                                  selected level and all levels above it. For example, when information is set, all error, warning and
+                                  information logs will be printed, but no debug or verbose ones. 'silent' setting will not print any logs
+                                  at all. Log level parser is case-sensitive, please make sure to provide log levels in lower case. If more
+                                  than one log level is specified, or log level is combined with --verbose, only the last flag is taken
+                                  into account.
+
+  --log-file-path                 Duplicates all console logs into this file. If the file does not exist, it will be created. If the file
+                                  does exist, it will be cleared and written to. If a path to a directory is provided, a log file called
+                                  'gibs-<datetime>.log will be created.
+
   --no-color                      Disables color in log messages.
-  --dry-run                       Does not actually run any compilation
-                                  or linking commands. Commands are only
-                                  printed out but not executed.
-  --log-process-output            Prints standard and error outputs
-                                  from spawned processes (compiler, linker
-                                  etc.).
-  -c, --compiler, --compiler-set  Selects the compiler set to use: gcc,
-                                  clang, apple-clang. Defaults to apple-clang
-                                  on macOS and gcc elsewhere.
-  input                           Path to the input file or directory
-                                  to build. If a directory is provided,
-                                  gibs will look for files with supported
-                                  extensions in it and its subdirectories.
-                                  If a file is provided, gibs will try to
-                                  build it. If no input is provided, gibs
-                                  will try to build a file called 'main'
-                                  with a supported extension in the current
-                                  directory.
-  --                              Other, user-defined arguments passed
-                                  to the program should be placed after
-                                  this separator. For example: 'gibs
-                                  --main.cpp -- --my-flag' will enable feature
-                                  'my-flag', and 'gibs --main.cpp --
-                                  --my-flag=OFF' will disable it when compiling
-                                  main.cpp.
+
+  --dry-run                       Does not actually run any compilation or linking commands. Commands are only printed out but not
+                                  executed.
+
+  --log-process-output            Prints standard and error outputs from spawned processes (compiler, linker etc.).
+
+  -c, --compiler, --compiler-set  Selects the compiler set to use: gcc, clang, apple-clang. Defaults to apple-clang on macOS and gcc
+                                  elsewhere.
+
+  input                           Path to the input file or directory to build. If a directory is provided, gibs will look for files with
+                                  supported extensions in it and its subdirectories. If a file is provided, gibs will try to build it. If
+                                  no input is provided, gibs will try to build a file called 'main' with a supported extension in the
+                                  current directory.
+
+  --                              Other, user-defined arguments passed to the program should be placed after this separator. For example:
+                                  'gibs --main.cpp -- --my-flag' will enable feature 'my-flag', and 'gibs --main.cpp -- --my-flag=OFF' will
+                                  disable it when compiling main.cpp.
 ```
 
 Gibs builds in *release* mode by default. If you want to compile a debug build,
@@ -181,13 +165,13 @@ you can use gibs commands inside comments of your C++ code.
 
 You can use one-line command syntax:
 
-```text
+```c++
 //i some command
 ```
 
 Or comment scope:
 
-```text
+```c++
 /*i
 some command
 other command
@@ -200,7 +184,7 @@ other command
 
 You can specify an extra source file to compile like this:
 
-```text
+```c++
 //i source my_source_file.cpp
 ```
 
@@ -213,7 +197,7 @@ Targets are applications or libraries that gibs is compiling and linking.
 
 * to create an executable or library with a given name:
 
-```text
+```c++
 //i executable name MyAwesomeApp
 //i library name MyAwesomeLibrary
 ```
@@ -223,7 +207,7 @@ an executable and it will be named the same as parent directory name.
 
 * libraries can additionally be marked as static or dynamic. Libraries are dynamic by default
 
-```text
+```c++
 //i library MyAwesomeLib type static
 //i library MyAwesomeLib type dynamic
 ```
@@ -232,7 +216,7 @@ an executable and it will be named the same as parent directory name.
 
 To pass custom defines to the compiler, use the following command:
 
-```text
+```c++
 //i define MY_DEFINE
 ```
 
@@ -240,7 +224,7 @@ To pass custom defines to the compiler, use the following command:
 
 Include paths are specified using `include` command:
 
-```text
+```c++
 //i include some/path
 ```
 
@@ -256,7 +240,7 @@ the corresponding source file will be compiled.
 To include and link to an external library, you need to specify both the include
 and gibs commands.
 
-```text
+```c++
 //i include library some/path
 //i include library -Lsome/path -llibrary1 -llibrary2
 ```
@@ -270,7 +254,7 @@ templates with real values.
 This is a very similar concept to CMake's
 [configure_file()](https://cmake.org/cmake/help/latest/command/configure_file.html).
 
-```text
+```c++
 //i configure file input something.h.in output something.h
 //i replace "some-text" with target.main.version()
 //i replace "another_text" with "hello, config file!"
@@ -287,7 +271,7 @@ hardcoded values (provided in quotes) or with built-in gibs methods.
 Built-in gibs values and functions are matched and replaced automatically, so
 there is no need to write for example:
 
-```text
+```c++
 //i replace ${target.gibs.name()} with target.gibs.name()
 ```
 
@@ -302,6 +286,7 @@ because the value will be replaced automatically.
 * TODO: more...
 
 #### Qt support
+
 ***Note: currently unsupported***
 
 Gibs makes it easier to build other Qt projects.
@@ -316,13 +301,13 @@ This will tell gibs which Qt version should it use. Then, in the source code of
 your application or library, you need to specify Qt modules which should be
 loaded.
 
-```text
+```c++
 //i qt core network
 ```
 
 To run Qt tools, use the `tools` command:
 
-```text
+```c++
 //i tool rcc myResource.qrc myOtherResource.qrc
 ```
 
@@ -336,7 +321,7 @@ command, followed by executable path and any necessary arguments.
 There are some tools which are pre-configured (like Qt's tools: `rcc` and `uic`)
 and you don't need to specify their paths.
 
-```text
+```c++
 //i tool myexecutable.exe --some -a -r -g -s
 ```
 
@@ -360,13 +345,13 @@ A feature can come with it's own set of C++ files. These are pointed to by featu
 
 To define a feature, use this syntax:
 
-```text
+```c++
 //i feature tts-support [default on|off]
 ```
 
 Or:
 
-```text
+```c++
 //i option tts-support [default on|off]
 ```
 

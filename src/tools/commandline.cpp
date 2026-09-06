@@ -1,5 +1,6 @@
 #include "commandline.h"
 #include "helpdata.h"
+#include "parsing/syntax.h"
 #include "processing/compilerset.h"
 #include "tools.h"
 //i configure file input ../versioninfo.h.in output ../versioninfo.h
@@ -23,23 +24,32 @@ namespace
 {
 constexpr std::string_view H = "-h";
 constexpr std::string_view Help = "--help";
-constexpr std::string_view HelpExplanation = "Displays this help information and exits.";
+constexpr std::string_view HelpExplanation =
+    "Optional values: [commands|functions]. Displays this help information and exits. If "
+    "one of the arguments is provided, displays help for that specific topic.";
+constexpr std::string_view HelpCommands = "commands";
+constexpr std::string_view HelpBuiltInFunctions = "functions";
+
 constexpr std::string_view V = "-v";
 constexpr std::string_view Version = "--version";
 constexpr std::string_view VersionExplanation = "Displays gibs version info and exits.";
+
 constexpr std::string_view R = "-r";
 constexpr std::string_view Run = "--run";
 constexpr std::string_view RunExplanation =
     "Run the executable immediately after building.";
+
 constexpr std::string_view D = "-d";
 constexpr std::string_view Debug = "--debug";
 constexpr std::string_view DebugExplanation =
     "Compile in debug mode. By default, gibs compiles release binaries.";
+
 constexpr std::string_view Q = "-q";
 constexpr std::string_view Quick = "--quick";
 constexpr std::string_view QuickExplanation =
     "'Convention over configuration' mode - parse files only up to first line of "
     "'concrete code'. Do not check file checksums when doing incremental builds.";
+
 constexpr std::string_view Verbose = "--verbose";
 constexpr std::string_view VerboseExplanation =
     "Sets log level to 'Verbose'. "
@@ -109,14 +119,15 @@ constexpr std::string_view Quote = "\"";
 constexpr std::string_view DateTimeFormat = "%Y-%m-%dT%H:%M:%SZ";
 constexpr std::string_view NegativeOptionBeginning = "no-";
 
-std::string toUpper(std::string string)
+std::string toUpper(std::string_view string)
 {
+    std::string result;
     for (auto &character : string)
     {
-        character =
-            static_cast<char>(std::toupper(static_cast<unsigned char>(character)));
+        result.push_back(
+            static_cast<char>(std::toupper(static_cast<unsigned char>(character))));
     }
-    return string;
+    return result;
 }
 }; // namespace
 
@@ -213,25 +224,53 @@ std::string CommandLine::helpText() const
 {
     HelpData help;
 
-    help.addIntro(
-        "C++ in-source project builder. Compile your projects without all the hassle "
-        "connected with preparing a project file. Just run 'gibs main.cpp' and enjoy "
-        "your compiled binary! More info: "
-        "https://github.com/sierdzio/gibs\n\nOptions:\n");
-    help.addEntry({H, Help}, HelpExplanation);
-    help.addEntry({V, Version}, VersionExplanation);
-    help.addEntry({R, Run}, RunExplanation);
-    help.addEntry({D, Debug}, DebugExplanation);
-    help.addEntry({Q, Quick}, QuickExplanation);
-    help.addEntry({Verbose}, VerboseExplanation);
-    help.addEntry({L, LogLevel}, LogLevelExplanation);
-    help.addEntry({LogFilePath}, LogFilePathExplanation);
-    help.addEntry({NoColor}, NoColorExplanation);
-    help.addEntry({DryRun}, DryRunExplanation);
-    help.addEntry({LogProcessOutput}, LogProcessOutputExplanation);
-    help.addEntry({C, Compiler, CompilerSetOption}, CompilerExplanation);
-    help.addEntry({Input}, InputExplanation);
-    help.addEntry({OtherArguments}, OtherArgumentsExplanation);
+    switch (_helpTopic)
+    {
+    case HelpTopic::None:
+        help.addIntro(
+            "C++ in-source project builder. Compile your projects without all the hassle "
+            "connected with preparing a project file. Just run 'gibs main.cpp' and enjoy "
+            "your compiled binary! More info: "
+            "https://github.com/sierdzio/gibs\n\nOptions:\n");
+        help.addEntry({H, Help}, HelpExplanation);
+        help.addEntry({V, Version}, VersionExplanation);
+        help.addEntry({R, Run}, RunExplanation);
+        help.addEntry({D, Debug}, DebugExplanation);
+        help.addEntry({Q, Quick}, QuickExplanation);
+        help.addEntry({Verbose}, VerboseExplanation);
+        help.addEntry({L, LogLevel}, LogLevelExplanation);
+        help.addEntry({LogFilePath}, LogFilePathExplanation);
+        help.addEntry({NoColor}, NoColorExplanation);
+        help.addEntry({DryRun}, DryRunExplanation);
+        help.addEntry({LogProcessOutput}, LogProcessOutputExplanation);
+        help.addEntry({C, Compiler, CompilerSetOption}, CompilerExplanation);
+        help.addEntry({Input}, InputExplanation);
+        help.addEntry({OtherArguments}, OtherArgumentsExplanation);
+        break;
+    case HelpTopic::Commands:
+        help.addIntro("List of all available project commands:\n");
+
+        for (size_t i = 0; i < Syntax::commandCount(); ++i)
+        {
+            const auto command = Syntax::Command(i);
+            help.addEntry({Syntax::commandString(command)},
+                          Syntax::commandDescription(command));
+        }
+        break;
+    case HelpTopic::BuiltInFunctions:
+        help.addIntro("Built-in functions can be used to return information parsed from "
+                      "current project:\n");
+        help.addEntry({"target.name()"},
+                      "name of current target (library or executable)");
+        help.addEntry({"target.version()"},
+                      "version of current target (library or executable)");
+        help.addEntry({"target.<name>.name()"},
+                      "name of cu a specifiedrrent target (library or executable)");
+        help.addEntry({"target.<name>.version()"},
+                      "version of  a specified target (library or executable)");
+        // TODO make it dynamic
+        break;
+    }
 
     return help.formatted(std::clamp(Tools::terminalWidth(), 60u, 140u));
 }
@@ -327,7 +366,7 @@ bool CommandLine::parse()
     const auto size = _args.size();
     ParseStatus status;
 
-    // Check if version or health flag is present
+    // Check if version or help flag is present
     for (std::size_t i = 0; i < size; ++i)
     {
         status.current = _args.at(i);
@@ -440,6 +479,20 @@ bool CommandLine::handleHelpAndVersion(ParseStatus &status)
     if (status.current == H or status.current == Help)
     {
         return set(_hasHelp, true, status, Help);
+    }
+
+    if (status.previous == H or status.previous == Help)
+    {
+        if (status.current == HelpCommands)
+        {
+            _helpTopic = HelpTopic::Commands;
+            return true;
+        }
+        else if (status.current == HelpBuiltInFunctions)
+        {
+            _helpTopic = HelpTopic::BuiltInFunctions;
+            return true;
+        }
     }
 
     if (status.current == V or status.current == Version)
@@ -591,7 +644,7 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
 }
 
 bool CommandLine::set(auto &value, const auto &toSet, ParseStatus &status,
-                      const std::string_view &name) const
+                      std::string_view name) const
 {
     value = toSet;
 

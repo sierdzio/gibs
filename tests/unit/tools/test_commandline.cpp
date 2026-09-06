@@ -164,6 +164,23 @@ TEST(commandline, CommandLine)
         EXPECT_TRUE(cmd.isValid());
         EXPECT_EQ(cmd.compilerSet(), CompilerSet::defaultForPlatform().name);
     }
+
+    {
+        const CommandLine cmd({"--help", "functions"});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_TRUE(cmd.hasHelp());
+        EXPECT_NE(cmd.helpText().find("Built-in functions"), std::string::npos);
+    }
+
+    {
+        const CommandLine cmd({"--help", "commands"});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_TRUE(cmd.hasHelp());
+        EXPECT_NE(cmd.helpText().find("List of all available project commands"),
+                  std::string::npos);
+    }
 }
 
 TEST(commandline, paths)

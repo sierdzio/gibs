@@ -2,21 +2,34 @@
 
 #include <string_view>
 
+// TODO: add examples to all descriptions. Also, add cross-references between commands.
+// Also, mention and sync this with README
 #define COMMANDS                                                                         \
-    X(Unknown, "unknown")                                                                \
-    X(Invalid, "invalid")                                                                \
-    X(Source, "source")                                                                  \
-    X(Library, "library")                                                                \
-    X(Define, "define")                                                                  \
-    X(Include, "include")                                                                \
-    X(Executable, "executable")                                                          \
-    X(Feature, "feature")                                                                \
-    X(Option, "option")                                                                  \
-    X(Subproject, "subproject")                                                          \
-    X(Tool, "tool")                                                                      \
-    X(Qt, "qt")                                                                          \
-    X(Configure, "configure")                                                            \
-    X(Replace, "replace")
+    X(Unknown, "unknown", "Unknown command")                                             \
+    X(Invalid, "invalid", "Invalid command")                                             \
+    X(Source, "source", "Use it to point gibs to a specific source file (.cpp)")         \
+    X(Library, "library", "Defines a library target")                                    \
+    X(Define, "define", "Can be used to add a define to compiler calls.")                \
+    X(Include, "include", "Used to add include paths and files.")                        \
+    X(Executable, "executable", "Defines an executable target.")                         \
+    X(Feature, "feature",                                                                \
+      "Feature can be turned on or off when calling gibs. This in turn can trigger "     \
+      "changes in the source code via changed defines.")                                 \
+    X(Option, "option", "Synonym to Feature")                                            \
+    X(Subproject, "subproject", "NOT IMPLEMENTED!")                                      \
+    X(Tool, "tool",                                                                      \
+      "Allows running external executables, for example: \n//i tool myexecutable.exe "   \
+      "--some -a -r -g -s")                                                              \
+    X(Qt, "qt", "NOT IMPLEMENTED! Load Qt modules")                                      \
+    X(Configure, "configure",                                                            \
+      "Configuration file can be used to generate a file based on a template. Built-in " \
+      "functions are replaced without prompting. For "                                   \
+      "example: \n//i configure file input something.h.in output something.h \n//i "     \
+      "replace \"some-text\" with target.main.version() \n//i replace \"another_text\" " \
+      "with \"hello, config file!\"")                                                    \
+    X(Replace, "replace",                                                                \
+      "Use in combination with configure command to specify which strings should be "    \
+      "replaced.")
 
 namespace Syntax
 {
@@ -56,7 +69,7 @@ constexpr std::string_view MultilineBegin = "/*";
 constexpr std::string_view MultilineEnd = "*/";
 }; // namespace Comment
 
-#define X(key, name) key,
+#define X(key, name, description) key,
 enum class Command
 {
     COMMANDS
@@ -64,6 +77,7 @@ enum class Command
 #undef X
 
 std::string_view commandString(const Command command);
+std::string_view commandDescription(const Command command);
 Command commandValue(std::string_view string);
 size_t commandCount();
 

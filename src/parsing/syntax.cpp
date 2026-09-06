@@ -6,8 +6,11 @@
 
 namespace
 {
-#define X(key, name) name,
+#define X(key, name, description) name,
 constexpr std::array commandStrings = {COMMANDS};
+#undef X
+#define X(key, name, description) description,
+constexpr std::array commandDescriptions = {COMMANDS};
 #undef X
 } //namespace
 
@@ -21,6 +24,18 @@ std::string_view Syntax::commandString(const Syntax::Command command)
     }
 
     return commandStrings.at(index);
+}
+
+std::string_view Syntax::commandDescription(const Syntax::Command command)
+{
+    const auto index = static_cast<size_t>(command);
+
+    if (index >= commandDescriptions.size())
+    {
+        throw CommandException(index);
+    }
+
+    return commandDescriptions.at(index);
 }
 
 Syntax::Command Syntax::commandValue(const std::string_view string)
