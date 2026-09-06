@@ -53,6 +53,14 @@ struct IncludeComponent : public Component
     bool isLibrary = false;
 };
 
+struct ToolComponent : public Component
+{
+    bool isValid(const Syntax::Command type) const override;
+
+    std::string executable;
+    StringList arguments;
+};
+
 struct OptionComponent : public Component
 {
     bool isValid(const Syntax::Command type) const override;

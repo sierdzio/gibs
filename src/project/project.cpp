@@ -76,6 +76,11 @@ bool Project::addCommand(const Command &command)
         _commandCompletionFutures[command.id()] = _processor->schedule(commands.back());
         commands.back().setIsReadyToExecute(true);
     }
+    else if (command.type == Syntax::Command::Tool)
+    {
+        _commandCompletionFutures[command.id()] = _processor->schedule(commands.back());
+        commands.back().setIsReadyToExecute(true);
+    }
 
     return true;
 }

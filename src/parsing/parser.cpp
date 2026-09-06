@@ -705,6 +705,10 @@ void Parser::handleCommand(Command command, CppState *state)
         shouldAdd = not state->currentFile.empty();
         hasPath = true;
     }
+    else if (command.type == Syntax::Command::Tool)
+    {
+        shouldAdd = true;
+    }
     else if (command.type == Syntax::Command::Library or
              command.type == Syntax::Command::Executable)
     {

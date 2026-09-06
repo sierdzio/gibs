@@ -57,6 +57,7 @@ class Command
     const ObjectComponent &object() const;
     ObjectComponent &objectReference();
     const IncludeComponent &include() const;
+    const ToolComponent &tool() const;
     const OptionComponent &option() const;
     const ConfigurationComponent &configuration() const;
     const ReplacementComponent &replacement() const;
@@ -79,6 +80,7 @@ class Command
     LibraryComponent _library;
     ObjectComponent _object;
     IncludeComponent _include;
+    ToolComponent _tool;
     OptionComponent _option;
     ConfigurationComponent _configuration;
     ReplacementComponent _replacement;

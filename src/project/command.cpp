@@ -111,7 +111,14 @@ bool Command::append(const std::string_view part)
             return false;
         }
 
-        _modifiers.emplace_back(Tools::prepareIncludePath(part));
+        if (type == Syntax::Command::Tool)
+        {
+            _modifiers.emplace_back(part);
+        }
+        else
+        {
+            _modifiers.emplace_back(Tools::prepareIncludePath(part));
+        }
 
         // TODO: check isValid() for given command type
 
@@ -350,6 +357,18 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
                     previous.clear();
                     continue;
                 }
+            }
+            else if (type == Syntax::Command::Tool)
+            {
+                if (_tool.executable.empty())
+                {
+                    _tool.executable = current;
+                }
+                else
+                {
+                    _tool.arguments.emplace_back(current);
+                }
+                continue;
             }
 
             previous = current;
@@ -650,6 +669,11 @@ const IncludeComponent &Command::include() const
     return _include;
 }
 
+const ToolComponent &Command::tool() const
+{
+    return _tool;
+}
+
 const OptionComponent &Command::option() const
 {
     return _option;
@@ -690,13 +714,13 @@ bool Command::supportsModifiers(const Syntax::Command command) const
     case Syntax::Command::Option:
     case Syntax::Command::Configure:
     case Syntax::Command::Replace:
+    case Syntax::Command::Tool:
         return true;
     case Syntax::Command::Unknown:
     case Syntax::Command::Invalid:
     case Syntax::Command::Define:
     case Syntax::Command::Source:
     case Syntax::Command::Subproject:
-    case Syntax::Command::Tool:
     case Syntax::Command::Qt:
         return false;
     }

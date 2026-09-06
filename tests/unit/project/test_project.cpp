@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <exceptions/processexception.h>
 #include <logger/log.h>
 #include <parsing/syntax.h>
 #include <processing/processor.h>
@@ -54,6 +55,19 @@ Command makeExecutableCommand(const std::string &exename)
     return cmd;
 }
 
+Command makeToolCommand(const std::string &executable, const StringList &arguments = {})
+{
+    Command cmd;
+    cmd.append("tool");
+    cmd.append(executable);
+    for (const auto &argument : arguments)
+    {
+        cmd.append(argument);
+    }
+    cmd.finalize({}, DefaultPaths);
+    return cmd;
+}
+
 class ProjectDependencyTest : public ::testing::Test
 {
   protected:
@@ -97,6 +111,45 @@ TEST_F(ProjectDependencyTest, SourceCommandsScheduledImmediately)
     _project->addCommand(source);
 
     EXPECT_TRUE(_project->commandRef(sourceId).isReadyToExecute());
+}
+
+TEST_F(ProjectDependencyTest, ToolCommandsAreScheduledImmediately)
+{
+    auto tool = makeToolCommand("true", {"--ignored-by-true"});
+    const auto toolId = tool.id();
+
+    _project->addCommand(tool);
+
+    EXPECT_TRUE(_project->commandRef(toolId).isReadyToExecute());
+    _processor->waitForFinished();
+}
+
+TEST(ProjectToolExecution, ExecutesToolArguments)
+{
+    auto processor = std::make_shared<Processor>();
+    auto tool = makeToolCommand("true");
+
+    processor->schedule(tool);
+    EXPECT_NO_THROW(processor->waitForFinished());
+}
+
+TEST(ProjectToolExecution, DryRunDoesNotRequireExecutable)
+{
+    auto processor = std::make_shared<Processor>();
+    processor->setDryRun(true);
+    auto tool = makeToolCommand("executable-that-does-not-exist");
+
+    processor->schedule(tool);
+    EXPECT_NO_THROW(processor->waitForFinished());
+}
+
+TEST(ProjectToolExecution, ReportsFailedTool)
+{
+    auto processor = std::make_shared<Processor>();
+    auto tool = makeToolCommand("executable-that-does-not-exist");
+
+    processor->schedule(tool);
+    EXPECT_THROW(processor->waitForFinished(), ProcessException);
 }
 
 TEST_F(ProjectDependencyTest, LibraryScheduledAfterSourcesToComplete)

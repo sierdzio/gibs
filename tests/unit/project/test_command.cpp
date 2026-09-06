@@ -109,6 +109,25 @@ TEST(command, isValid)
     }
 }
 
+TEST(command, Tool)
+{
+    Log::setLogLevel(Log::Type::Silent);
+
+    Command tool;
+    EXPECT_TRUE(tool.append("tool"));
+    EXPECT_TRUE(tool.append("printf"));
+    EXPECT_TRUE(tool.append("hello world"));
+    EXPECT_TRUE(tool.append("--flag"));
+
+    tool.finalize({}, DefaultPaths);
+
+    EXPECT_TRUE(tool.isValid());
+    EXPECT_EQ(tool.tool().executable, "printf");
+    ASSERT_EQ(tool.tool().arguments.size(), 2);
+    EXPECT_EQ(tool.tool().arguments.at(0), "hello world");
+    EXPECT_EQ(tool.tool().arguments.at(1), "--flag");
+}
+
 TEST(command, OptionComponentDefine)
 {
     Log::setLogLevel(Log::Type::Silent);

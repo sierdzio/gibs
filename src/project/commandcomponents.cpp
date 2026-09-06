@@ -25,6 +25,11 @@ bool IncludeComponent::isValid(const Syntax::Command type) const
     return type == Syntax::Command::Include and not path.empty();
 }
 
+bool ToolComponent::isValid(const Syntax::Command type) const
+{
+    return type == Syntax::Command::Tool and not executable.empty();
+}
+
 std::string IncludeComponent::dirPath() const
 {
     // TODO: these checks and results should be cached!

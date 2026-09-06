@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
 
 #include <logger/log.h>
@@ -95,4 +96,38 @@ TEST(parsing, ParserReadsFinalProjectCommandToken)
 
     EXPECT_TRUE(sourceCommandFound);
     EXPECT_TRUE(loggerIncludePathFound);
+}
+
+TEST(parsing, ParserSchedulesToolCommand)
+{
+    Log::setLogLevel(Log::Type::Silent);
+
+    const auto directory = std::filesystem::temp_directory_path() / "gibs-tool-test";
+    std::filesystem::create_directories(directory);
+    const auto sourcePath = directory / "main.cpp";
+    {
+        std::ofstream source(sourcePath);
+        source << "//i tool true --tool-argument\n";
+        source << "int main() { return 0; }\n";
+    }
+
+    auto processor = std::make_shared<Processor>();
+    processor->setDryRun(true);
+    auto project = std::make_shared<Project>(processor);
+
+    Parser parser(sourcePath, false, {}, project);
+    ASSERT_EQ(parser.status(), AppError::NoError);
+    parser.parse();
+
+    const auto tool = std::find_if(project->commands.begin(), project->commands.end(),
+                                   [](const Command &command)
+                                   { return command.type == Syntax::Command::Tool; });
+    ASSERT_NE(tool, project->commands.end());
+    EXPECT_TRUE(tool->isReadyToExecute());
+    EXPECT_EQ(tool->tool().executable, "true");
+    ASSERT_EQ(tool->tool().arguments.size(), 1);
+    EXPECT_EQ(tool->tool().arguments.front(), "--tool-argument");
+
+    processor->waitForFinished();
+    std::filesystem::remove_all(directory);
 }

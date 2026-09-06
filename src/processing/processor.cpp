@@ -117,8 +117,16 @@ std::shared_future<void> Processor::schedule(const Command &command)
         return future;
     case Syntax::Command::Tool:
         Log::debug("Processing:", typeString, "command:", command.whole());
-        completion->set_value();
-        return future;
+        {
+            CommandData toolCommand;
+            toolCommand.command = command.tool().executable;
+            toolCommand.arguments = command.tool().arguments;
+
+            auto process = createProcess(toolCommand);
+            process->start();
+            processes.emplace_back(std::move(process));
+        }
+        break;
     case Syntax::Command::Option:
     case Syntax::Command::Include:
     case Syntax::Command::Feature:
