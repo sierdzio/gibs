@@ -35,6 +35,21 @@ TEST(syntax, commandString)
                  CommandException);
 }
 
+TEST(syntax, commandDescription)
+{
+    EXPECT_EQ(Syntax::commandDescription(Syntax::Command::Unknown), "Unknown command");
+    EXPECT_EQ(Syntax::commandDescription(Syntax::Command::Source),
+              "Use it to point gibs to a specific source file (.cpp)");
+    EXPECT_EQ(Syntax::commandDescription(Syntax::Command::Configure),
+              "Configuration file can be used to generate a file based on a template. "
+              "Built-in functions are replaced without prompting. For example: \n//i "
+              "configure file input something.h.in output something.h \n//i replace "
+              "\"some-text\" with target.main.version() \n//i replace \"another_text\" "
+              "with \"hello, config file!\"");
+    EXPECT_THROW(Syntax::commandDescription(static_cast<Syntax::Command>(123)),
+                 CommandException);
+}
+
 TEST(syntax, commandValue)
 {
     EXPECT_EQ(Syntax::commandValue("unknown"), Syntax::Command::Unknown);

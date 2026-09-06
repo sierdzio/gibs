@@ -265,9 +265,9 @@ std::string CommandLine::helpText() const
         help.addEntry({"target.version()"},
                       "version of current target (library or executable)");
         help.addEntry({"target.<name>.name()"},
-                      "name of cu a specifiedrrent target (library or executable)");
+                      "name of a specified target (library or executable)");
         help.addEntry({"target.<name>.version()"},
-                      "version of  a specified target (library or executable)");
+                      "version of a specified target (library or executable)");
         // TODO make it dynamic
         break;
     }

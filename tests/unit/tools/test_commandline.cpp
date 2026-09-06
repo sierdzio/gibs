@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <logger/log.h>
+#include <parsing/syntax.h>
 #include <processing/compilerset.h>
 #include <tools/commandline.h>
 #include <tools/stringlist.h>
@@ -180,6 +181,35 @@ TEST(commandline, CommandLine)
         EXPECT_TRUE(cmd.hasHelp());
         EXPECT_NE(cmd.helpText().find("List of all available project commands"),
                   std::string::npos);
+
+        const auto help = cmd.helpText();
+        for (size_t i = 0; i < Syntax::commandCount(); ++i)
+        {
+            const auto command = static_cast<Syntax::Command>(i);
+
+            EXPECT_NE(help.find(Syntax::commandString(command)), std::string::npos);
+        }
+    }
+
+    {
+        const CommandLine cmd({"-h", "commands"});
+
+        EXPECT_TRUE(cmd.isValid());
+        EXPECT_TRUE(cmd.hasHelp());
+        EXPECT_NE(cmd.helpText().find("List of all available project commands"),
+                  std::string::npos);
+    }
+
+    {
+        const CommandLine cmd({"--help", "functions"});
+        const auto help = cmd.helpText();
+
+        EXPECT_NE(help.find("target.name()"), std::string::npos);
+        EXPECT_NE(help.find("target.version()"), std::string::npos);
+        EXPECT_NE(help.find("target.<name>.name()"), std::string::npos);
+        EXPECT_NE(help.find("target.<name>.version()"), std::string::npos);
+        EXPECT_NE(help.find("name of a specified target"), std::string::npos);
+        EXPECT_NE(help.find("version of a specified target"), std::string::npos);
     }
 }
 
@@ -295,6 +325,20 @@ TEST(commandline, otherArguments)
 
     {
         const CommandLine cmd({"--", "--my-flag=OFF"});
+        EXPECT_TRUE(cmd.isValid());
+        const auto arguments = cmd.otherArguments();
+        EXPECT_EQ(std::any_cast<bool>(arguments.at("my-flag")), false);
+    }
+
+    {
+        const CommandLine cmd({"--", "--my-flag=on"});
+        EXPECT_TRUE(cmd.isValid());
+        const auto arguments = cmd.otherArguments();
+        EXPECT_EQ(std::any_cast<bool>(arguments.at("my-flag")), true);
+    }
+
+    {
+        const CommandLine cmd({"--", "--my-flag=off"});
         EXPECT_TRUE(cmd.isValid());
         const auto arguments = cmd.otherArguments();
         EXPECT_EQ(std::any_cast<bool>(arguments.at("my-flag")), false);
