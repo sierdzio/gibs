@@ -20,6 +20,7 @@ add_subdirectory(src)
 
 if (BUILD_TESTS)
     message("Building gibs test suite")
+    option(BUILD_SAMPLE_TESTS "Run gibs on all samples" OFF)
     enable_testing()
     add_subdirectory(tests)
 else()

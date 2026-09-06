@@ -32,8 +32,20 @@ make
 
 Precompiled gibs releases can be found on [releases page](https://github.com/sierdzio/gibs/releases)
 
-Alternatively, get the source code and compile gibs using cmake. C++14 is
+Alternatively, get the source code and compile gibs using cmake. C++20 is
 required.
+
+To build and run the sample-based integration tests, configure with both
+`BUILD_TESTS` and `BUILD_SAMPLE_TESTS` enabled:
+
+```bash
+cmake -S . -B build -DBUILD_TESTS=ON -DBUILD_SAMPLE_TESTS=ON
+cmake --build build --target sample_tests
+```
+
+`BUILD_SAMPLE_TESTS` is available only when `BUILD_TESTS` is enabled. The tests
+run each sample separately using the `gibs` executable built in the current
+build tree, rather than an executable found through `PATH`.
 
 ## Online docs
 
