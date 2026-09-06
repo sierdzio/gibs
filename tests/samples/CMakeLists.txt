@@ -16,8 +16,8 @@ gibs_add_sample_test(multiple-files multiple-files)
 gibs_add_sample_test(multiple-files-and-libs multiple-files-and-libs)
 gibs_add_sample_test(single-file single-file)
 gibs_add_sample_test(single-project-file single-project-file/project.gibs)
-gibs_add_sample_test(subproject subproject/app/main.cpp)
-gibs_add_sample_test(subproject-static subproject-static/app/main.cpp)
+gibs_add_sample_test(subproject subproject/main.gibs)
+gibs_add_sample_test(subproject-static subproject-static/main.gibs)
 
 add_custom_target(sample_tests
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R "^gibs_sample_"
