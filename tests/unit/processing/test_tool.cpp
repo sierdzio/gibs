@@ -1,10 +1,14 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 
+#include "processing/compilecommands.h"
 #include "processing/compiler.h"
 #include "processing/compilerset.h"
 #include "processing/linker.h"
 #include "project/command.h"
+
+#include <fstream>
+#include <iterator>
 
 namespace
 {
@@ -45,6 +49,30 @@ TEST(processing, CompilerCommands)
             commands[0].arguments.begin(), commands[0].arguments.end(),
             (DefaultPaths.workingDirectory / "main.cpp").lexically_normal().string()) !=
         commands[0].arguments.end());
+}
+
+TEST(processing, CompileCommandsWritesStandardDatabaseEntry)
+{
+    const auto path =
+        std::filesystem::temp_directory_path() / "gibs_compile_commands_unit_test.json";
+    CommandData command;
+    command.command = "c++";
+    command.arguments = {"-DNAME=\"value\"", "source file.cpp"};
+
+    CompileCommands compileCommands;
+    compileCommands.add("/project/build", "/project/source file.cpp", command);
+    EXPECT_TRUE(compileCommands.write(path));
+
+    std::ifstream input(path);
+    const std::string contents((std::istreambuf_iterator<char>(input)),
+                               std::istreambuf_iterator<char>());
+    std::filesystem::remove(path);
+
+    EXPECT_NE(contents.find("\"directory\": \"/project/build\""), std::string::npos);
+    EXPECT_NE(contents.find("\"arguments\": [\"c++\", \"-DNAME=\\\"value\\\"\", "
+                            "\"source file.cpp\"]"),
+              std::string::npos);
+    EXPECT_NE(contents.find("\"file\": \"/project/source file.cpp\""), std::string::npos);
 }
 
 TEST(processing, LinkerStaticLibraryMultiCommand)

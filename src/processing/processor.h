@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compilecommands.h"
 #include "compilerset.h"
 #include "project/command.h"
 #include "tool.h"
@@ -35,6 +36,7 @@ class Processor
 
     void setLogProcessOutput(const bool enabled);
     bool isLogProcessOutput() const;
+    void setGenerateCompileCommands(const bool enabled);
     void setCompilerSet(const CompilerSet &compilerSet);
 
     void checkProcessStates(); // Made public for Project to update futures
@@ -42,5 +44,7 @@ class Processor
     std::vector<RunningCommand> _runningCommands;
     bool _dryRun = false;
     bool _logProcessOutput = false;
+    bool _generateCompileCommands = true;
     CompilerSet _compilerSet = CompilerSet::defaultForPlatform();
+    CompileCommands _compileCommands;
 };

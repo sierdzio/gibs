@@ -92,6 +92,10 @@ constexpr std::string_view LogProcessOutputExplanation =
     "Prints standard and error outputs from spawned processes "
     "(compiler, linker etc.).";
 
+constexpr std::string_view NoGenerateCompileCommands = "--no-generate-compile-commands";
+constexpr std::string_view NoGenerateCompileCommandsExplanation =
+    "Do not generate compile_commands.json after building.";
+
 constexpr std::string_view C = "-c";
 constexpr std::string_view Compiler = "--compiler";
 constexpr std::string_view CompilerSetOption = "--compiler-set";
@@ -213,6 +217,7 @@ std::string CommandLine::parsedFlagsText() const
     appendIf(&result, not colorfulLogs(), NoColor);
     appendIf(&result, isDryRun(), DryRun);
     appendIf(&result, isLogProcessOutput(), LogProcessOutput);
+    appendIf(&result, not generateCompileCommands(), NoGenerateCompileCommands);
     appendIf(&result, true, CompilerSetOption, compilerSet());
     appendIf(&result, true, Input, input());
     appendIf(&result, true, OtherArguments, otherArgumentsText());
@@ -243,6 +248,7 @@ std::string CommandLine::helpText() const
         help.addEntry({NoColor}, NoColorExplanation);
         help.addEntry({DryRun}, DryRunExplanation);
         help.addEntry({LogProcessOutput}, LogProcessOutputExplanation);
+        help.addEntry({NoGenerateCompileCommands}, NoGenerateCompileCommandsExplanation);
         help.addEntry({C, Compiler, CompilerSetOption}, CompilerExplanation);
         help.addEntry({Input}, InputExplanation);
         help.addEntry({OtherArguments}, OtherArgumentsExplanation);
@@ -359,6 +365,11 @@ bool CommandLine::isDryRun() const
 bool CommandLine::isLogProcessOutput() const
 {
     return _logProcessOutput;
+}
+
+bool CommandLine::generateCompileCommands() const
+{
+    return _generateCompileCommands;
 }
 
 bool CommandLine::parse()
@@ -543,6 +554,11 @@ bool CommandLine::handleFlags(ParseStatus &status)
     if (status.current == LogProcessOutput)
     {
         return set(_logProcessOutput, true, status, LogProcessOutput);
+    }
+
+    if (status.current == NoGenerateCompileCommands)
+    {
+        return set(_generateCompileCommands, false, status, NoGenerateCompileCommands);
     }
 
     return false;

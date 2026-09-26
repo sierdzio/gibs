@@ -77,6 +77,7 @@ TEST(commandline, CommandLine)
         EXPECT_TRUE(cmd.colorfulLogs());
         EXPECT_FALSE(cmd.isDryRun());
         EXPECT_FALSE(cmd.isLogProcessOutput());
+        EXPECT_TRUE(cmd.generateCompileCommands());
     }
 
     {
@@ -102,7 +103,8 @@ TEST(commandline, CommandLine)
     {
         const CommandLine cmd({"-h", "-v", "-r", "-d", "-q", "--verbose", "--log-level",
                                "verbose", "--no-color", "--dry-run",
-                               "--log-process-output", "main.cpp"});
+                               "--log-process-output", "--no-generate-compile-commands",
+                               "main.cpp"});
 
         EXPECT_TRUE(cmd.parsedFlagsText().size() > 0);
         EXPECT_TRUE(cmd.helpText().size() > 0);
@@ -119,6 +121,7 @@ TEST(commandline, CommandLine)
         EXPECT_FALSE(cmd.colorfulLogs());
         EXPECT_TRUE(cmd.isDryRun());
         EXPECT_TRUE(cmd.isLogProcessOutput());
+        EXPECT_FALSE(cmd.generateCompileCommands());
         EXPECT_FALSE(cmd.isLogFilePathSet());
         EXPECT_TRUE(cmd.logFilePath().empty());
     }
@@ -164,6 +167,7 @@ TEST(commandline, CommandLine)
 
         EXPECT_TRUE(cmd.isValid());
         EXPECT_EQ(cmd.compilerSet(), CompilerSet::defaultForPlatform().name);
+        EXPECT_TRUE(cmd.generateCompileCommands());
     }
 
     {

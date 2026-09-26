@@ -16,6 +16,7 @@ set(gibs_srcs
     project/command.cpp project/command.h
     project/targetid.cpp project/targetid.h
     processing/eventloop.cpp processing/eventloop.cpp
+    processing/compilecommands.cpp processing/compilecommands.h
     processing/tool.h
     processing/compiler.cpp processing/compiler.h
     processing/compilerset.cpp processing/compilerset.h

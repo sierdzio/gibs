@@ -39,6 +39,7 @@ class CommandLine
     bool colorfulLogs() const;
     bool isDryRun() const;
     bool isLogProcessOutput() const;
+    bool generateCompileCommands() const;
 
   private:
     enum class HelpTopic
@@ -88,4 +89,5 @@ class CommandLine
     bool _colorfulLogs = true;
     bool _dryRun = false;
     bool _logProcessOutput = false;
+    bool _generateCompileCommands = true;
 };

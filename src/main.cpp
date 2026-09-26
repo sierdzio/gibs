@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
     auto processor = std::make_shared<Processor>();
     processor->setDryRun(cmd.isDryRun());
     processor->setLogProcessOutput(cmd.isLogProcessOutput());
+    processor->setGenerateCompileCommands(cmd.generateCompileCommands());
     processor->setCompilerSet(CompilerSet::fromName(cmd.compilerSet()));
 
     auto project = std::make_shared<Project>(processor);

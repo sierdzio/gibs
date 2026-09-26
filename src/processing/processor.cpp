@@ -11,6 +11,7 @@
 #include <process/dryrunprocess.h>
 #include <process/process.h>
 
+#include <filesystem>
 #include <future>
 #include <memory>
 #include <string>
@@ -89,6 +90,19 @@ std::shared_future<void> Processor::schedule(const Command &command)
             const Compiler tool(command, _compilerSet);
             const auto toolCommands = tool.commands();
 
+            if (_generateCompileCommands)
+            {
+                const auto &object = command.object();
+                const auto file = object.sourcePath.empty()
+                                      ? std::filesystem::path(object.source)
+                                      : object.sourcePath;
+                for (const auto &toolCommand : toolCommands)
+                {
+                    _compileCommands.add(std::filesystem::current_path(), file,
+                                         toolCommand);
+                }
+            }
+
             if (sequential && !toolCommands.empty())
             {
                 processes.emplace_back(createProcess(toolCommands.front()));
@@ -160,24 +174,23 @@ std::shared_future<void> Processor::schedule(const Command &command)
 
 void Processor::waitForFinished()
 {
-    if (_runningCommands.empty())
-    {
-        return;
-    }
-
-    forever
+    while (not _runningCommands.empty())
     {
         checkProcessStates();
 
         if (_runningCommands.empty())
         {
             Log::verbose("All processes have finished.");
-            break;
         }
         else
         {
             std::this_thread::sleep_for(100ms);
         }
+    }
+
+    if (_generateCompileCommands && not _compileCommands.write("compile_commands.json"))
+    {
+        Log::error("Failed to write compile_commands.json");
     }
 }
 
@@ -199,6 +212,11 @@ void Processor::setLogProcessOutput(const bool enabled)
 bool Processor::isLogProcessOutput() const
 {
     return _logProcessOutput;
+}
+
+void Processor::setGenerateCompileCommands(const bool enabled)
+{
+    _generateCompileCommands = enabled;
 }
 
 void Processor::setCompilerSet(const CompilerSet &compilerSet)
