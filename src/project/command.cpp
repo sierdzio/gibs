@@ -68,6 +68,12 @@ bool Command::isValid() const
         return false;
     }
 
+    if (type == Syntax::Command::Tests and not _tests.isValid(type))
+    {
+        Log::warning(CommandNotValid, "tests command requires a directory");
+        return false;
+    }
+
     return true;
 }
 
@@ -146,6 +152,7 @@ bool Command::canBeProcessed() const
     case Syntax::Command::Tool:
     case Syntax::Command::Configure:
     case Syntax::Command::Replace:
+    case Syntax::Command::Tests:
         return true;
     case Syntax::Command::Include:
     case Syntax::Command::Feature:
@@ -358,6 +365,36 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
                     continue;
                 }
             }
+            else if (type == Syntax::Command::Tests)
+            {
+                if (previous == Syntax::Modifier::Directory)
+                {
+                    _tests.directory = current;
+                    previous.clear();
+                    continue;
+                }
+                else if (current == Syntax::Modifier::Recursive)
+                {
+                    _tests.recursive = true;
+                    previous.clear();
+                    continue;
+                }
+                else if (current == Syntax::Modifier::GTest)
+                {
+                    _tests.gtest = true;
+                    previous.clear();
+                    continue;
+                }
+                else if (current == Syntax::Modifier::Directory)
+                {
+                    previous = current;
+                    continue;
+                }
+
+                Log::error("Unknown tests command modifier:", current);
+                _parsingFailed = true;
+                return;
+            }
             else if (type == Syntax::Command::Tool)
             {
                 if (_tool.executable.empty())
@@ -481,6 +518,7 @@ std::string Command::whole() const
     case Syntax::Command::Qt:
     case Syntax::Command::Configure:
     case Syntax::Command::Replace:
+    case Syntax::Command::Tests:
     case Syntax::Command::Invalid:
     case Syntax::Command::Unknown:
         break;
@@ -530,6 +568,7 @@ const std::string &Command::path() const
     case Syntax::Command::Qt:
     case Syntax::Command::Configure:
     case Syntax::Command::Replace:
+    case Syntax::Command::Tests:
     case Syntax::Command::Subproject:
     case Syntax::Command::Tool:
     case Syntax::Command::Invalid:
@@ -558,6 +597,7 @@ bool Command::hasPath() const
     case Syntax::Command::Qt:
     case Syntax::Command::Configure:
     case Syntax::Command::Replace:
+    case Syntax::Command::Tests:
     case Syntax::Command::Subproject:
     case Syntax::Command::Tool:
     case Syntax::Command::Invalid:
@@ -689,6 +729,11 @@ const ReplacementComponent &Command::replacement() const
     return _replacement;
 }
 
+const TestsComponent &Command::tests() const
+{
+    return _tests;
+}
+
 std::optional<Syntax::Command> Command::getCommand(const std::string_view command) const
 {
     try
@@ -715,6 +760,7 @@ bool Command::supportsModifiers(const Syntax::Command command) const
     case Syntax::Command::Configure:
     case Syntax::Command::Replace:
     case Syntax::Command::Tool:
+    case Syntax::Command::Tests:
         return true;
     case Syntax::Command::Unknown:
     case Syntax::Command::Invalid:

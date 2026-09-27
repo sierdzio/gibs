@@ -85,6 +85,16 @@ bool Project::addCommand(const Command &command)
     return true;
 }
 
+void Project::addTestRunner(const std::filesystem::path &path)
+{
+    _testRunners.emplace_back(path);
+}
+
+void Project::addTestTarget(const CommandId id)
+{
+    _testTargets.insert(id);
+}
+
 CommandId Project::linkCommandIdFor(const TargetId &id,
                                     const std::filesystem::path &path) const
 {
@@ -147,7 +157,8 @@ void Project::onParsingFinished()
     for (const auto &command : commands)
     {
         if (command.type == Syntax::Command::Library ||
-            command.type == Syntax::Command::Executable)
+            (command.type == Syntax::Command::Executable &&
+             not _testTargets.contains(command.id())))
         {
             pending.insert(command.id());
         }
@@ -208,6 +219,25 @@ void Project::onParsingFinished()
     }
 
     _processor->waitForFinished();
+
+    for (const auto commandId : _testTargets)
+    {
+        auto &command = commandRef(commandId);
+        _commandCompletionFutures[commandId] = _processor->schedule(command);
+        command.setIsReadyToExecute(true);
+    }
+
+    _processor->waitForFinished();
+
+    for (const auto &path : _testRunners)
+    {
+        Command runner;
+        runner.type = Syntax::Command::Tool;
+        runner.append(path.string());
+        runner.finalize({}, {});
+        _processor->schedule(runner);
+        _processor->waitForFinished();
+    }
 }
 
 /*!

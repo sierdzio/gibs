@@ -378,15 +378,26 @@ Gibs supports building and running tests (unit test and others).
 tests directory "directory name / path" [recursive] [gtest]
 ```
 
-More than one `tests` commands can be specified, gibs will go through all
-(recursively if needed) and in each directory try to find a main.cpp or main.gibs file
-in the same way regular gibs command searches for projects.
+Test directory paths are relative to the project root. Quote paths containing
+spaces. More than one `tests` command can be specified.
 
-For tests which require libraries, object files or binary files from the main project, gibs will
-automatically provide them. This is determined based on `#include` statements in test files.
+Without `gtest`, gibs looks for `main.gibs` (preferred) or `main.cpp` in each
+listed directory. With `recursive`, it also searches descendant directories.
+Each discovered project is built as a separate test executable; once an entry
+point is found, its subdirectories belong to that project and are not treated as
+additional projects. A listed directory with no entry point is an error.
 
-If `gtest` is specified, gibs will automatically add a main file and test run scaffolding,
-similar to CMake's `gtest_discover_tests` function.
+With `gtest`, gibs instead compiles the C++ sources in the directory (recursively
+when requested) into one test executable and generates a GoogleTest `main()`.
+GoogleTest must already be installed, with `gtest/gtest.h` available to the
+compiler and `-lgtest -pthread` available to the linker.
+
+Tests are built after the main project's targets and run automatically after
+linking. A failing test makes the gibs invocation fail. `--dry-run` prints the
+build and run commands without executing them. When a test includes a project
+header whose source is already part of the main project, gibs reuses its owning
+library or non-main object files; it does not link the main application
+executable.
 
 ## Recommendations
 

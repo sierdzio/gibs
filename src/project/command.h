@@ -61,6 +61,7 @@ class Command
     const OptionComponent &option() const;
     const ConfigurationComponent &configuration() const;
     const ReplacementComponent &replacement() const;
+    const TestsComponent &tests() const;
 
     // General members
     TargetId targetId;
@@ -84,6 +85,7 @@ class Command
     OptionComponent _option;
     ConfigurationComponent _configuration;
     ReplacementComponent _replacement;
+    TestsComponent _tests;
 
     bool _parsingFailed = false;
     bool _isReadyToExe = false;

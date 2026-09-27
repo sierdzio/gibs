@@ -131,3 +131,50 @@ TEST(parsing, ParserSchedulesToolCommand)
     processor->waitForFinished();
     std::filesystem::remove_all(directory);
 }
+
+TEST(parsing, ParserReadsQuotedTestDirectory)
+{
+    Log::setLogLevel(Log::Type::Silent);
+
+    const auto directory =
+        std::filesystem::temp_directory_path() / "gibs parser test directory";
+    std::filesystem::remove_all(directory);
+    std::filesystem::create_directories(directory / "test suite");
+    {
+        std::ofstream projectFile(directory / "main.gibs");
+        projectFile << "source main.cpp\n";
+        projectFile << "tests directory \"test suite\"\n";
+        std::ofstream mainSource(directory / "main.cpp");
+        mainSource << "int main() { return 0; }\n";
+        std::ofstream testSource(directory / "test suite" / "main.cpp");
+        testSource << "int main() { return 0; }\n";
+    }
+
+    auto processor = std::make_shared<Processor>();
+    processor->setDryRun(true);
+    auto project = std::make_shared<Project>(processor);
+    Parser parser(directory / "main.gibs", false, {}, project);
+
+    ASSERT_EQ(parser.status(), AppError::NoError);
+    parser.parse();
+
+    const auto testTarget =
+        std::find_if(project->commands.begin(), project->commands.end(),
+                     [](const Command &command)
+                     {
+                         return command.type == Syntax::Command::Executable &&
+                                command.targetId.name() == "test_test_suite";
+                     });
+    ASSERT_NE(testTarget, project->commands.end());
+    EXPECT_EQ(testTarget->executable().outputPath.filename(), "test_test_suite");
+    EXPECT_TRUE(std::any_of(project->commands.begin(), project->commands.end(),
+                            [&directory](const Command &command)
+                            {
+                                return command.type == Syntax::Command::Source &&
+                                       command.object().sourcePath ==
+                                           directory / "test suite" / "main.cpp";
+                            }));
+
+    processor->waitForFinished();
+    std::filesystem::remove_all(directory);
+}

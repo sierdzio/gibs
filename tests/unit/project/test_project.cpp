@@ -152,6 +152,15 @@ TEST(ProjectToolExecution, ReportsFailedTool)
     EXPECT_THROW(processor->waitForFinished(), ProcessException);
 }
 
+TEST(ProjectToolExecution, ReportsFailedTestRunner)
+{
+    auto processor = std::make_shared<Processor>();
+    Project project(processor);
+    project.addTestRunner("false");
+
+    EXPECT_THROW(project.onParsingFinished(), ProcessException);
+}
+
 TEST_F(ProjectDependencyTest, LibraryScheduledAfterSourcesToComplete)
 {
     Command exec = makeExecutableCommand("myexe");

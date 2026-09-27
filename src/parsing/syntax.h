@@ -29,7 +29,8 @@
       "with \"hello, config file!\"")                                                    \
     X(Replace, "replace",                                                                \
       "Use in combination with configure command to specify which strings should be "    \
-      "replaced.")
+      "replaced.")                                                                       \
+    X(Tests, "tests", "Build and run tests from a directory")
 
 namespace Syntax
 {
@@ -97,6 +98,9 @@ constexpr std::string_view Library = "library";
 constexpr std::string_view Default = "default";
 constexpr std::string_view On = "on";
 constexpr std::string_view Off = "off";
+constexpr std::string_view Directory = "directory";
+constexpr std::string_view Recursive = "recursive";
+constexpr std::string_view GTest = "gtest";
 }; // namespace Modifier
 
 enum class LibraryType

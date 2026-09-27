@@ -346,6 +346,22 @@ TEST(command, ConfigurationAndReplacement)
     EXPECT_EQ(replacement.replacement().value, "target.name()");
 }
 
+TEST(command, TestsDirectoryOptions)
+{
+    Command tests;
+    EXPECT_TRUE(tests.append("tests"));
+    EXPECT_TRUE(tests.append("directory"));
+    EXPECT_TRUE(tests.append("test suite"));
+    EXPECT_TRUE(tests.append("recursive"));
+    EXPECT_TRUE(tests.append("gtest"));
+    tests.finalize({}, DefaultPaths);
+
+    EXPECT_TRUE(tests.isValid());
+    EXPECT_EQ(tests.tests().directory, "test suite");
+    EXPECT_TRUE(tests.tests().recursive);
+    EXPECT_TRUE(tests.tests().gtest);
+}
+
 TEST(command, ObjectComponentDefines)
 {
     Log::setLogLevel(Log::Type::Silent);

@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -139,7 +140,12 @@ void Parser::parse()
         parseCppFile(_paths.projectEntryPoint, _project->id);
     }
 
-    _project->onParsingFinished();
+    parseTestDirectories();
+
+    if (_status == AppError::NoError)
+    {
+        _project->onParsingFinished();
+    }
 }
 
 bool Parser::scanProjectDirectoryForEntryPoints()
@@ -180,6 +186,12 @@ bool Parser::scanProjectDirectoryForEntryPoints()
 std::string Parser::absoluteCommandModifierPath(const Command &command,
                                                 const std::string &modifier) const
 {
+    if (command.type == Syntax::Command::Tests &&
+        command.value() == Syntax::Modifier::Directory)
+    {
+        return _paths.absolutePath(modifier).string();
+    }
+
     if (command.type == Syntax::Command::Source)
     {
         const auto path = std::filesystem::path(modifier);
@@ -232,6 +244,15 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
 
     if (Tools::contains(_compiledFiles, absolutePath.string()))
     {
+        if (_isParsingTestProject && fileType(absolutePath) == Syntax::FileType::H)
+        {
+            if (const auto source = findCppFile(absolutePath.string());
+                source.has_value())
+            {
+                linkExistingProjectSource(
+                    id, (workingDirectory() / source.value()).lexically_normal());
+            }
+        }
         Log::verbose("Skipping, already parsed:", absolutePath);
         return;
     }
@@ -340,6 +361,11 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
                 // Determine absolute path of the cpp file
                 const auto cppAbs = (workingDirectory() / cppPath).lexically_normal();
 
+                if (_isParsingTestProject && linkExistingProjectSource(state.id, cppAbs))
+                {
+                    return;
+                }
+
                 // Look for an existing library command whose target root directory
                 // is a parent of this cpp file. If found, parse under that target.
                 TargetId parseId = state.id;
@@ -376,6 +402,77 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     }
 }
 
+bool Parser::linkExistingProjectSource(const TargetId &targetId,
+                                       const std::filesystem::path &sourcePath)
+{
+    const auto source = std::find_if(
+        _project->commands.begin(), _project->commands.end(),
+        [&sourcePath](const Command &current)
+        {
+            return current.type == Syntax::Command::Source &&
+                   current.object().sourcePath.lexically_normal() == sourcePath;
+        });
+    if (source == _project->commands.end())
+    {
+        return false;
+    }
+
+    // TODO: use caching, hash maps to speed things up
+    const auto targetLinkId = _project->linkCommandIdFor(targetId, sourcePath);
+    if (targetLinkId == NullCommandId)
+    {
+        return false;
+    }
+    auto &testTarget = _project->commandRef(targetLinkId);
+    const auto addUniqueLink = [&testTarget](const std::string &path)
+    {
+        const auto &executable = testTarget.executable();
+        if (std::find(executable.objects.begin(), executable.objects.end(), path) ==
+                executable.objects.end() &&
+            std::find(executable.libraries.begin(), executable.libraries.end(), path) ==
+                executable.libraries.end())
+        {
+            testTarget.addLinkObject(path);
+        }
+    };
+
+    if (source->parentId == NullCommandId)
+    {
+        addUniqueLink(source->object().name);
+        return true;
+    }
+
+    const auto &owner = _project->commandRef(source->parentId);
+    if (owner.type == Syntax::Command::Library)
+    {
+        addUniqueLink(owner.object().name);
+    }
+    else if (owner.type == Syntax::Command::Executable)
+    {
+        for (const auto &object : owner.executable().objects)
+        {
+            const auto ownedSource =
+                std::find_if(_project->commands.begin(), _project->commands.end(),
+                             [&object](const Command &current)
+                             {
+                                 return current.type == Syntax::Command::Source &&
+                                        current.object().name == object;
+                             });
+            if (ownedSource != _project->commands.end() &&
+                ownedSource->object().sourcePath.stem().string() != "main")
+            {
+                addUniqueLink(object);
+            }
+        }
+        for (const auto &library : owner.executable().libraries)
+        {
+            addUniqueLink(library);
+        }
+    }
+
+    return true;
+}
+
 void Parser::parseProjectLine(std::string &&line, const TargetId &id)
 {
     if (line.size() == 0)
@@ -391,10 +488,15 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
 
     std::string word;
     Command command;
+    bool inQuotes = false;
 
     for (const auto &character : std::as_const(line))
     {
-        if (Tools::isWhitespace(character))
+        if (character == '"')
+        {
+            inQuotes = not inQuotes;
+        }
+        else if (Tools::isWhitespace(character) and not inQuotes)
         {
             if (word.empty() == true)
             {
@@ -418,6 +520,13 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
         {
             word.push_back(character);
         }
+    }
+
+    if (inQuotes)
+    {
+        Log::error("Unterminated quoted value in project file:", line);
+        _status = AppError::ConfigurationError;
+        return;
     }
 
     if (not word.empty())
@@ -449,6 +558,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     Command command;
     bool isOneLineCommand = false;
     bool isCppInclude = false;
+    bool inQuotes = false;
 
     enum class Action
     {
@@ -555,7 +665,11 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
 
     for (const auto &character : std::as_const(line))
     {
-        if (Tools::isWhitespace(character)) [[unlikely]]
+        if (character == '"' and (isOneLineCommand or state->isProjectCommentBlock))
+        {
+            inQuotes = not inQuotes;
+        }
+        else if (Tools::isWhitespace(character) and not inQuotes) [[unlikely]]
         {
             if (word.empty())
             {
@@ -709,6 +823,10 @@ void Parser::handleCommand(Command command, CppState *state)
     {
         shouldAdd = true;
     }
+    else if (command.type == Syntax::Command::Tests)
+    {
+        _testSuites.emplace_back(command.tests());
+    }
     else if (command.type == Syntax::Command::Library or
              command.type == Syntax::Command::Executable)
     {
@@ -725,7 +843,8 @@ void Parser::handleCommand(Command command, CppState *state)
 
         //if this is first Target command, and/ or it is issued in main.cpp, assume
         //it is naming the whole project and executable
-        if (not _projectIdAlreadySet and state->id == _project->id)
+        if (not _projectIdAlreadySet and
+            (state->id == _project->id or _isParsingTestProject))
         {
             const auto name = command.executable().name;
             Log::information("Auto-setting project name and executable name to:", name,
@@ -1127,4 +1246,233 @@ const std::filesystem::path &Parser::root() const
 const std::filesystem::path &Parser::workingDirectory() const
 {
     return _paths.workingDirectory;
+}
+
+void Parser::parseTestDirectories()
+{
+    for (const auto &suite : _testSuites)
+    {
+        const auto directory = suite.directory.lexically_normal();
+        if (not std::filesystem::is_directory(directory))
+        {
+            Log::error("Tests directory does not exist:", directory);
+            _status = AppError::ConfigurationError;
+            return;
+        }
+
+        const auto isBuildOutput = [this](const std::filesystem::path &path)
+        {
+            const auto normalizedPath = path.lexically_normal();
+            const auto buildDirectory = _paths.buildDirectory.lexically_normal();
+            const auto relative = normalizedPath.lexically_relative(buildDirectory);
+            return normalizedPath == buildDirectory ||
+                   (not relative.empty() and *relative.begin() != "..");
+        };
+
+        if (suite.gtest)
+        {
+            std::vector<std::filesystem::path> sources;
+            const auto collect = [this, &sources](const std::filesystem::path &path)
+            {
+                if (std::filesystem::is_regular_file(path) &&
+                    fileType(path) == Syntax::FileType::Cpp)
+                {
+                    sources.emplace_back(path);
+                }
+            };
+
+            if (suite.recursive)
+            {
+                for (auto entry = std::filesystem::recursive_directory_iterator(
+                         directory,
+                         std::filesystem::directory_options::skip_permission_denied);
+                     entry != std::filesystem::recursive_directory_iterator(); ++entry)
+                {
+                    if (entry->is_directory() and isBuildOutput(entry->path()))
+                    {
+                        entry.disable_recursion_pending();
+                        continue;
+                    }
+                    collect(entry->path());
+                }
+            }
+            else
+            {
+                for (const auto &entry : std::filesystem::directory_iterator(directory))
+                {
+                    collect(entry.path());
+                }
+            }
+
+            std::sort(sources.begin(), sources.end());
+            if (sources.empty())
+            {
+                Log::error("No C++ test sources found in:", directory);
+                _status = AppError::ConfigurationError;
+                return;
+            }
+
+            parseTestProject(directory, {}, std::move(sources), true);
+            continue;
+        }
+
+        const auto entryPointFor = [](const std::filesystem::path &currentDirectory)
+        {
+            const auto projectFile = currentDirectory / "main.gibs";
+            const auto cppFile = currentDirectory / "main.cpp";
+            return std::filesystem::exists(projectFile) ? projectFile
+                   : std::filesystem::exists(cppFile)   ? cppFile
+                                                        : std::filesystem::path{};
+        };
+
+        std::size_t discovered = 0;
+        const auto rootEntryPoint = entryPointFor(directory);
+        if (rootEntryPoint.has_filename())
+        {
+            parseTestProject(directory, rootEntryPoint, {}, false);
+            ++discovered;
+        }
+        else if (suite.recursive)
+        {
+            for (auto entry = std::filesystem::recursive_directory_iterator(
+                     directory,
+                     std::filesystem::directory_options::skip_permission_denied);
+                 entry != std::filesystem::recursive_directory_iterator(); ++entry)
+            {
+                if (not entry->is_directory())
+                {
+                    continue;
+                }
+
+                if (isBuildOutput(entry->path()))
+                {
+                    entry.disable_recursion_pending();
+                    continue;
+                }
+
+                const auto entryPoint = entryPointFor(entry->path());
+                if (entryPoint.has_filename())
+                {
+                    parseTestProject(entry->path(), entryPoint, {}, false);
+                    ++discovered;
+                    entry.disable_recursion_pending();
+                }
+            }
+        }
+
+        if (discovered == 0)
+        {
+            Log::error("No test project entry point (main.gibs or main.cpp) found in:",
+                       directory);
+            _status = AppError::ConfigurationError;
+            return;
+        }
+    }
+}
+
+void Parser::parseTestProject(const std::filesystem::path &directory,
+                              const std::filesystem::path &entryPoint,
+                              std::vector<std::filesystem::path> sources,
+                              const bool useGtest)
+{
+    const auto originalPaths = _paths;
+    const auto originalCompiledFiles = _compiledFiles;
+    const auto originalProjectIdAlreadySet = _projectIdAlreadySet;
+    const auto originalIsParsingTestProject = _isParsingTestProject;
+    const auto restore = Tools::ScopeGuard(
+        [this, &originalPaths, &originalCompiledFiles, originalProjectIdAlreadySet,
+         originalIsParsingTestProject]
+        {
+            _paths = originalPaths;
+            _compiledFiles = originalCompiledFiles;
+            _projectIdAlreadySet = originalProjectIdAlreadySet;
+            _isParsingTestProject = originalIsParsingTestProject;
+        });
+
+    _paths.projectDirectory = directory;
+    _paths.projectFile = entryPoint.extension() == Syntax::Extension::ProjectFile
+                             ? entryPoint
+                             : std::filesystem::path{};
+    _paths.projectEntryPoint = entryPoint.extension() == Syntax::Extension::ProjectFile
+                                   ? std::filesystem::path{}
+                                   : entryPoint;
+    _paths.workingDirectory = directory;
+    const auto relativeDirectory =
+        directory.lexically_relative(originalPaths.projectDirectory);
+    std::string targetName = "test_" + relativeDirectory.generic_string();
+    std::replace_if(
+        targetName.begin(), targetName.end(), [](const unsigned char value)
+        { return not std::isalnum(value) and value != '_'; }, '_');
+    _paths.buildDirectory = originalPaths.buildDirectory / "tests" / targetName;
+    _paths.includePaths.clear();
+    addIncludePath(directory);
+    for (const auto &includePath : originalPaths.includePaths)
+    {
+        addIncludePath(originalPaths.workingDirectory / includePath);
+    }
+    _projectIdAlreadySet = false;
+    _isParsingTestProject = true;
+
+    TargetId testId(std::move(targetName), TargetId::Type::Executable);
+    testId.setRootDirectory(directory);
+
+    Command link;
+    link.type = Syntax::Command::Executable;
+    link.targetId = testId;
+    link.append(testId.name());
+    link.finalize(_arguments, _paths);
+    _project->addCommand(link);
+    const auto linkId = link.id();
+    _project->addTestTarget(linkId);
+
+    if (useGtest)
+    {
+        const auto generatedMain = _paths.buildDirectory / "gtest_main.cpp";
+        std::error_code directoryError;
+        std::filesystem::create_directories(generatedMain.parent_path(), directoryError);
+        if (directoryError)
+        {
+            Log::error("Could not create generated GTest main directory:",
+                       generatedMain.parent_path());
+            _status = AppError::ConfigurationError;
+            return;
+        }
+
+        std::ofstream output(generatedMain);
+        if (not output.is_open())
+        {
+            Log::error("Could not create generated GTest main:", generatedMain);
+            _status = AppError::ConfigurationError;
+            return;
+        }
+        output << "#include <gtest/gtest.h>\n"
+                  "int main(int argc, char **argv) {\n"
+                  "    ::testing::InitGoogleTest(&argc, argv);\n"
+                  "    return RUN_ALL_TESTS();\n"
+                  "}\n";
+        output.close();
+
+        auto &testLink = _project->commandRef(linkId);
+        testLink.addLinkObject("-lgtest");
+        testLink.addLinkObject("-pthread");
+        sources.emplace_back(generatedMain);
+    }
+
+    if (_paths.projectFile.has_filename())
+    {
+        parseProjectFile(_paths.projectFile, testId);
+    }
+    if (_paths.projectEntryPoint.has_filename())
+    {
+        parseCppFile(_paths.projectEntryPoint, testId);
+    }
+    for (const auto &source : sources)
+    {
+        parseCppFile(source, testId);
+    }
+
+    if (_status == AppError::NoError)
+    {
+        _project->addTestRunner(_project->commandRef(linkId).executable().outputPath);
+    }
 }

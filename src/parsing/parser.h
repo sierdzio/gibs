@@ -11,6 +11,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 class CommandLine;
 class Project;
@@ -29,9 +30,16 @@ class Parser
 
   private:
     bool scanProjectDirectoryForEntryPoints();
+    void parseTestDirectories();
+    void parseTestProject(const std::filesystem::path &directory,
+                          const std::filesystem::path &entryPoint,
+                          std::vector<std::filesystem::path> sources,
+                          const bool useGtest);
 
     void parseProjectFile(const std::filesystem::path &path, const TargetId &id);
     void parseCppFile(const std::filesystem::path &path, const TargetId &id);
+    bool linkExistingProjectSource(const TargetId &targetId,
+                                   const std::filesystem::path &sourcePath);
 
     void parseProjectLine(std::string &&line, const TargetId &id);
     void parseCppLine(std::string &&line, CppState *state);
@@ -60,11 +68,13 @@ class Parser
      * processed through handleCommand().
      */
     StringList _compiledFiles;
+    std::vector<TestsComponent> _testSuites;
     ArgumentsList _arguments;
 
     std::shared_ptr<Project> _project;
 
     AppError _status = AppError::NoError;
     bool _projectIdAlreadySet = false;
+    bool _isParsingTestProject = false;
     bool _isQuickMode = false;
 };

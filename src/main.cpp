@@ -142,7 +142,18 @@ int main(int argc, char *argv[])
         result = -101;
     }
 
-    processor->waitForFinished();
+    try
+    {
+        processor->waitForFinished();
+    }
+    catch (const ProcessException &e)
+    {
+        Log::error(e.what());
+        if (result == 0)
+        {
+            result = -11;
+        }
+    }
     project->logCommandTree();
 
     const auto end = std::chrono::steady_clock::now();

@@ -93,3 +93,12 @@ struct ReplacementComponent final : public Component
     std::string token;
     std::string value;
 };
+
+struct TestsComponent final : public Component
+{
+    bool isValid(const Syntax::Command type) const override;
+
+    std::filesystem::path directory;
+    bool recursive = false;
+    bool gtest = false;
+};

@@ -77,3 +77,8 @@ bool ReplacementComponent::isValid(const Syntax::Command type) const
 {
     return type == Syntax::Command::Replace and not token.empty() and not value.empty();
 }
+
+bool TestsComponent::isValid(const Syntax::Command type) const
+{
+    return type == Syntax::Command::Tests and not directory.empty();
+}
