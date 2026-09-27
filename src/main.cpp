@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
     processor->setCompilerSet(CompilerSet::fromName(cmd.compilerSet()));
 
     auto project = std::make_shared<Project>(processor);
+    project->setTestExecution(cmd.compileTests(), cmd.runTests());
 
     Parser parser(cmd.input(), cmd.isQuickMode(), cmd.otherArguments(), project);
 

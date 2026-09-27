@@ -42,6 +42,17 @@ Project::Project(std::shared_ptr<Processor> processor) : _processor(processor)
 {
 }
 
+void Project::setTestExecution(const bool compileTests, const bool runTests)
+{
+    _compileTests = compileTests or runTests;
+    _runTests = runTests;
+}
+
+bool Project::compileTests() const
+{
+    return _compileTests;
+}
+
 bool Project::addCommand(const Command &command)
 {
     commands.emplace_back(command);
@@ -220,6 +231,11 @@ void Project::onParsingFinished()
 
     _processor->waitForFinished();
 
+    if (not _compileTests)
+    {
+        return;
+    }
+
     for (const auto commandId : _testTargets)
     {
         auto &command = commandRef(commandId);
@@ -228,6 +244,11 @@ void Project::onParsingFinished()
     }
 
     _processor->waitForFinished();
+
+    if (not _runTests)
+    {
+        return;
+    }
 
     for (const auto &path : _testRunners)
     {

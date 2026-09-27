@@ -18,6 +18,8 @@ class Project
   public:
     Project(std::shared_ptr<Processor> processor);
 
+    void setTestExecution(const bool compileTests, const bool runTests);
+    bool compileTests() const;
     bool addCommand(const Command &command);
     void addTestTarget(const CommandId id);
     void addTestRunner(const std::filesystem::path &path);
@@ -43,4 +45,6 @@ class Project
     std::unordered_set<CommandId> _testTargets;
     std::vector<std::filesystem::path> _testRunners;
     std::shared_ptr<Processor> _processor;
+    bool _compileTests = false;
+    bool _runTests = false;
 };

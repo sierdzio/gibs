@@ -34,6 +34,8 @@ class CommandLine
     bool hasHelp() const;
     bool hasVersion() const;
     bool runImmediately() const;
+    bool compileTests() const;
+    bool runTests() const;
     bool isDebug() const;
     bool isQuickMode() const;
     bool colorfulLogs() const;
@@ -84,6 +86,8 @@ class CommandLine
     bool _hasHelp = false;
     bool _hasVersion = false;
     bool _runImmediately = false;
+    bool _compileTests = false;
+    bool _runTests = false;
     bool _isDebug = false;
     bool _isQuick = false;
     bool _colorfulLogs = true;

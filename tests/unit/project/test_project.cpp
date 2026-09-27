@@ -156,6 +156,7 @@ TEST(ProjectToolExecution, ReportsFailedTestRunner)
 {
     auto processor = std::make_shared<Processor>();
     Project project(processor);
+    project.setTestExecution(true, true);
     project.addTestRunner("false");
 
     EXPECT_THROW(project.onParsingFinished(), ProcessException);

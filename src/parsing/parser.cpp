@@ -140,7 +140,10 @@ void Parser::parse()
         parseCppFile(_paths.projectEntryPoint, _project->id);
     }
 
-    parseTestDirectories();
+    if (_project->compileTests())
+    {
+        parseTestDirectories();
+    }
 
     if (_status == AppError::NoError)
     {

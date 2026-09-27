@@ -39,6 +39,14 @@ constexpr std::string_view Run = "--run";
 constexpr std::string_view RunExplanation =
     "Run the executable immediately after building.";
 
+constexpr std::string_view CompileTests = "--compile-tests";
+constexpr std::string_view CompileTestsExplanation =
+    "Compile tests without running them.";
+
+constexpr std::string_view RunTests = "--run-tests";
+constexpr std::string_view RunTestsExplanation =
+    "Compile and run tests after building the main project.";
+
 constexpr std::string_view D = "-d";
 constexpr std::string_view Debug = "--debug";
 constexpr std::string_view DebugExplanation =
@@ -210,6 +218,8 @@ std::string CommandLine::parsedFlagsText() const
     };
 
     appendIf(&result, runImmediately(), Run);
+    appendIf(&result, _compileTests, CompileTests);
+    appendIf(&result, runTests(), RunTests);
     appendIf(&result, isDebug(), Debug);
     appendIf(&result, isQuickMode(), Quick);
     appendIf(&result, true, LogLevel, Log::typeString(_logLevel));
@@ -240,6 +250,8 @@ std::string CommandLine::helpText() const
         help.addEntry({H, Help}, HelpExplanation);
         help.addEntry({V, Version}, VersionExplanation);
         help.addEntry({R, Run}, RunExplanation);
+        help.addEntry({CompileTests}, CompileTestsExplanation);
+        help.addEntry({RunTests}, RunTestsExplanation);
         help.addEntry({D, Debug}, DebugExplanation);
         help.addEntry({Q, Quick}, QuickExplanation);
         help.addEntry({Verbose}, VerboseExplanation);
@@ -340,6 +352,16 @@ bool CommandLine::hasVersion() const
 bool CommandLine::runImmediately() const
 {
     return _runImmediately;
+}
+
+bool CommandLine::compileTests() const
+{
+    return _compileTests or _runTests;
+}
+
+bool CommandLine::runTests() const
+{
+    return _runTests;
 }
 
 bool CommandLine::isDebug() const
@@ -524,6 +546,16 @@ bool CommandLine::handleFlags(ParseStatus &status)
     if (status.current == R or status.current == Run)
     {
         return set(_runImmediately, true, status, Run);
+    }
+
+    if (status.current == CompileTests)
+    {
+        return set(_compileTests, true, status, CompileTests);
+    }
+
+    if (status.current == RunTests)
+    {
+        return set(_runTests, true, status, RunTests);
     }
 
     if (status.current == D or status.current == Debug)

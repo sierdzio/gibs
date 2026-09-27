@@ -399,13 +399,13 @@ By default, tests are not compiled or run.
 To compile them (but not run):
 
 ```bash
-gibs --compile-tests
+gibs --compile-tests --log-process-output
 ```
 
 To run (and compile if necessary) tests, call:
 
 ```bash
-gibs --run-tests
+gibs --run-tests --log-process-output
 ```
 
 Tests are built after the main project's targets and run automatically after
@@ -414,6 +414,9 @@ build and run commands without executing them. When a test includes a project
 header whose source is already part of the main project, gibs reuses its owning
 library or non-main object files; it does not link the main application
 executable.
+
+Child-process output is suppressed by default, even though the tests run.
+Add `--log-process-output` to see GoogleTest and sample output.
 
 ## Recommendations
 

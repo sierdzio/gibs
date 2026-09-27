@@ -72,6 +72,8 @@ TEST(commandline, CommandLine)
         EXPECT_FALSE(cmd.hasHelp());
         EXPECT_FALSE(cmd.hasVersion());
         EXPECT_FALSE(cmd.runImmediately());
+        EXPECT_FALSE(cmd.compileTests());
+        EXPECT_FALSE(cmd.runTests());
         EXPECT_FALSE(cmd.isDebug());
         EXPECT_FALSE(cmd.isQuickMode());
         EXPECT_TRUE(cmd.colorfulLogs());
@@ -93,6 +95,8 @@ TEST(commandline, CommandLine)
         EXPECT_FALSE(cmd.hasHelp());
         EXPECT_FALSE(cmd.hasVersion());
         EXPECT_FALSE(cmd.runImmediately());
+        EXPECT_FALSE(cmd.compileTests());
+        EXPECT_FALSE(cmd.runTests());
         EXPECT_FALSE(cmd.isDebug());
         EXPECT_TRUE(cmd.isQuickMode());
         EXPECT_TRUE(cmd.colorfulLogs());
@@ -104,7 +108,7 @@ TEST(commandline, CommandLine)
         const CommandLine cmd({"-h", "-v", "-r", "-d", "-q", "--verbose", "--log-level",
                                "verbose", "--no-color", "--dry-run",
                                "--log-process-output", "--no-generate-compile-commands",
-                               "main.cpp"});
+                               "--compile-tests", "main.cpp"});
 
         EXPECT_TRUE(cmd.parsedFlagsText().size() > 0);
         EXPECT_TRUE(cmd.helpText().size() > 0);
@@ -116,6 +120,8 @@ TEST(commandline, CommandLine)
         EXPECT_TRUE(cmd.hasHelp());
         EXPECT_TRUE(cmd.hasVersion());
         EXPECT_TRUE(cmd.runImmediately());
+        EXPECT_TRUE(cmd.compileTests());
+        EXPECT_FALSE(cmd.runTests());
         EXPECT_TRUE(cmd.isDebug());
         EXPECT_TRUE(cmd.isQuickMode());
         EXPECT_FALSE(cmd.colorfulLogs());
@@ -124,6 +130,18 @@ TEST(commandline, CommandLine)
         EXPECT_FALSE(cmd.generateCompileCommands());
         EXPECT_FALSE(cmd.isLogFilePathSet());
         EXPECT_TRUE(cmd.logFilePath().empty());
+    }
+
+    {
+        const CommandLine compileTests({"--compile-tests"});
+        EXPECT_TRUE(compileTests.isValid());
+        EXPECT_TRUE(compileTests.compileTests());
+        EXPECT_FALSE(compileTests.runTests());
+
+        const CommandLine runTests({"--run-tests"});
+        EXPECT_TRUE(runTests.isValid());
+        EXPECT_TRUE(runTests.compileTests());
+        EXPECT_TRUE(runTests.runTests());
     }
 
     {

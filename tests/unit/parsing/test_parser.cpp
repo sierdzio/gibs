@@ -153,6 +153,7 @@ TEST(parsing, ParserReadsQuotedTestDirectory)
     auto processor = std::make_shared<Processor>();
     processor->setDryRun(true);
     auto project = std::make_shared<Project>(processor);
+    project->setTestExecution(true, false);
     Parser parser(directory / "main.gibs", false, {}, project);
 
     ASSERT_EQ(parser.status(), AppError::NoError);
