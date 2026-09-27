@@ -136,7 +136,8 @@ TEST(parsing, ParserReportsInvalidProjectCommand)
 {
     Log::setLogLevel(Log::Type::Silent);
 
-    const auto directory = std::filesystem::temp_directory_path() / "gibs-invalid-command-test";
+    const auto directory =
+        std::filesystem::temp_directory_path() / "gibs-invalid-command-test";
     std::filesystem::remove_all(directory);
     std::filesystem::create_directories(directory);
     const auto sourcePath = directory / "main.cpp";
