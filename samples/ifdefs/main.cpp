@@ -1,4 +1,4 @@
-//i target name SimpleTestIfdefs
+//i executable name SimpleTestIfdefs
 //i qt core
 
 #include "someclass.h"

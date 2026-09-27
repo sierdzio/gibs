@@ -542,6 +542,17 @@ void Parser::parseProjectLine(std::string &&line, const TargetId &id)
 
     CppState state;
     state.id = id;
+    if (command.type == Syntax::Command::Unknown)
+    {
+        return;
+    }
+
+    if (not command.isValid())
+    {
+        _status = AppError::InvalidProjectCommand;
+        return;
+    }
+
     handleCommand(command, &state);
 }
 
@@ -724,6 +735,7 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
     }
     else
     {
+        _status = AppError::InvalidProjectCommand;
         // Skipping command handling when we are already parsing this file.
         // TODO: also skip parsing when this file was already parsed or compiled! Do not
         // duplicate the work!

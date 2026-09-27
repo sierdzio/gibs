@@ -132,6 +132,62 @@ TEST(parsing, ParserSchedulesToolCommand)
     std::filesystem::remove_all(directory);
 }
 
+TEST(parsing, ParserReportsInvalidProjectCommand)
+{
+    Log::setLogLevel(Log::Type::Silent);
+
+    const auto directory = std::filesystem::temp_directory_path() / "gibs-invalid-command-test";
+    std::filesystem::remove_all(directory);
+    std::filesystem::create_directories(directory);
+    const auto sourcePath = directory / "main.cpp";
+    {
+        std::ofstream source(sourcePath);
+        source << "//i target name InvalidCommandTest\n";
+        source << "int main() { return 0; }\n";
+    }
+
+    auto processor = std::make_shared<Processor>();
+    processor->setDryRun(true);
+    auto project = std::make_shared<Project>(processor);
+    Parser parser(sourcePath, false, {}, project);
+
+    ASSERT_EQ(parser.status(), AppError::NoError);
+    parser.parse();
+
+    EXPECT_EQ(parser.status(), AppError::InvalidProjectCommand);
+
+    processor->waitForFinished();
+    std::filesystem::remove_all(directory);
+}
+
+TEST(parsing, ParserReportsInvalidProjectFileCommand)
+{
+    Log::setLogLevel(Log::Type::Silent);
+
+    const auto directory =
+        std::filesystem::temp_directory_path() / "gibs-invalid-project-file-command-test";
+    std::filesystem::remove_all(directory);
+    std::filesystem::create_directories(directory);
+    const auto projectPath = directory / "main.gibs";
+    {
+        std::ofstream projectFile(projectPath);
+        projectFile << "target name InvalidCommandTest\n";
+    }
+
+    auto processor = std::make_shared<Processor>();
+    processor->setDryRun(true);
+    auto project = std::make_shared<Project>(processor);
+    Parser parser(projectPath, false, {}, project);
+
+    ASSERT_EQ(parser.status(), AppError::NoError);
+    parser.parse();
+
+    EXPECT_EQ(parser.status(), AppError::InvalidProjectCommand);
+
+    processor->waitForFinished();
+    std::filesystem::remove_all(directory);
+}
+
 TEST(parsing, ParserReadsQuotedTestDirectory)
 {
     Log::setLogLevel(Log::Type::Silent);

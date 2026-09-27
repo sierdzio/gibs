@@ -1,4 +1,4 @@
-//i target name SimpleTestSubproject
+//i executable name SimpleTestSubproject
 //i subproject ../library/simpletest.h
 
 #include "simpletest.h"

@@ -7,4 +7,5 @@ enum class AppError
     IncorrectInputFileType = -2,
     EntryPointNotFound = -3,
     ConfigurationError = -4,
+    InvalidProjectCommand = -5,
 };

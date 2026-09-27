@@ -1,5 +1,5 @@
-//i target name SimpleTestFolder
-//i includes folder
+//i executable name SimpleTestFolder
+//i include folder
 //    Random text
 
 #include "folder/someclass.h"

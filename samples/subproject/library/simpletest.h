@@ -1,8 +1,7 @@
 #pragma once
 
 /*i
- target name simpletest
- target type lib dynamic
+ library name simpletest type dynamic
  */
 
 class SimpleTest
