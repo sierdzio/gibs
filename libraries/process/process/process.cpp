@@ -303,8 +303,7 @@ void Process::performWorkNatively()
 
     finish(status, Exit::Status::UndefinedFailure);
 #elif defined(_WIN32)
-    Log::error(logIdentifier(),
-               "Process running is not implemented yet:", std::strerror(errno));
+    Log::error(logIdentifier(), "Process running is not implemented yet");
     finish(1, Exit::Status::FailedToExecute);
 #endif
 }
