@@ -2,17 +2,11 @@
 
 [TOC]
 
-[![Build Status](https://travis-ci.org/sierdzio/gibs.svg?branch=master)](https://travis-ci.org/sierdzio/gibs)
-
 GIBS - *Generally In-source Build System*
-
-Note: *This branch contains gibs written in pure C++ and is a WORK IN PROGRESS*
-
-If you look for something that can be used, check out *master_qt* branch, although it is heavily outdated!
 
 ## Intro
 
-GIBS (in-source build system) is a build tool that makes it easier to build C++
+Gibs is a build tool that makes it easier to build C++
 projects by using the information from source code to compile it.
 
 In short, to compile a project it is enough to run:
@@ -34,7 +28,7 @@ make
 
 Precompiled gibs releases can be found on [releases page](https://github.com/sierdzio/gibs/releases)
 
-Alternatively, get the source code and compile gibs using cmake. C++20 is
+Alternatively, get the source code and compile gibs using cmake. C++23 is
 required. Gibs can also be compiled using and older version of gibs.
 
 To build and run the sample-based integration tests, configure with both
@@ -133,6 +127,8 @@ Gibs builds in *release* mode by default. If you want to compile a debug build,
 use `--debug` or `-d`.
 
 ### Path config / cache
+
+***Note: this is not implemented yet in C++ version***
 
 To save you typing, gibs will remember paths between runs, so you need to
 specify them only once.
@@ -373,6 +369,24 @@ On / off syntax is also supported:
 gibs main.cpp -- --tts-support=OFF
 gibs main.cpp -- --tts-support=ON
 ```
+
+#### Tests
+
+Gibs supports building and running tests (unit test and others).
+
+```
+tests directory "directory name / path" [recursive] [gtest]
+```
+
+More than one `tests` commands can be specified, gibs will go through all
+(recursively if needed) and in each directory try to find a main.cpp or main.gibs file
+in the same way regular gibs command searches for projects.
+
+For tests which require libraries, object files or binary files from the main project, gibs will
+automatically provide them. This is determined based on `#include` statements in test files.
+
+If `gtest` is specified, gibs will automatically add a main file and test run scaffolding,
+similar to CMake's `gtest_discover_tests` function.
 
 ## Recommendations
 

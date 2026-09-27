@@ -1,18 +1,18 @@
 include(GoogleTest)
 
 add_executable(unit_tests_gibs
-    tools/test_tools.cpp
-    tools/test_helpdata.cpp
-    tools/test_commandline.cpp
     parsing/test_syntax.cpp
     parsing/test_parser.cpp
+    parsing/test_paths.cpp
+    processing/test_tool.cpp
+    processing/test_configuration.cpp
     project/test_targetid.cpp
     project/test_command.cpp
     project/test_project.cpp
-    processing/test_tool.cpp
-    processing/test_configuration.cpp
+    tools/test_tools.cpp
+    tools/test_helpdata.cpp
+    tools/test_commandline.cpp
     test_log_silence.cpp
-    parsing/test_paths.cpp
 )
 
 # TODO: investigate, should not be needed
