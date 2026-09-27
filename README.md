@@ -392,6 +392,22 @@ when requested) into one test executable and generates a GoogleTest `main()`.
 GoogleTest must already be installed, with `gtest/gtest.h` available to the
 compiler and `-lgtest -pthread` available to the linker.
 
+##### Compiling and running tests
+
+By default, tests are not compiled or run.
+
+To compile them (but not run):
+
+```bash
+gibs --compile-tests
+```
+
+To run (and compile if necessary) tests, call:
+
+```bash
+gibs --run-tests
+```
+
 Tests are built after the main project's targets and run automatically after
 linking. A failing test makes the gibs invocation fail. `--dry-run` prints the
 build and run commands without executing them. When a test includes a project
