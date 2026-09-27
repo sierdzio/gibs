@@ -26,7 +26,7 @@ make
 
 ## How to get it
 
-Precompiled gibs releases can be found on [releases page](https://github.com/sierdzio/gibs/releases)
+~~Precompiled gibs releases can be found on [releases page](https://github.com/sierdzio/gibs/releases)~~
 
 Alternatively, get the source code and compile gibs using cmake. C++23 is
 required. Gibs can also be compiled using and older version of gibs.
