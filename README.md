@@ -77,12 +77,16 @@ gibs --help
 Options:
 
 ```text
-  -h, --help                      Optional values: [commands|readme]. Displays this help information and exits. If one of the arguments is
-                                  provided, displays help for that specific topic.
+  -h, --help                      Optional values: [commands|functions]. Displays this help information and exits. If one of the arguments
+                                  is provided, displays help for that specific topic.
 
   -v, --version                   Displays gibs version info and exits.
 
   -r, --run                       Run the executable immediately after building.
+
+  --compile-tests                 Compile tests without running them.
+
+  --run-tests                     Compile and run tests after building the main project.
 
   -d, --debug                     Compile in debug mode. By default, gibs compiles release binaries.
 
@@ -109,6 +113,8 @@ Options:
                                   executed.
 
   --log-process-output            Prints standard and error outputs from spawned processes (compiler, linker etc.).
+
+  --no-generate-compile-commands  Do not generate compile_commands.json after building.
 
   -c, --compiler, --compiler-set  Selects the compiler set to use: gcc, clang, apple-clang. Defaults to apple-clang on macOS and gcc
                                   elsewhere.
