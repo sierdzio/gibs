@@ -90,8 +90,8 @@ TEST(tools, boolToString)
 {
     EXPECT_EQ(Tools::boolToString(true), "true");
     EXPECT_EQ(Tools::boolToString(false), "false");
-    EXPECT_EQ(Tools::boolToString(123), "true");
-    EXPECT_EQ(Tools::boolToString(-1), "true");
+    EXPECT_EQ(Tools::boolToString(static_cast<bool>(123)), "true");
+    EXPECT_EQ(Tools::boolToString(static_cast<bool>(-1)), "true");
 }
 
 TEST(tools, isPathToFile)

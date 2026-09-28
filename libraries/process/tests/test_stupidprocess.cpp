@@ -2,6 +2,9 @@
 
 #include <process/stupidprocess.h>
 
+#include <chrono>
+#include <thread>
+
 TEST(stupidprocess, defaults)
 {
     StupidProcess process;
@@ -69,8 +72,13 @@ TEST(stupidprocess, normalRun)
 
     process.setDuration(1ms);
     const auto result = process.start();
-    std::this_thread::sleep_for(10ms);
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+    while (not process.isFinished() and std::chrono::steady_clock::now() < deadline)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 
+    ASSERT_TRUE(process.isFinished());
     EXPECT_EQ(process.result().rawCode, 0);
     EXPECT_EQ(process.result().status, Exit::Status::Success);
 

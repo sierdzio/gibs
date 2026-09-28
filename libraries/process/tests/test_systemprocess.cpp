@@ -2,6 +2,8 @@
 
 #include <process/systemprocess.h>
 
+#include <chrono>
+
 using namespace std::chrono_literals;
 
 TEST(systemprocess, defaults)
