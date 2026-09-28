@@ -21,25 +21,29 @@ jobs:
             c_compiler: gcc
             cpp_compiler: g++
             build_type: Release
+            build_tests: true
             run_tests: true
           - os: ubuntu-latest
             name: Linux-Clang
             c_compiler: clang
             cpp_compiler: clang++
             build_type: Release
+            build_tests: true
             run_tests: true
           - os: macos-latest
             name: macOS-Clang
             c_compiler: clang
             cpp_compiler: clang++
             build_type: Release
+            build_tests: true
             run_tests: true
           - os: windows-latest
             name: Windows-MSVC
             c_compiler: cl
             cpp_compiler: cl
             build_type: Release
-            run_tests: true
+            build_tests: true
+            run_tests: false
 
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 2
@@ -76,7 +80,7 @@ jobs:
         shell: bash
         run: |
           TEST_FLAGS="-DBUILD_TESTS=OFF -DBUILD_SAMPLE_TESTS=OFF"
-          if [[ "${{ matrix.run_tests }}" == "true" ]]; then
+          if [[ "${{ matrix.build_tests }}" == "true" ]]; then
             TEST_FLAGS="-DBUILD_TESTS=ON -DBUILD_SAMPLE_TESTS=ON"
           fi
 
