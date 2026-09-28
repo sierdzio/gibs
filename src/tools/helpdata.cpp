@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <ranges>
+#include <stdexcept>
 #include <string_view>
 
 namespace

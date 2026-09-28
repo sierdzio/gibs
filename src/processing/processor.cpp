@@ -247,10 +247,10 @@ void Processor::checkProcessStates()
 
                 if (process->result().status == Exit::Status::Success)
                 {
-                    Log::information("Process finished successfully for command id:",
-                                     current.commandId,
-                                     "executable:", process->executable(),
-                                     "arguments:", process->arguments());
+                    Log::information(
+                        "Process finished successfully for command id:",
+                        current.commandId, "executable:", process->executable(),
+                        "arguments:", Tools::listToString(process->arguments()));
                 }
                 else
                 {

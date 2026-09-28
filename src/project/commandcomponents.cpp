@@ -47,10 +47,10 @@ std::string IncludeComponent::libraryName() const
 
     if (Tools::isPathToFile(path))
     {
-        return rawPath.parent_path().filename();
+        return rawPath.parent_path().filename().string();
     }
 
-    return rawPath.filename();
+    return rawPath.filename().string();
 }
 
 bool OptionComponent::isValid(const Syntax::Command type) const

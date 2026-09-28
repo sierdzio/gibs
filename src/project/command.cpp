@@ -230,7 +230,8 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
                     if (namePath.is_absolute())
                     {
                         _library.name =
-                            std::filesystem::relative(namePath, paths.workingDirectory);
+                            std::filesystem::relative(namePath, paths.workingDirectory)
+                                .string();
                     }
                     else
                     {
@@ -267,7 +268,7 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
                 {
                     _include.isLibrary = true;
                     _include.path =
-                        std::filesystem::relative(path, paths.workingDirectory);
+                        std::filesystem::relative(path, paths.workingDirectory).string();
                     if (not _modifiers.empty())
                     {
                         _modifiers.back() = _include.path;
@@ -276,7 +277,8 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
                     continue;
                 }
 
-                _include.path = std::filesystem::relative(path, paths.workingDirectory);
+                _include.path =
+                    std::filesystem::relative(path, paths.workingDirectory).string();
                 if (not _modifiers.empty())
                 {
                     _modifiers.back() = _include.path;
@@ -445,7 +447,8 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
                 filePath.is_absolute() ? filePath : paths.workingDirectory / filePath;
             _object.sourcePath = absoluteSource.lexically_normal();
             _object.source =
-                std::filesystem::relative(absoluteSource, paths.workingDirectory);
+                std::filesystem::relative(absoluteSource, paths.workingDirectory)
+                    .string();
             if (not _modifiers.empty())
             {
                 _modifiers.back() = _object.source;
@@ -456,7 +459,8 @@ void Command::finalize(const ArgumentsList &arguments, const Paths &paths)
             // TODO: use different extension per platform!
             Log::verbose("Appending object file:", filePath.string());
             _object.name = (paths.buildDirectory / buildRelativePath(_object.source))
-                               .replace_extension(Syntax::Extension::ObjectFile1);
+                               .replace_extension(Syntax::Extension::ObjectFile1)
+                               .string();
         }
     }
 

@@ -15,6 +15,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstddef>
+#include <ctime>
 #include <filesystem>
 #include <iomanip>
 #include <sstream>
@@ -661,15 +662,21 @@ bool CommandLine::handlePositionalArguments(ParseStatus &status)
         {
             const auto now = std::chrono::system_clock::now();
             const auto time = std::chrono::system_clock::to_time_t(now);
+            std::tm localTime{};
+#ifdef _WIN32
+            localtime_s(&localTime, &time);
+#else
+            localtime_r(&time, &localTime);
+#endif
             std::ostringstream dateTimeStream;
-            dateTimeStream << std::put_time(std::localtime(&time), DateTimeFormat.data());
+            dateTimeStream << std::put_time(&localTime, DateTimeFormat.data());
             const auto dateTimeString = dateTimeStream.str();
             const auto path =
                 std::filesystem::current_path() / ("gibs-" + dateTimeString + ".log");
 
             Log::information(
                 "Log file path argument provided without a value, using default:", path);
-            return set(_logFilePath, path, status, LogFilePath);
+            return set(_logFilePath, path.string(), status, LogFilePath);
         }
 
         return set(_logFilePath, status.current, status, LogFilePath);

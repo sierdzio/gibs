@@ -107,7 +107,7 @@ void Parser::parse()
 {
     // Take project name from parent directory - for now. It can be adjusted later if
     // "target name" command is found inside project files
-    _project->id = TargetId(_paths.projectDirectory.parent_path().filename(),
+    _project->id = TargetId(_paths.projectDirectory.parent_path().filename().string(),
                             TargetId::Type::Executable);
     _project->id.setRootDirectory(_paths.projectDirectory);
 
@@ -347,7 +347,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
         // TODO: handle case where source file is in a different directory... maybe cache
         // the dir structure ?
         // }
-        const auto cppPathOptional = findCppFile(absolutePath);
+        const auto cppPathOptional = findCppFile(absolutePath.string());
 
         if (cppPathOptional.has_value()) [[likely]]
         {
@@ -649,7 +649,8 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             {
                 word =
                     (state->currentFile.parent_path() / Tools::prepareIncludePath(word))
-                        .lexically_normal();
+                        .lexically_normal()
+                        .string();
             }
             else
             {
@@ -765,15 +766,16 @@ void Parser::handleCommand(Command command, CppState *state)
         auto &configuration = state->configuration.value();
         const auto inputPath = std::filesystem::path(configuration.input);
         const auto outputPath = std::filesystem::path(configuration.output);
-        configuration.input =
-            (inputPath.is_absolute() ? inputPath : base / inputPath).lexically_normal();
+        configuration.input = (inputPath.is_absolute() ? inputPath : base / inputPath)
+                                  .lexically_normal()
+                                  .string();
         const auto sourceOutput =
             (outputPath.is_absolute() ? outputPath : base / outputPath)
                 .lexically_normal();
         const auto relativeOutput =
             std::filesystem::relative(sourceOutput, workingDirectory());
         configuration.output =
-            (_paths.buildDirectory / relativeOutput).lexically_normal();
+            (_paths.buildDirectory / relativeOutput).lexically_normal().string();
     }
     else if (command.type == Syntax::Command::Replace)
     {
@@ -1002,7 +1004,7 @@ void Parser::handleCommand(Command command, CppState *state)
                 // includes inside library files can be resolved relative to that folder.
                 addIncludePath(path);
 
-                if (Tools::isPathToFile(path))
+                if (Tools::isPathToFile(path.string()))
                 {
                     Log::verbose("Parsing", path, "as entry point of of library:",
                                  command.include().libraryName());
@@ -1028,13 +1030,13 @@ void Parser::handleCommand(Command command, CppState *state)
             }
             else if (Tools::isPathToFile(path.string()))
             {
-                if (Tools::isHeaderFile(path))
+                if (Tools::isHeaderFile(path.string()))
                 {
                     parseCppFile(path, state->id);
                 }
                 else
                 {
-                    const auto pathOptional = findCppFile(path);
+                    const auto pathOptional = findCppFile(path.string());
                     if (pathOptional.has_value())
                     {
                         parseCppFile(pathOptional.value(), state->id);
