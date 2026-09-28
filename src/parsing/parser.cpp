@@ -271,7 +271,7 @@ void Parser::parseCppFile(const std::filesystem::path &path, const TargetId &id)
     }
 
     Log::debug("Reading file:", absolutePath);
-    _compiledFiles.emplace_back(absolutePath);
+    _compiledFiles.emplace_back(absolutePath.string());
 
     CppState state;
     state.id = id;

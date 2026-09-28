@@ -581,7 +581,8 @@ const std::string &Command::path() const
     }
 
     Log::error("Path requested from command which does not support it:",
-               Syntax::commandString(type), "available modifiers are:", _modifiers);
+               Syntax::commandString(type),
+               "available modifiers are:", Tools::listToString(_modifiers));
 
     throw CommandStringException("Path requested from command which does not support it");
 }
