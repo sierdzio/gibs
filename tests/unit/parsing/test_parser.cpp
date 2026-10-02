@@ -130,7 +130,7 @@ TEST(parsing, ParserResolvesProcessorHeaderProcessIncludePath)
               source->object().includePaths.end());
     EXPECT_NE(std::find(source->object().includePaths.begin(),
                         source->object().includePaths.end(),
-                        (projectRoot / "libraries/json").string()),
+                        (projectRoot / "libraries/streamer").string()),
               source->object().includePaths.end());
 }
 
