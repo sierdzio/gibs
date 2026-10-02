@@ -75,7 +75,7 @@ TEST(JsonTest, CompositeValuesOwnTheirContentsByValue)
     Object sourceObject{{"array", Value{Array{Value{3}}}}};
     Value objectValue{sourceObject};
     sourceObject.insert("later", Value{4});
-    EXPECT_EQ(objectValue.toString(), "{\n\"array\": [3]\n\n}\n");
+    EXPECT_EQ(objectValue.toString(), "{\n\"array\": [3]\n}\n");
 }
 
 TEST(JsonTest, ObjectAndArraySerializeTheirCollectionContents)
@@ -85,6 +85,21 @@ TEST(JsonTest, ObjectAndArraySerializeTheirCollectionContents)
 
     const Array array{Value{1}, Value{"two"}, Value{true}};
     EXPECT_EQ(Array::serialize(array), "[1,\"two\",true]\n");
+
+    const Array objects{Value{Object{{"first", Value{1}}}},
+                        Value{Object{{"second", Value{2}}}}};
+    EXPECT_EQ(Array::serialize(objects),
+              "[{\n\"first\": 1\n},{\n\"second\": 2\n}]\n");
+}
+
+TEST(JsonTest, NestedCompositeSeparatorsStayOnThePreviousLine)
+{
+    Value object;
+    object.data = Value::ObjectStorage{
+        {"nested", Value{Object{{"value", Value{1}}}}}, {"next", Value{2}}};
+
+    EXPECT_EQ(object.toString(),
+              "{\n\"nested\": {\n\"value\": 1\n},\n\"next\": 2\n}\n");
 }
 
 TEST(JsonTest, StringEscapingIsHandledCorrectly)
@@ -121,12 +136,12 @@ TEST(JsonTest, InsertAndAppendMoveTemporaryValues)
 
     Object object;
     object.insert("nested", std::move(arrayValue));
-    EXPECT_EQ(Object::serialize(object), "{\n\"nested\": [1,2]\n\n}\n");
+    EXPECT_EQ(Object::serialize(object), "{\n\"nested\": [1,2]\n}\n");
 
     Value objectValue{Object{{"answer", Value{42}}}};
     Array array;
     array.append(std::move(objectValue));
-    EXPECT_EQ(Array::serialize(array), "[{\n\"answer\": 42\n}\n]\n");
+    EXPECT_EQ(Array::serialize(array), "[{\n\"answer\": 42\n}]\n");
 }
 
 TEST(JsonTest, JsonWriteWritesObjectAndArrayContentToDisk)
@@ -148,6 +163,15 @@ TEST(JsonTest, JsonWriteWritesObjectAndArrayContentToDisk)
     const auto arrayPath = directory / "array.json";
     EXPECT_TRUE(array.write(arrayPath));
     EXPECT_EQ(readFileContents(arrayPath), "[\n1,\n2\n]\n");
+
+    Json<Array> objectArray;
+    objectArray.append(Value{Object{{"first", Value{1}}}});
+    objectArray.append(Value{Object{{"second", Value{2}}}});
+
+    const auto objectArrayPath = directory / "object-array.json";
+    EXPECT_TRUE(objectArray.write(objectArrayPath));
+    EXPECT_EQ(readFileContents(objectArrayPath),
+              "[\n{\n\"first\": 1\n},\n{\n\"second\": 2\n}\n]\n");
 
     std::filesystem::remove_all(directory);
 }

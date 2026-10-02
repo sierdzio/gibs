@@ -54,7 +54,7 @@ void writeQuotedAndEscapedString(std::ostream &output, std::string_view value)
     output.put('"');
 }
 
-void writeValue(std::ostream &output, const Value &value)
+void writeValue(std::ostream &output, const Value &value, bool addTrailingNewline = true)
 {
     if (std::holds_alternative<std::string>(value.data))
     {
@@ -88,14 +88,18 @@ void writeValue(std::ostream &output, const Value &value)
         {
             writeQuotedAndEscapedString(output, elements[index].first);
             output << ": ";
-            writeValue(output, elements[index].second);
+            writeValue(output, elements[index].second, false);
             if (index + 1 != elements.size())
             {
                 output.put(',');
             }
             output.put('\n');
         }
-        output << "}\n";
+        output.put('}');
+        if (addTrailingNewline)
+        {
+            output.put('\n');
+        }
         return;
     }
 
@@ -105,13 +109,17 @@ void writeValue(std::ostream &output, const Value &value)
         output.put('[');
         for (size_t index = 0; index < elements.size(); ++index)
         {
-            if (index != 0)
+            writeValue(output, elements[index], false);
+            if (index + 1 != elements.size())
             {
                 output.put(',');
             }
-            writeValue(output, elements[index]);
         }
-        output << "]\n";
+        output.put(']');
+        if (addTrailingNewline)
+        {
+            output.put('\n');
+        }
         return;
     }
 }
@@ -239,7 +247,7 @@ void Object::serialize(const Object &object, std::ostream &output)
     {
         writeQuotedAndEscapedString(output, key);
         output << ": ";
-        writeValue(output, value);
+        writeValue(output, value, false);
         if (++index != size)
         {
             output.put(',');
@@ -276,11 +284,11 @@ void Array::serialize(const Array &array, std::ostream &output)
     output << array.beginning();
     for (size_t index = 0; index < array.elements.size(); ++index)
     {
-        if (index != 0)
+        writeValue(output, array.elements[index], false);
+        if (index + 1 != array.elements.size())
         {
             output.put(',');
         }
-        writeValue(output, array.elements[index]);
     }
     output << array.ending() << '\n';
 }
@@ -327,13 +335,13 @@ bool Json<Type>::write(const std::filesystem::path &path) const
     {
         if constexpr (std::is_base_of_v<Array, Type>)
         {
-            writeValue(output, current);
+            writeValue(output, current, false);
         }
         else if constexpr (std::is_base_of_v<Object, Type>)
         {
             writeQuotedAndEscapedString(output, current.first);
             output << ": ";
-            writeValue(output, current.second);
+            writeValue(output, current.second, false);
         }
 
         if (index != size - 1)
