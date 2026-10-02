@@ -57,7 +57,7 @@ TEST(processing, CompileCommandsWritesStandardDatabaseEntry)
         std::filesystem::temp_directory_path() / "gibs_compile_commands_unit_test.json";
     CommandData command;
     command.command = "c++";
-    command.arguments = {"-DNAME=\"value\"", "source file.cpp"};
+    command.arguments = {"-DNAME=\"value\"", "-o", "build object.o", "source file.cpp"};
 
     CompileCommands compileCommands;
     compileCommands.add("/project/build", "/project/source file.cpp", command);
@@ -69,10 +69,12 @@ TEST(processing, CompileCommandsWritesStandardDatabaseEntry)
     std::filesystem::remove(path);
 
     EXPECT_NE(contents.find("\"directory\": \"/project/build\""), std::string::npos);
-    EXPECT_NE(contents.find("\"arguments\": [\"c++\", \"-DNAME=\\\"value\\\"\", "
-                            "\"source file.cpp\"]"),
+    EXPECT_NE(contents.find("\"arguments\": [\"c++\",\"-DNAME=\\\"value\\\"\","
+                            "\"-o\",\"build object.o\",\"source file.cpp\"]"),
               std::string::npos);
     EXPECT_NE(contents.find("\"file\": \"/project/source file.cpp\""), std::string::npos);
+    EXPECT_NE(contents.find("\"output\": \"build object.o\""), std::string::npos);
+    EXPECT_EQ(contents.find("\"command\""), std::string::npos);
 }
 
 TEST(processing, LinkerStaticLibraryMultiCommand)

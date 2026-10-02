@@ -2,15 +2,15 @@ include(CTest)
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
-set(NAME unit_tests_logger)
+set(NAME unit_tests_json)
 
 add_executable(${NAME}
-    test_log.cpp
+    test_json.cpp
 )
 
 target_link_libraries(${NAME}
     PRIVATE
-    logger
+    json
     GTest::gtest_main
 )
 

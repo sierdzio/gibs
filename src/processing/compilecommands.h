@@ -2,15 +2,10 @@
 
 #include "tool.h"
 
-#include <filesystem>
-#include <vector>
+//i include ../../libraries/json
+#include <json/json.h>
 
-struct CompileCommand
-{
-    std::filesystem::path directory;
-    std::filesystem::path file;
-    CommandData command;
-};
+#include <filesystem>
 
 class CompileCommands
 {
@@ -20,5 +15,5 @@ class CompileCommands
     bool write(const std::filesystem::path &path) const;
 
   private:
-    std::vector<CompileCommand> _commands;
+    Json<Array> _json;
 };

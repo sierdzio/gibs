@@ -12,7 +12,7 @@ add_executable(${NAME}
 
 target_link_libraries(${NAME}
     PRIVATE
-    gibs-lib
+    process
     GTest::gtest_main
 )
 

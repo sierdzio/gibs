@@ -21,6 +21,7 @@ if (BUILD_TESTS)
     endif()
 endif()
 
+add_subdirectory(libraries/json)
 add_subdirectory(libraries/logger)
 add_subdirectory(libraries/process)
 add_subdirectory(src)
