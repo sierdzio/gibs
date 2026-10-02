@@ -2,7 +2,7 @@
 
 #include "tool.h"
 
-//i include ../../libraries/json
+//i include libraries/json
 #include <json/json.h>
 
 #include <filesystem>

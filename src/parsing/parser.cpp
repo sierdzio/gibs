@@ -647,10 +647,18 @@ void Parser::parseCppLine(std::string &&line, CppState *state)
             if (command.type == Syntax::Command::Include && !isCppInclude &&
                 !state->currentFile.empty())
             {
-                word =
-                    (state->currentFile.parent_path() / Tools::prepareIncludePath(word))
-                        .lexically_normal()
-                        .string();
+                const auto includePath = Tools::prepareIncludePath(word);
+                const auto projectPath = _paths.projectDirectory / includePath;
+                if (std::filesystem::exists(projectPath))
+                {
+                    word = projectPath.lexically_normal().string();
+                }
+                else
+                {
+                    word = (state->currentFile.parent_path() / includePath)
+                               .lexically_normal()
+                               .string();
+                }
             }
             else
             {

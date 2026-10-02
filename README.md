@@ -231,6 +231,9 @@ Include paths are specified using `include` command:
 ```
 
 If a path to a directory is provided, it will be added to C++ include paths (`-I`).
+Relative paths in `include` directives are resolved from the project root first. In C++
+source files, if the path does not exist there, it is resolved from the directory
+containing the directive.
 
 If a path to gibs project file is provided, the file will be loaded and parsed.
 

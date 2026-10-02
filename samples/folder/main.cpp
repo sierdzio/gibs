@@ -1,5 +1,4 @@
 //i executable name SimpleTestFolder
-//i include folder
 //    Random text
 
 #include "folder/someclass.h"
