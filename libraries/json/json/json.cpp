@@ -241,18 +241,19 @@ std::string Object::serialize(const Object &object)
 void Object::serialize(const Object &object, std::ostream &output)
 {
     output << object.beginning() << '\n';
-    const auto size = object.elements.size();
+    const auto sizeToCheck = object.elements.size() - 1;
     size_t index = 0;
     for (const auto &[key, value] : object.elements)
     {
         writeQuotedAndEscapedString(output, key);
         output << ": ";
         writeValue(output, value, false);
-        if (++index != size)
+        if (index != sizeToCheck)
         {
             output.put(',');
         }
         output.put('\n');
+        ++index;
     }
     output << object.ending() << '\n';
 }
@@ -282,10 +283,11 @@ std::string Array::serialize(const Array &array)
 void Array::serialize(const Array &array, std::ostream &output)
 {
     output << array.beginning();
+    const auto sizeToCheck = array.elements.size() - 1;
     for (size_t index = 0; index < array.elements.size(); ++index)
     {
         writeValue(output, array.elements[index], false);
-        if (index + 1 != array.elements.size())
+        if (index != sizeToCheck)
         {
             output.put(',');
         }
@@ -329,7 +331,7 @@ bool Json<Type>::write(const std::filesystem::path &path) const
 
     output << this->beginning() << "\n";
 
-    const auto size = this->elements.size();
+    const auto sizeToCheck = this->elements.size() - 1;
     size_t index = 0;
     for (const auto &current : this->elements)
     {
@@ -344,7 +346,7 @@ bool Json<Type>::write(const std::filesystem::path &path) const
             writeValue(output, current.second, false);
         }
 
-        if (index != size - 1)
+        if (index != sizeToCheck)
         {
             output.put(',');
         }

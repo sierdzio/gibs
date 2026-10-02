@@ -98,6 +98,37 @@ TEST(parsing, ParserReadsFinalProjectCommandToken)
     EXPECT_TRUE(loggerIncludePathFound);
 }
 
+TEST(parsing, ParserResolvesProcessorHeaderProcessIncludePath)
+{
+    Log::setLogLevel(Log::Type::Silent);
+
+    auto processor = std::make_shared<Processor>();
+    processor->setDryRun(true);
+    auto project = std::make_shared<Project>(processor);
+
+    const auto sourcePath = std::filesystem::path(__FILE__).parent_path() /
+                            std::filesystem::path(
+                                "../../../src/processing/processor.cpp");
+
+    Parser parser(sourcePath, true, {}, project);
+    ASSERT_EQ(parser.status(), AppError::NoError);
+
+    parser.parse();
+
+    const auto source = std::find_if(
+        project->commands.begin(), project->commands.end(),
+        [](const Command &command)
+        {
+            return command.type == Syntax::Command::Source &&
+                   command.object().sourcePath.filename() == "processor.cpp";
+        });
+    ASSERT_NE(source, project->commands.end());
+    EXPECT_TRUE(std::any_of(
+        source->object().includePaths.begin(), source->object().includePaths.end(),
+        [](const std::string &includePath)
+        { return includePath.ends_with("libraries/process"); }));
+}
+
 TEST(parsing, ParserSchedulesToolCommand)
 {
     Log::setLogLevel(Log::Type::Silent);
