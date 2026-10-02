@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
 
-project(logger VERSION 0.0.1
+project(logger VERSION 0.3.0
         DESCRIPTION "logging library"
         LANGUAGES CXX)
 

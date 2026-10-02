@@ -1,7 +1,7 @@
 DOXYFILE_ENCODING = UTF-8
 
 PROJECT_NAME = gibs
-PROJECT_NUMBER = 0.2.0
+PROJECT_NUMBER = 0.3.0
 PROJECT_BRIEF = "Generally In-source Build System"
 PROJECT_LOGO = deployment/gibs.png
 

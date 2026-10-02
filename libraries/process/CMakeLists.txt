@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
 
-project(process VERSION 0.0.1
+project(process VERSION 0.3.0
         DESCRIPTION "process execution library"
         LANGUAGES CXX)
 

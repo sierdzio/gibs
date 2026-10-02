@@ -1,4 +1,4 @@
-//i executable name gibs version 0.2.0
+//i executable name gibs version 0.3.0
 //i include ../libraries/logger
 //i include ../libraries/process
 
