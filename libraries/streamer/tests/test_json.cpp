@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <json/json.h>
+#include <streamer/json.h>
 
 #include <filesystem>
 #include <fstream>
@@ -47,20 +47,14 @@ TEST(JsonTest, TemplateIsRestrictedToObjectOrArrayTypes)
     EXPECT_FALSE(IsValidJson<int>::value);
 }
 
-TEST(JsonTest, ValueSupportsAllBuiltInJsonScalarAndCompositeTypes)
+TEST(JsonTest, ValueStoresBuiltInScalarTypes)
 {
-    EXPECT_EQ(Value{"hello"}.toString(), "\"hello\"");
-    EXPECT_EQ(Value{std::string{"world"}}.toString(), "\"world\"");
-    EXPECT_EQ(Value{42}.toString(), "42");
-    EXPECT_EQ(Value{3.5}.toString(), "3.500000");
-    EXPECT_EQ(Value{true}.toString(), "true");
-    EXPECT_EQ(Value{false}.toString(), "false");
-
-    const Value objectValue{Object{{"answer", Value{42}}}};
-    EXPECT_EQ(objectValue.toString(), "{\n\"answer\": 42\n}\n");
-
-    const Value arrayValue{Array{Value{1}, Value{2}}};
-    EXPECT_EQ(arrayValue.toString(), "[1,2]\n");
+    EXPECT_EQ(std::get<std::string>(Value{"hello"}.data), "hello");
+    EXPECT_EQ(std::get<std::string>(Value{std::string{"world"}}.data), "world");
+    EXPECT_EQ(std::get<int>(Value{42}.data), 42);
+    EXPECT_EQ(std::get<double>(Value{3.5}.data), 3.5);
+    EXPECT_TRUE(std::get<bool>(Value{true}.data));
+    EXPECT_FALSE(std::get<bool>(Value{false}.data));
 }
 
 TEST(JsonTest, CompositeValuesOwnTheirContentsByValue)
@@ -69,46 +63,51 @@ TEST(JsonTest, CompositeValuesOwnTheirContentsByValue)
     Value arrayValue{sourceArray};
     auto &storedArray = std::get<Value::ArrayStorage>(arrayValue.data);
     storedArray.emplace_back(2);
-    EXPECT_EQ(arrayValue.toString(), "[1,2]\n");
+    ASSERT_EQ(storedArray.size(), 2u);
+    EXPECT_EQ(std::get<int>(storedArray[0].data), 1);
+    EXPECT_EQ(std::get<int>(storedArray[1].data), 2);
     EXPECT_EQ(sourceArray.elements.size(), 1u);
 
     Object sourceObject{{"array", Value{Array{Value{3}}}}};
     Value objectValue{sourceObject};
     sourceObject.insert("later", Value{4});
-    EXPECT_EQ(objectValue.toString(), "{\n\"array\": [3]\n}\n");
+    const auto &storedObject = std::get<Value::ObjectStorage>(objectValue.data);
+    ASSERT_EQ(storedObject.size(), 1u);
+    EXPECT_EQ(storedObject[0].first, "array");
+    const auto &storedNestedArray = std::get<Value::ArrayStorage>(storedObject[0].second.data);
+    ASSERT_EQ(storedNestedArray.size(), 1u);
+    EXPECT_EQ(std::get<int>(storedNestedArray[0].data), 3);
 }
 
 TEST(JsonTest, ObjectAndArraySerializeTheirCollectionContents)
 {
     const Object object{{"message", Value{"hello"}}};
-    EXPECT_EQ(Object::serialize(object), "{\n\"message\": \"hello\"\n}\n");
+    EXPECT_EQ(Json<Object>::serialize(object), "{\n\"message\": \"hello\"\n}\n");
 
     const Array array{Value{1}, Value{"two"}, Value{true}};
-    EXPECT_EQ(Array::serialize(array), "[1,\"two\",true]\n");
+    EXPECT_EQ(Json<Array>::serialize(array), "[1,\"two\",true]\n");
 
     const Array objects{Value{Object{{"first", Value{1}}}},
                         Value{Object{{"second", Value{2}}}}};
-    EXPECT_EQ(Array::serialize(objects),
-              "[{\n\"first\": 1\n},{\n\"second\": 2\n}]\n");
+    EXPECT_EQ(Json<Array>::serialize(objects), "[{\n\"first\": 1\n},{\n\"second\": 2\n}]\n");
 }
 
 TEST(JsonTest, NestedCompositeSeparatorsStayOnThePreviousLine)
 {
-    Value object;
-    object.data = Value::ObjectStorage{
-        {"nested", Value{Object{{"value", Value{1}}}}}, {"next", Value{2}}};
+    Value object{Object{{"nested", Value{Object{{"value", Value{1}}}}}}};
+    std::get<Value::ObjectStorage>(object.data)
+        .emplace_back("next", Value{2});
 
-    EXPECT_EQ(object.toString(),
-              "{\n\"nested\": {\n\"value\": 1\n},\n\"next\": 2\n}\n");
+    EXPECT_EQ(Json<Array>::serialize(Array{object}),
+              "[{\n\"nested\": {\n\"value\": 1\n},\n\"next\": 2\n}]\n");
 }
 
 TEST(JsonTest, StringEscapingIsHandledCorrectly)
 {
-    const Value value{Object{{"message",
-                             Value{"quote \"hi\"\nnext\tend\\slash"}}}};
+    const Array values{Value{Object{{"message", Value{"quote \"hi\"\nnext\tend\\slash"}}}}};
 
-    EXPECT_EQ(value.toString(),
-              "{\n\"message\": \"quote \\\"hi\\\"\\nnext\\tend\\\\slash\"\n}\n");
+    EXPECT_EQ(Json<Array>::serialize(values),
+              "[{\n\"message\": \"quote \\\"hi\\\"\\nnext\\tend\\\\slash\"\n}]\n");
 }
 
 TEST(JsonTest, InsertAndAppendAddValuesToCollections)
@@ -126,7 +125,7 @@ TEST(JsonTest, InsertAndAppendAddValuesToCollections)
     array.append(Value{2});
 
     EXPECT_EQ(array.elements.size(), 2u);
-    EXPECT_EQ(Array::serialize(array), "[1,2]\n");
+    EXPECT_EQ(Json<Array>::serialize(array), "[1,2]\n");
 }
 
 TEST(JsonTest, InsertAndAppendMoveTemporaryValues)
@@ -136,12 +135,12 @@ TEST(JsonTest, InsertAndAppendMoveTemporaryValues)
 
     Object object;
     object.insert("nested", std::move(arrayValue));
-    EXPECT_EQ(Object::serialize(object), "{\n\"nested\": [1,2]\n}\n");
+    EXPECT_EQ(Json<Object>::serialize(object), "{\n\"nested\": [1,2]\n}\n");
 
     Value objectValue{Object{{"answer", Value{42}}}};
     Array array;
     array.append(std::move(objectValue));
-    EXPECT_EQ(Array::serialize(array), "[{\n\"answer\": 42\n}]\n");
+    EXPECT_EQ(Json<Array>::serialize(array), "[{\n\"answer\": 42\n}]\n");
 }
 
 TEST(JsonTest, JsonWriteWritesObjectAndArrayContentToDisk)

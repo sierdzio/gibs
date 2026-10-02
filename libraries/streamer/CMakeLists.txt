@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
 
-project(json VERSION 0.3.0
-        DESCRIPTION "JSON library"
+project(streamer VERSION 0.3.0
+        DESCRIPTION "streamer library"
         LANGUAGES CXX)
 
 set(srcs
-    json/json.cpp
-    json/json.h
+    streamer/data.cpp
+    streamer/data.h
+    streamer/json.cpp
+    streamer/json.h
 )
 
 add_library(${PROJECT_NAME}
@@ -16,7 +18,7 @@ add_library(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
-    $<INSTALL_INTERFACE:json>
+    $<INSTALL_INTERFACE:streamer>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/>
 )
 
@@ -27,11 +29,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     UNITY_BUILD_BATCH_SIZE "${UNITY_BUILD_BATCH_SIZE_VALUE}"
 )
 
-option(BUILD_TESTS "Build json test suite" OFF)
+option(BUILD_TESTS "Build streamer test suite" OFF)
 
 if (BUILD_TESTS)
-    message("Building json test suite")
+    message("Building streamer test suite")
     add_subdirectory(tests)
 else()
-    message("json test suite will not be built")
+    message("streamer test suite will not be built")
 endif()

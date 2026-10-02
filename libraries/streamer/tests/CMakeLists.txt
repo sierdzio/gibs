@@ -2,7 +2,7 @@ include(CTest)
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
-set(NAME unit_tests_json)
+set(NAME unit_tests_streamer)
 
 add_executable(${NAME}
     test_json.cpp
@@ -10,7 +10,7 @@ add_executable(${NAME}
 
 target_link_libraries(${NAME}
     PRIVATE
-    json
+    streamer
     GTest::gtest_main
 )
 

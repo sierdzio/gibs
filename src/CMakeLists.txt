@@ -36,9 +36,9 @@ add_library(${PROJECT_NAME}-lib
 )
 
 target_link_libraries(${PROJECT_NAME}-lib PUBLIC
-    json
     logger
     process
+    streamer
 )
 
 set_target_properties(${PROJECT_NAME}-lib PROPERTIES
