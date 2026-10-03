@@ -6,10 +6,8 @@
 
 namespace
 {
-constexpr char FirstPrintableCharacter = 0x20;
-constexpr char Hex[] = "0123456789abcdef";
-
-void writeValueInternal(std::ostream &output, const Value &value, bool addTrailingNewline = true)
+void writeValueInternal(std::ostream &output, const Value &value,
+                        bool addTrailingNewline = true)
 {
     if (std::holds_alternative<std::string>(value.data))
     {
@@ -82,7 +80,8 @@ void writeValueInternal(std::ostream &output, const Value &value, bool addTraili
 
 template <typename Type>
     requires(std::is_base_of_v<Object, Type> || std::is_base_of_v<Array, Type>)
-void Json<Type>::writeValue(std::ostream &output, const Value &value, bool addTrailingNewline)
+void Json<Type>::writeValue(std::ostream &output, const Value &value,
+                            bool addTrailingNewline)
 {
     writeValueInternal(output, value, addTrailingNewline);
 }
