@@ -49,12 +49,20 @@ TEST(JsonTest, TemplateIsRestrictedToObjectOrArrayTypes)
 
 TEST(JsonTest, ValueStoresBuiltInScalarTypes)
 {
+    EXPECT_EQ(Value{"hello"}.type(), typeid(std::string));
     EXPECT_EQ(std::get<std::string>(Value{"hello"}.data), "hello");
     EXPECT_EQ(std::get<std::string>(Value{std::string{"world"}}.data), "world");
+    EXPECT_EQ(Value{42}.type(), typeid(int));
     EXPECT_EQ(std::get<int>(Value{42}.data), 42);
+    EXPECT_EQ(Value{3.5}.type(), typeid(double));
     EXPECT_EQ(std::get<double>(Value{3.5}.data), 3.5);
+    EXPECT_EQ(Value{true}.type(), typeid(bool));
     EXPECT_TRUE(std::get<bool>(Value{true}.data));
     EXPECT_FALSE(std::get<bool>(Value{false}.data));
+
+    const Value objectValue{Object{{"message", Value{"hello"}}}};
+    EXPECT_EQ(objectValue.type(), typeid(Object));
+    EXPECT_EQ(objectValue.asObject().at("message").toString(), "hello");
 }
 
 TEST(JsonTest, CompositeValuesOwnTheirContentsByValue)
@@ -73,9 +81,9 @@ TEST(JsonTest, CompositeValuesOwnTheirContentsByValue)
     sourceObject.insert("later", Value{4});
     const auto &storedObject = std::get<Value::ObjectStorage>(objectValue.data);
     ASSERT_EQ(storedObject.size(), 1u);
-    EXPECT_EQ(storedObject[0].first, "array");
+    ASSERT_TRUE(storedObject.contains("array"));
     const auto &storedNestedArray =
-        std::get<Value::ArrayStorage>(storedObject[0].second.data);
+        std::get<Value::ArrayStorage>(storedObject.at("array").data);
     ASSERT_EQ(storedNestedArray.size(), 1u);
     EXPECT_EQ(std::get<int>(storedNestedArray[0].data), 3);
 }
@@ -84,6 +92,10 @@ TEST(JsonTest, ObjectAndArraySerializeTheirCollectionContents)
 {
     const Object object{{"message", Value{"hello"}}};
     EXPECT_EQ(Json<Object>::serialize(object), "{\n\"message\": \"hello\"\n}\n");
+
+    const Object unorderedInput{{"z-last", Value{3}}, {"a-first", Value{1}}};
+    EXPECT_EQ(Json<Object>::serialize(unorderedInput),
+              "{\n\"a-first\": 1,\n\"z-last\": 3\n}\n");
 
     const Array array{Value{1}, Value{"two"}, Value{true}};
     EXPECT_EQ(Json<Array>::serialize(array), "[1,\"two\",true]\n");
@@ -97,7 +109,7 @@ TEST(JsonTest, ObjectAndArraySerializeTheirCollectionContents)
 TEST(JsonTest, NestedCompositeSeparatorsStayOnThePreviousLine)
 {
     Value object{Object{{"nested", Value{Object{{"value", Value{1}}}}}}};
-    std::get<Value::ObjectStorage>(object.data).emplace_back("next", Value{2});
+    std::get<Value::ObjectStorage>(object.data).emplace("next", Value{2});
 
     EXPECT_EQ(Json<Array>::serialize(Array{object}),
               "[{\n\"nested\": {\n\"value\": 1\n},\n\"next\": 2\n}]\n");
@@ -106,10 +118,10 @@ TEST(JsonTest, NestedCompositeSeparatorsStayOnThePreviousLine)
 TEST(JsonTest, StringEscapingIsHandledCorrectly)
 {
     const Array values{
-        Value{Object{{"message", Value{"quote \"hi\"\nnext\tend\\slash"}}}}};
+        Value{Object{{"message", Value{"quote \"hi\"\nnext\tend\\slash\a"}}}}};
 
     EXPECT_EQ(Json<Array>::serialize(values),
-              "[{\n\"message\": \"quote \\\"hi\\\"\\nnext\\tend\\\\slash\"\n}]\n");
+              "[{\n\"message\": \"quote \\\"hi\\\"\\nnext\\tend\\\\slash\\u0007\"\n}]\n");
 }
 
 TEST(JsonTest, InsertAndAppendAddValuesToCollections)

@@ -2,10 +2,9 @@
 
 //i library name streamer type static
 
+#include <map>
 #include <string>
 #include <typeinfo>
-#include <unordered_map>
-#include <utility>
 #include <variant>
 #include <vector>
 
@@ -16,7 +15,7 @@ struct Value
 {
     static void writeQuotedAndEscapedString(std::ostream &output, std::string_view value);
 
-    using ObjectStorage = std::vector<std::pair<std::string, Value>>;
+    using ObjectStorage = std::map<std::string, Value>;
     using ArrayStorage = std::vector<Value>;
     using Storage = std::variant<std::monostate, std::string, int, double, bool,
                                  ObjectStorage, ArrayStorage>;
@@ -35,11 +34,15 @@ struct Value
     Value(Array &&value);
 
     const std::type_info &type() const;
+
+    const std::string &toString() const;
+
+    const ObjectStorage &asObject() const;
 };
 
-struct Object : public std::unordered_map<std::string, Value>
+struct Object : public std::map<std::string, Value>
 {
-    using std::unordered_map<std::string, Value>::unordered_map;
+    using std::map<std::string, Value>::map;
 
     void insert(const std::string &key, const Value &value);
     void insert(const std::string &key, Value &&value);

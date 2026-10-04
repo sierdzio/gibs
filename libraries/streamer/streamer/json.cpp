@@ -1,5 +1,7 @@
 #include "json.h"
 
+#include <logger/log.h>
+
 #include <fstream>
 #include <sstream>
 
@@ -36,16 +38,18 @@ void writeValueInternal(std::ostream &output, const Value &value,
     {
         const auto &elements = std::get<Value::ObjectStorage>(value.data);
         output << "{\n";
-        for (size_t index = 0; index < elements.size(); ++index)
+        size_t index = 0;
+        for (const auto &[key, child] : elements)
         {
-            Value::writeQuotedAndEscapedString(output, elements[index].first);
+            Value::writeQuotedAndEscapedString(output, key);
             output << ": ";
-            writeValueInternal(output, elements[index].second, false);
+            writeValueInternal(output, child, false);
             if (index + 1 != elements.size())
             {
                 output.put(',');
             }
             output.put('\n');
+            ++index;
         }
         output.put('}');
         if (addTrailingNewline)
@@ -149,6 +153,7 @@ bool Json<Type>::write(const std::filesystem::path &path) const
     std::ofstream output(path);
     if (not output)
     {
+        Log::error("Failed to open JSON file for writing:", path.string());
         return false;
     }
 

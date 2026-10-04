@@ -109,8 +109,14 @@ constexpr std::string_view C = "-c";
 constexpr std::string_view Compiler = "--compiler";
 constexpr std::string_view CompilerSetOption = "--compiler-set";
 constexpr std::string_view CompilerExplanation =
-    "Selects the compiler set to use: gcc, clang, apple-clang. "
+    "Selects the compiler set to use from built-in ones: gcc, clang, apple-clang. "
+    "Alternatively, a path to an ini file with custom configuration can be provided."
     "Defaults to apple-clang on macOS and gcc elsewhere.";
+constexpr std::string_view CompilerOnError =
+    "Missing compiler set value. Specify a compiler set after -c, --compiler, or "
+    "--compiler-set.";
+constexpr std::string_view LogLevelOnError =
+    "Missing log level value. Specify a log level after -l or --log-level.";
 
 constexpr std::string_view Executable = "executable";
 constexpr std::string_view Input = "input";
@@ -483,8 +489,8 @@ bool CommandLine::parse()
             }
         }
 
-        const bool argumentValid = handleHelpAndVersion(status) or handleFlags(status) or
-                                   handleOptionsWithValues(status) or
+        const bool argumentValid = handleOptionsWithValues(status) or
+                                   handleHelpAndVersion(status) or handleFlags(status) or
                                    handlePositionalArguments(status);
 
         if (not argumentValid)
@@ -604,23 +610,22 @@ bool CommandLine::handleOptionsWithValues(ParseStatus &status)
         return false;
     }
 
-    if (status.current == Compiler or status.current == CompilerSetOption)
+    if (status.previous == C or status.previous == Compiler or
+        status.previous == CompilerSetOption)
     {
-        if (status.isLastArgument)
+        if (isFlag(status))
         {
-            Log::error("Missing value for option:", status.current);
+            Log::error(CompilerOnError);
             status.hasError = true;
             return false;
         }
 
-        return true;
-    }
-
-    if (status.previous == Compiler or status.previous == CompilerSetOption)
-    {
-        if (not CompilerSet::isKnownName(status.current))
+        if (not CompilerSet::isKnownName(status.current) and
+            not std::filesystem::exists(status.current))
         {
-            Log::error("Unsupported compiler set:", status.current);
+            Log::error(
+                "Compiler set:", status.current,
+                "is not a known built-in compiler set and does not exist as a file.");
             status.hasError = true;
             return false;
         }
@@ -628,13 +633,40 @@ bool CommandLine::handleOptionsWithValues(ParseStatus &status)
         return set(_compilerSet, status.current, status, CompilerSetOption);
     }
 
-    if (status.previous == LogLevel)
+    if (status.current == C or status.current == Compiler or
+        status.current == CompilerSetOption)
     {
+        if (status.isLastArgument)
+        {
+            Log::error(CompilerOnError);
+            status.hasError = true;
+            return false;
+        }
+
+        return true;
+    }
+
+    if (status.previous == L or status.previous == LogLevel)
+    {
+        if (isFlag(status))
+        {
+            Log::error(LogLevelOnError);
+            status.hasError = true;
+            return false;
+        }
+
         return set(_logLevel, Log::typeValue(status.current), status, LogLevel);
     }
 
     if (status.current == L || status.current == LogLevel)
     {
+        if (status.isLastArgument)
+        {
+            Log::error(LogLevelOnError);
+            status.hasError = true;
+            return false;
+        }
+
         return true;
     }
 

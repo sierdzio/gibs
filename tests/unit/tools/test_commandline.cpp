@@ -1,5 +1,9 @@
 #include <gtest/gtest.h>
 
+#include <iostream>
+#include <sstream>
+#include <string_view>
+
 #include <logger/log.h>
 #include <parsing/syntax.h>
 #include <processing/compilerset.h>
@@ -233,6 +237,41 @@ TEST(commandline, CommandLine)
         EXPECT_NE(help.find("name of a specified target"), std::string::npos);
         EXPECT_NE(help.find("version of a specified target"), std::string::npos);
     }
+}
+
+TEST(commandline, missingOptionValues)
+{
+    const auto previousLogLevel = Log::logLevel();
+    Log::setLogLevel(Log::Type::Verbose);
+
+    const auto expectMissingValue = [](const StringList &args,
+                                       const std::string_view &expectedError)
+    {
+        std::ostringstream output;
+        auto *previousBuffer = std::cout.rdbuf(output.rdbuf());
+        const CommandLine cmd(args);
+        std::cout.rdbuf(previousBuffer);
+
+        EXPECT_FALSE(cmd.isValid());
+        EXPECT_NE(output.str().find(expectedError), std::string::npos);
+    };
+
+    expectMissingValue({"executable", "-c"}, "Missing compiler set value");
+    expectMissingValue({"executable", "--compiler"}, "Missing compiler set value");
+    expectMissingValue({"executable", "--compiler-set"},
+                       "Missing compiler set value");
+    expectMissingValue({"executable", "-c", "-q"}, "Missing compiler set value");
+    expectMissingValue({"executable", "-c", "--help"}, "Missing compiler set value");
+    expectMissingValue({"executable", "-l"}, "Missing log level value");
+    expectMissingValue({"executable", "--log-level"}, "Missing log level value");
+    expectMissingValue({"executable", "-l", "-q"}, "Missing log level value");
+    expectMissingValue({"executable", "-l", "--help"}, "Missing log level value");
+
+    const CommandLine shortLogLevel({"executable", "-l", "debug"});
+    EXPECT_TRUE(shortLogLevel.isValid());
+    EXPECT_EQ(shortLogLevel.logLevel(), Log::Type::Debug);
+
+    Log::setLogLevel(previousLogLevel);
 }
 
 TEST(commandline, paths)

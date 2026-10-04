@@ -62,6 +62,13 @@ TEST(IniTest, WriteValueSerializesScalarAndCompositeValues)
     output.clear();
     Ini<Object>::writeValue(output, Value{Object{{"host", Value{"localhost"}}}}, false);
     EXPECT_EQ(output.str(), "\n\"host\" = \"localhost\"\n");
+
+    output.str("");
+    output.clear();
+    Ini<Object>::writeValue(output,
+                            Value{Object{{"message", Value{"quote \"hi\"\nnext\tend\\slash\a"}}}},
+                            false);
+    EXPECT_EQ(output.str(), "\n\"message\" = \"quote \\\"hi\\\"\\nnext\\tend\\\\slash\\u0007\"\n");
 }
 
 TEST(IniTest, SerializeReturnsDeterministicOutputForSingleValueCollections)
@@ -69,6 +76,17 @@ TEST(IniTest, SerializeReturnsDeterministicOutputForSingleValueCollections)
     EXPECT_EQ(Ini<Object>::serialize(Object{{"message", Value{"hello"}}}),
               "{\n\"message\": \"hello\"\n}\n");
     EXPECT_EQ(Ini<Object>::serialize(Array{Value{1}, Value{2}}), "[1,2]\n");
+}
+
+TEST(IniTest, NestedObjectEntriesSerializeInKeyOrder)
+{
+    std::ostringstream output;
+    Ini<Object>::writeValue(output,
+                            Value{Object{{"z-last", Value{3}},
+                                         {"a-first", Value{1}}}},
+                            false);
+
+    EXPECT_EQ(output.str(), "\n\"a-first\" = 1\n\"z-last\" = 3\n");
 }
 
 TEST(IniTest, IniWriteWritesSectionedConfigurationToDisk)

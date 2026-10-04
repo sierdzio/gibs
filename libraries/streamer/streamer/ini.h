@@ -27,4 +27,5 @@ class Ini : public Type
                            bool addTrailingNewline = true);
 
     bool write(const std::filesystem::path &path) const;
+    bool read(const std::filesystem::path &path);
 };

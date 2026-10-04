@@ -1,5 +1,7 @@
 #include "ini.h"
 
+#include <logger/log.h>
+
 #include <fstream>
 #include <sstream>
 
@@ -39,11 +41,11 @@ void writeValueInternal(std::ostream &output, const Value &value,
     {
         const auto &elements = std::get<Value::ObjectStorage>(value.data);
         output << Nl;
-        for (size_t index = 0; index < elements.size(); ++index)
+        for (const auto &[key, child] : elements)
         {
-            Value::writeQuotedAndEscapedString(output, elements[index].first);
+            Value::writeQuotedAndEscapedString(output, key);
             output << Eq;
-            writeValueInternal(output, elements[index].second, false);
+            writeValueInternal(output, child, false);
             output.put(Nl);
         }
         if (addTrailingNewline)
@@ -152,8 +154,7 @@ bool Ini<Type>::write(const std::filesystem::path &path) const
 
     if constexpr (std::is_base_of_v<Array, Type>)
     {
-        // Top-level array - not supported in INI format
-        // TODO: log
+        Log::error("INI format does not support top-level arrays");
         return false;
     }
 
@@ -171,6 +172,26 @@ bool Ini<Type>::write(const std::filesystem::path &path) const
     }
 
     return output.good();
+}
+
+template <typename Type>
+    requires(std::is_base_of_v<Object, Type>)
+bool Ini<Type>::read(const std::filesystem::path &path)
+{
+    std::ifstream input(path);
+    if (not input)
+    {
+        Log::error("Failed to open INI file for reading:", path.string());
+        return false;
+    }
+
+    std::string result{std::istreambuf_iterator<char>(input),
+                       std::istreambuf_iterator<char>()};
+
+    // TODO: implement reading INI files
+    Log::information("read INI data:", result);
+
+    return true;
 }
 
 template class Ini<Object>;

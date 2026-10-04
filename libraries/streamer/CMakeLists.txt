@@ -18,6 +18,10 @@ add_library(${PROJECT_NAME}
     ${srcs}
 )
 
+target_link_libraries(${PROJECT_NAME} PUBLIC
+    logger
+)
+
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     $<INSTALL_INTERFACE:streamer>

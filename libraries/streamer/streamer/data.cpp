@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string_view>
+#include <utility>
 
 namespace
 {
@@ -74,26 +75,12 @@ Value::Value(bool value) : data(value)
 {
 }
 
-Value::Value(const Object &value)
+Value::Value(const Object &value) : data(static_cast<const ObjectStorage &>(value))
 {
-    ObjectStorage elements;
-    elements.reserve(value.size());
-    for (const auto &[key, child] : value)
-    {
-        elements.emplace_back(key, child);
-    }
-    data = std::move(elements);
 }
 
-Value::Value(Object &&value)
+Value::Value(Object &&value) : data(std::move(static_cast<ObjectStorage &>(value)))
 {
-    ObjectStorage elements;
-    elements.reserve(value.size());
-    for (auto &[key, child] : value)
-    {
-        elements.emplace_back(key, std::move(child));
-    }
-    data = std::move(elements);
 }
 
 Value::Value(const Array &value) : data(value)
@@ -131,6 +118,16 @@ const std::type_info &Value::type() const
         return typeid(Array);
     }
     return typeid(std::monostate);
+}
+
+const std::string &Value::toString() const
+{
+    return std::get<std::string>(data);
+}
+
+const Value::ObjectStorage &Value::asObject() const
+{
+    return std::get<ObjectStorage>(data);
 }
 
 void Object::insert(const std::string &key, const Value &value)
