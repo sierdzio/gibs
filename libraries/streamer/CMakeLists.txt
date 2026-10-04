@@ -9,6 +9,8 @@ set(srcs
     streamer/data.h
     streamer/json.cpp
     streamer/json.h
+    streamer/ini.cpp
+    streamer/ini.h
 )
 
 add_library(${PROJECT_NAME}
