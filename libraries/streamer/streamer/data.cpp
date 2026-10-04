@@ -1,7 +1,6 @@
-#include "json.h"
+#include "data.h"
 
-#include <fstream>
-#include <sstream>
+#include <iostream>
 #include <string_view>
 
 namespace
@@ -78,8 +77,8 @@ Value::Value(bool value) : data(value)
 Value::Value(const Object &value)
 {
     ObjectStorage elements;
-    elements.reserve(value.elements.size());
-    for (const auto &[key, child] : value.elements)
+    elements.reserve(value.size());
+    for (const auto &[key, child] : value)
     {
         elements.emplace_back(key, child);
     }
@@ -89,19 +88,19 @@ Value::Value(const Object &value)
 Value::Value(Object &&value)
 {
     ObjectStorage elements;
-    elements.reserve(value.elements.size());
-    for (auto &[key, child] : value.elements)
+    elements.reserve(value.size());
+    for (auto &[key, child] : value)
     {
         elements.emplace_back(key, std::move(child));
     }
     data = std::move(elements);
 }
 
-Value::Value(const Array &value) : data(value.elements)
+Value::Value(const Array &value) : data(value)
 {
 }
 
-Value::Value(Array &&value) : data(std::move(value.elements))
+Value::Value(Array &&value) : data(std::move(value))
 {
 }
 
@@ -136,29 +135,20 @@ const std::type_info &Value::type() const
 
 void Object::insert(const std::string &key, const Value &value)
 {
-    elements.try_emplace(key, value);
+    try_emplace(key, value);
 }
 
 void Object::insert(const std::string &key, Value &&value)
 {
-    elements.try_emplace(key, std::move(value));
-}
-
-Object::Object(std::initializer_list<std::pair<const std::string, Value>> initialValues)
-    : elements(initialValues)
-{
-}
-
-Array::Array(std::initializer_list<Value> initialValues) : elements(initialValues)
-{
+    try_emplace(key, std::move(value));
 }
 
 void Array::append(const Value &value)
 {
-    elements.push_back(value);
+    push_back(value);
 }
 
 void Array::append(Value &&value)
 {
-    elements.push_back(std::move(value));
+    push_back(std::move(value));
 }

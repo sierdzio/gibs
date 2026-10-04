@@ -2,7 +2,6 @@
 
 #include <fstream>
 #include <sstream>
-#include <string_view>
 
 namespace
 {
@@ -100,9 +99,9 @@ template <typename Type>
 void Json<Type>::serialize(const Object &object, std::ostream &output)
 {
     output << "{\n";
-    const auto sizeToCheck = object.elements.size() - 1;
+    const auto sizeToCheck = object.size() - 1;
     size_t index = 0;
-    for (const auto &[key, value] : object.elements)
+    for (const auto &[key, value] : object)
     {
         Value::writeQuotedAndEscapedString(output, key);
         output << ": ";
@@ -131,10 +130,10 @@ template <typename Type>
 void Json<Type>::serialize(const Array &array, std::ostream &output)
 {
     output << "[";
-    const auto sizeToCheck = array.elements.size() - 1;
-    for (size_t index = 0; index < array.elements.size(); ++index)
+    const auto sizeToCheck = array.size() - 1;
+    for (size_t index = 0; index < array.size(); ++index)
     {
-        writeValue(output, array.elements[index], false);
+        writeValue(output, array[index], false);
         if (index != sizeToCheck)
         {
             output.put(',');
@@ -162,9 +161,9 @@ bool Json<Type>::write(const std::filesystem::path &path) const
         output << "{\n";
     }
 
-    const auto sizeToCheck = this->elements.size() - 1;
+    const auto sizeToCheck = this->size() - 1;
     size_t index = 0;
-    for (const auto &current : this->elements)
+    for (const auto &current : (*this))
     {
         if constexpr (std::is_base_of_v<Array, Type>)
         {

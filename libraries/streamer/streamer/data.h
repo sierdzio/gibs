@@ -2,7 +2,6 @@
 
 //i library name streamer type static
 
-#include <initializer_list>
 #include <string>
 #include <typeinfo>
 #include <unordered_map>
@@ -38,24 +37,18 @@ struct Value
     const std::type_info &type() const;
 };
 
-struct Object
+struct Object : public std::unordered_map<std::string, Value>
 {
-    Object() = default;
-    Object(std::initializer_list<std::pair<const std::string, Value>> initialValues);
+    using std::unordered_map<std::string, Value>::unordered_map;
 
     void insert(const std::string &key, const Value &value);
     void insert(const std::string &key, Value &&value);
-
-    std::unordered_map<std::string, Value> elements;
 };
 
-struct Array
+struct Array : public std::vector<Value>
 {
-    Array() = default;
-    Array(std::initializer_list<Value> initialValues);
+    using std::vector<Value>::vector;
 
     void append(const Value &value);
     void append(Value &&value);
-
-    std::vector<Value> elements;
 };
