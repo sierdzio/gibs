@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <string>
 
+/*! \brief Generates a configuration file based on the provided input and replacements. */
 class ConfigurationGenerator
 {
   public:
