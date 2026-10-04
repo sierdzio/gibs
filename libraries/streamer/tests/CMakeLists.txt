@@ -6,6 +6,7 @@ set(NAME unit_tests_streamer)
 
 add_executable(${NAME}
     test_json.cpp
+    test_ini.cpp
 )
 
 target_link_libraries(${NAME}
