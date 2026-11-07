@@ -27,9 +27,10 @@ void HelpData::addIntro(const std::string_view &introText)
     intro = introText;
 }
 
-void HelpData::addEntry(const StringViewList &flags, const std::string_view &explanation)
+void HelpData::addEntry(const StringViewList &flags, const std::string_view &explanation,
+                        const StringViewList &extraInfo)
 {
-    entries.push_back({flags, explanation});
+    entries.push_back({flags, explanation, extraInfo});
 }
 
 std::string HelpData::formatted(const unsigned int width) const
@@ -111,7 +112,22 @@ void HelpData::appendText(std::string &string, const HelpEntry &entry,
         currentColumn = indent;
     }
 
-    appendWordsWithWrapping(string, entry.explanation, currentColumn, width);
+    std::string explanation = std::string(entry.explanation);
+
+    if (not entry.extraInfo.empty())
+    {
+        explanation.append(Space);
+        for (const auto &extra : entry.extraInfo)
+        {
+            explanation.append(extra);
+            if (&extra != &entry.extraInfo.back())
+            {
+                explanation.append(FlagSeparator);
+            }
+        }
+    }
+
+    appendWordsWithWrapping(string, explanation, currentColumn, width);
 
     string.push_back('\n');
 }

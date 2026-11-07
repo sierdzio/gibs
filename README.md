@@ -116,8 +116,9 @@ Options:
 
   --no-generate-compile-commands  Do not generate compile_commands.json after building.
 
-  -c, --compiler, --compiler-set  Selects the compiler set to use: gcc, clang, apple-clang. Defaults to apple-clang on macOS and gcc
-                                  elsewhere.
+  -c, --compiler, --compiler-set  Selects the compiler set to use from built-in ones: gcc, clang, apple-clang. Alternatively, a path to an
+                                  ini file with custom configuration can be provided. Defaults to apple-clang on macOS and gcc elsewhere.
+                                  Default compiler sets are searched for in: ~/.config/gibs/compiler-sets
 
   input                           Path to the input file or directory to build. If a directory is provided, gibs will look for files with
                                   supported extensions in it and its subdirectories. If a file is provided, gibs will try to build it. If

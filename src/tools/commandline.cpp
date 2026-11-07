@@ -2,6 +2,7 @@
 #include "helpdata.h"
 #include "parsing/syntax.h"
 #include "processing/compilerset.h"
+#include "standardpaths.h"
 #include "tools.h"
 //i configure file input ../versioninfo.h.in output ../versioninfo.h
 //i replace ${PROJECT_VERSION} with target.gibs.version()
@@ -110,8 +111,9 @@ constexpr std::string_view Compiler = "--compiler";
 constexpr std::string_view CompilerSetOption = "--compiler-set";
 constexpr std::string_view CompilerExplanation =
     "Selects the compiler set to use from built-in ones: gcc, clang, apple-clang. "
-    "Alternatively, a path to an ini file with custom configuration can be provided."
-    "Defaults to apple-clang on macOS and gcc elsewhere.";
+    "Alternatively, a path to an ini file with custom configuration can be provided. "
+    "Defaults to apple-clang on macOS and gcc elsewhere. "
+    "Default compiler sets are searched for in:";
 constexpr std::string_view CompilerOnError =
     "Missing compiler set value. Specify a compiler set after -c, --compiler, or "
     "--compiler-set.";
@@ -268,7 +270,8 @@ std::string CommandLine::helpText() const
         help.addEntry({DryRun}, DryRunExplanation);
         help.addEntry({LogProcessOutput}, LogProcessOutputExplanation);
         help.addEntry({NoGenerateCompileCommands}, NoGenerateCompileCommandsExplanation);
-        help.addEntry({C, Compiler, CompilerSetOption}, CompilerExplanation);
+        help.addEntry({C, Compiler, CompilerSetOption}, CompilerExplanation,
+                      StandardPaths::compilerSetsPaths());
         help.addEntry({Input}, InputExplanation);
         help.addEntry({OtherArguments}, OtherArgumentsExplanation);
         break;

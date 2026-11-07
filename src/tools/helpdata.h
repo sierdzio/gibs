@@ -6,13 +6,15 @@ struct HelpEntry
 {
     StringViewList flags;
     std::string_view explanation;
+    StringViewList extraInfo;
 };
 
 class HelpData
 {
   public:
     void addIntro(const std::string_view &introText);
-    void addEntry(const StringViewList &flags, const std::string_view &explanation);
+    void addEntry(const StringViewList &flags, const std::string_view &explanation,
+                  const StringViewList &extraInfo = {});
     std::string formatted(const unsigned int width) const;
 
   private:

@@ -5,9 +5,13 @@ set(gibs_srcs
     exceptions/emptylinkobject.cpp exceptions/emptylinkobject.h
     exceptions/targetidtypeexception.cpp exceptions/targetidtypeexception.h
     exceptions/processexception.cpp exceptions/processexception.h
+    tools/apperror.h
+    tools/argumentslist.h
     tools/commandline.cpp tools/commandline.h
-    tools/tools.cpp tools/tools.h
     tools/helpdata.cpp tools/helpdata.h
+    tools/standardpaths.cpp tools/standardpaths.h
+    tools/stringlist.h
+    tools/tools.cpp tools/tools.h
     parsing/syntax.cpp parsing/syntax.h
     parsing/parser.cpp parsing/parser.h
     parsing/paths.cpp parsing/paths.h
