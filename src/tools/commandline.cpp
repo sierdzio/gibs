@@ -113,7 +113,7 @@ constexpr std::string_view CompilerExplanation =
     "Selects the compiler set to use from built-in ones: gcc, clang, apple-clang. "
     "Alternatively, a path to an ini file with custom configuration can be provided. "
     "Defaults to apple-clang on macOS and gcc elsewhere. "
-    "Default compiler sets are searched for in:";
+    "Default compiler sets are loaded from or created in:";
 constexpr std::string_view CompilerOnError =
     "Missing compiler set value. Specify a compiler set after -c, --compiler, or "
     "--compiler-set.";

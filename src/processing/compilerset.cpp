@@ -1,10 +1,21 @@
 #include "compilerset.h"
+#include "tools/standardpaths.h"
 #include "tools/tools.h"
 
 #include <logger/log.h>
 
 //i include libraries/streamer
 #include <streamer/ini.h>
+
+#include <algorithm>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <map>
+#include <mutex>
+#include <optional>
+#include <stdexcept>
+#include <vector>
 
 namespace
 {
@@ -14,71 +25,277 @@ constexpr std::string_view Compiler = "compiler";
 constexpr std::string_view Archiver = "archiver";
 constexpr std::string_view Ranlib = "ranlib";
 constexpr std::string_view Execution = "execution";
-} //namespace
 
-CompilerSet CompilerSet::defaultForPlatform()
+struct CompilerSetCache
+{
+    std::mutex mutex;
+    std::mutex initializationMutex;
+    std::map<std::string, CompilerSet> sets;
+    bool initialized = false;
+};
+
+CompilerSetCache &compilerSetCache()
+{
+    static CompilerSetCache cache;
+    return cache;
+}
+
+std::optional<CompilerSet> readCompilerSet(const std::filesystem::path &path)
+{
+    Ini<Object> ini;
+    if (not ini.read(path))
+    {
+        return std::nullopt;
+    }
+
+    for (const auto &[section, entry] : ini)
+    {
+        if (section != SectionName)
+        {
+            continue;
+        }
+
+        const auto &object = entry.asObject();
+        if (not object.contains(Name.data()) or not object.contains(Compiler.data()) or
+            not object.contains(Archiver.data()) or not object.contains(Ranlib.data()) or
+            not object.contains(Execution.data()))
+        {
+            Log::error("Compiler set INI file is missing required entries:",
+                       path.string());
+            return std::nullopt;
+        }
+
+        CompilerSet set;
+        set.name = object.at(Name.data()).toString();
+        set.compilerCommand = object.at(Compiler.data()).toString();
+        set.archiverCommand = object.at(Archiver.data()).toString();
+        set.ranlibCommand = object.at(Ranlib.data()).toString();
+        const auto &execution = object.at(Execution.data()).toString();
+        set.commandExecution = execution == "Parallel"
+                                   ? CompilerSet::CommandExecution::Parallel
+                                   : CompilerSet::CommandExecution::Sequential;
+        return set;
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::filesystem::path> expandHomeDirectory(std::string_view path)
+{
+    if (not path.starts_with("~/"))
+    {
+        return std::filesystem::path(path);
+    }
+
+#if defined(_WIN32)
+    const auto *home = std::getenv("USERPROFILE");
+#else
+    const auto *home = std::getenv("HOME");
+#endif
+    if (home == nullptr)
+    {
+        return std::nullopt;
+    }
+
+    return std::filesystem::path(home) / path.substr(2);
+}
+
+std::string_view platformDefaultName()
 {
 #ifdef __APPLE__
-    return {"apple-clang", "clang++", "ar", "ranlib",
-            CompilerSet::CommandExecution::Sequential};
+    return "apple-clang";
 #else
-    return {"gcc", "g++", "ar", "ranlib", CompilerSet::CommandExecution::Sequential};
+    return "gcc";
 #endif
 }
 
-CompilerSet CompilerSet::fromName(const std::string &name)
+std::vector<CompilerSet> builtInCompilerSets()
 {
-    const auto normalized = Tools::toLower(name);
+    return {
+        {"gcc", "g++", "ar", "ranlib", CompilerSet::CommandExecution::Sequential},
+        {"clang", "clang++", "ar", "ranlib", CompilerSet::CommandExecution::Sequential},
+        {"apple-clang", "clang++", "ar", "ranlib",
+         CompilerSet::CommandExecution::Sequential},
+    };
+}
 
-    if (normalized == "gcc")
+void writeDefaultCompilerSet(const std::filesystem::path &directory,
+                             const CompilerSet &set)
+{
+    const auto path = directory / (set.name + ".ini");
+    std::error_code error;
+    if (std::filesystem::exists(path, error))
     {
-        return {"gcc", "g++", "ar", "ranlib", CompilerSet::CommandExecution::Sequential};
+        return;
+    }
+    if (error)
+    {
+        Log::warning("Could not check default compiler set file:", path.string(),
+                     error.message());
+        return;
     }
 
-    if (normalized == "clang")
+    std::ofstream output(path);
+    if (not output)
     {
-        return {"clang", "clang++", "ar", "ranlib",
-                CompilerSet::CommandExecution::Sequential};
+        Log::error("Could not create default compiler set file:", path.string());
+        return;
     }
 
-    if (normalized == "apple-clang")
+    output << "[compiler-set]\n"
+           << "name = " << set.name << '\n'
+           << "compiler = " << set.compilerCommand << '\n'
+           << "archiver = " << set.archiverCommand << '\n'
+           << "ranlib = " << set.ranlibCommand << '\n'
+           << "execution = "
+           << (set.commandExecution == CompilerSet::CommandExecution::Parallel
+                   ? "Parallel"
+                   : "Sequential")
+           << '\n';
+    if (not output)
     {
-        return {"apple-clang", "clang++", "ar", "ranlib",
-                CompilerSet::CommandExecution::Sequential};
+        Log::error("Could not write default compiler set file:", path.string());
     }
+}
 
-    if (std::filesystem::exists(name))
+void ensureCompilerSetsInitialized()
+{
+    auto &cache = compilerSetCache();
     {
-        Ini<Object> ini;
-        if (not ini.read(name))
+        const std::lock_guard lock(cache.mutex);
+        if (cache.initialized)
         {
-            Log::error("Failed to read compiler set ini file:", name);
-            // TODO: throw instead
-            return {};
+            return;
+        }
+    }
+
+    CompilerSet::initialize();
+}
+} //namespace
+
+void CompilerSet::initialize()
+{
+    auto &cache = compilerSetCache();
+    const std::lock_guard initializationLock(cache.initializationMutex);
+    std::map<std::string, CompilerSet> sets;
+
+    for (const auto searchPath : StandardPaths::compilerSetsPaths())
+    {
+        const auto expandedDirectory = expandHomeDirectory(searchPath);
+        if (not expandedDirectory.has_value())
+        {
+            Log::warning("Could not resolve compiler set directory:", searchPath);
+            continue;
+        }
+        const auto &directory = *expandedDirectory;
+
+        std::error_code error;
+        std::filesystem::create_directories(directory, error);
+        if (error)
+        {
+            Log::error("Could not create compiler set directory:", directory.string(),
+                       error.message());
+            continue;
         }
 
-        for (const auto &[section, entry] : ini)
+        for (const auto &set : builtInCompilerSets())
         {
-            Log::information("INI section:", section);
+            writeDefaultCompilerSet(directory, set);
+        }
 
-            if (section != SectionName)
+        std::vector<std::filesystem::path> paths;
+        for (std::filesystem::directory_iterator entry(directory, error), end;
+             not error and entry != end; entry.increment(error))
+        {
+            if (entry->is_regular_file(error) and entry->path().extension() == ".ini")
+            {
+                paths.push_back(entry->path());
+            }
+            if (error)
+            {
+                Log::warning("Could not inspect compiler set file in:", directory.string(),
+                             error.message());
+                error.clear();
+            }
+        }
+        if (error)
+        {
+            Log::warning("Could not read compiler set directory:", directory.string(),
+                         error.message());
+        }
+
+        std::sort(paths.begin(), paths.end());
+        for (const auto &path : paths)
+        {
+            const auto set = readCompilerSet(path);
+            if (not set.has_value() or set->name.empty())
             {
                 continue;
             }
 
-            const auto &object = entry.asObject();
+            const auto key = Tools::toLower(set->name);
+            if (sets.contains(key))
+            {
+                Log::warning("Ignoring duplicate compiler set name:", set->name,
+                             "from", path.string());
+                continue;
+            }
+            sets.emplace(key, *set);
+        }
+    }
 
-            CompilerSet set;
-            set.name = object.at(Name.data()).toString();
-            set.compilerCommand = object.at(Compiler.data()).toString();
-            set.archiverCommand = object.at(Archiver.data()).toString();
-            set.ranlibCommand = object.at(Ranlib.data()).toString();
-            const auto &execution = object.at(Execution.data()).toString();
-            set.commandExecution = execution == "Parallel"
-                                       ? CompilerSet::CommandExecution::Parallel
-                                       : CompilerSet::CommandExecution::Sequential;
+    for (const auto &set : builtInCompilerSets())
+    {
+        sets.try_emplace(Tools::toLower(set.name), set);
+    }
 
-            return set;
+    const std::lock_guard lock(cache.mutex);
+    cache.sets = std::move(sets);
+    cache.initialized = true;
+}
+
+CompilerSet CompilerSet::defaultForPlatform()
+{
+    ensureCompilerSetsInitialized();
+
+    auto &cache = compilerSetCache();
+    const std::lock_guard lock(cache.mutex);
+    const auto set = cache.sets.find(std::string(platformDefaultName()));
+    if (set != cache.sets.end())
+    {
+        return set->second;
+    }
+
+    for (const auto &builtIn : builtInCompilerSets())
+    {
+        if (builtIn.name == platformDefaultName())
+        {
+            return builtIn;
+        }
+    }
+    throw std::logic_error("Platform default compiler set is not defined");
+}
+
+CompilerSet CompilerSet::fromName(const std::string &name)
+{
+    ensureCompilerSetsInitialized();
+    const auto normalized = Tools::toLower(name);
+
+    auto &cache = compilerSetCache();
+    {
+        const std::lock_guard lock(cache.mutex);
+        const auto cached = cache.sets.find(normalized);
+        if (cached != cache.sets.end())
+        {
+            return cached->second;
+        }
+    }
+
+    if (std::filesystem::exists(name))
+    {
+        if (const auto set = readCompilerSet(name))
+        {
+            return *set;
         }
     }
 
@@ -87,6 +304,9 @@ CompilerSet CompilerSet::fromName(const std::string &name)
 
 bool CompilerSet::isKnownName(const std::string &name)
 {
+    ensureCompilerSetsInitialized();
     const auto normalized = Tools::toLower(name);
-    return normalized == "gcc" or normalized == "clang" or normalized == "apple-clang";
+    auto &cache = compilerSetCache();
+    const std::lock_guard lock(cache.mutex);
+    return cache.sets.contains(normalized);
 }

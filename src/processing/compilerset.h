@@ -16,6 +16,7 @@ struct CompilerSet
     std::string ranlibCommand;
     CommandExecution commandExecution = CommandExecution::Sequential;
 
+    static void initialize();
     static CompilerSet defaultForPlatform();
     /*!
      * Returns a CompilerSet based on provided \a name which can be one of the built-in

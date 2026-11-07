@@ -4,10 +4,10 @@
 
 StringViewList StandardPaths::compilerSetsPaths()
 {
-#ifdef __unix__
-    return {"~/.config/gibs/compiler-sets"};
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
     return {"~/Library/Application Support/gibs/compiler-sets"};
+#elif defined(__unix__)
+    return {"~/.config/gibs/compiler-sets"};
 #elif defined(_WIN32)
     // TODO: Use SHGetKnownFolderPath(FOLDERID_ProgramData) instead of hardcoding the path
     return {"C:\\ProgramData\\gibs\\compiler-sets"};

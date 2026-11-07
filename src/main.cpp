@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
 {
     const auto begin = std::chrono::steady_clock::now();
     const CommandLine cmd(CommandLine::toStringList(argc, argv));
+    CompilerSet::initialize();
 
     try
     {
