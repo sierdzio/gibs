@@ -4,6 +4,7 @@ add_executable(unit_tests_gibs
     parsing/test_syntax.cpp
     parsing/test_parser.cpp
     parsing/test_paths.cpp
+    processing/test_compilerset.cpp
     processing/test_tool.cpp
     processing/test_configuration.cpp
     project/test_targetid.cpp

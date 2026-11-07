@@ -26,7 +26,7 @@ TEST(systemprocess, defaults)
     EXPECT_EQ(process.result().status, Exit::Status::FailedToExecute);
 }
 
-TEST(systemprocess, printf)
+TEST(systemprocess, real_process)
 {
     SystemProcess process;
     process.setExecutable("printf");
