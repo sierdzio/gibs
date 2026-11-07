@@ -8,10 +8,12 @@
 #include <streamer/ini.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <stdexcept>
@@ -88,16 +90,27 @@ std::optional<std::filesystem::path> expandHomeDirectory(std::string_view path)
     }
 
 #if defined(_WIN32)
-    const auto *home = std::getenv("USERPROFILE");
+    char *homeValue = nullptr;
+    std::size_t homeValueSize = 0;
+    if (_dupenv_s(&homeValue, &homeValueSize, "USERPROFILE") != 0 or
+        homeValue == nullptr)
+    {
+        return std::nullopt;
+    }
+    const std::unique_ptr<char, decltype(&std::free)> home(homeValue, &std::free);
 #else
     const auto *home = std::getenv("HOME");
-#endif
     if (home == nullptr)
     {
         return std::nullopt;
     }
+#endif
 
+#if defined(_WIN32)
+    return std::filesystem::path(home.get()) / path.substr(2);
+#else
     return std::filesystem::path(home) / path.substr(2);
+#endif
 }
 
 std::string_view platformDefaultName()
