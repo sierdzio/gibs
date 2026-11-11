@@ -1,9 +1,8 @@
 #include "stringlist.h"
 #include <string_view>
 
-class StandardPaths
+namespace StandardPaths
 {
-  public:
-    static std::string_view configurationPath();
-    static StringViewList compilerSetsPaths();
-};
+std::string_view configurationPath();
+StringViewList compilerSetsPaths();
+}; //namespace StandardPaths
