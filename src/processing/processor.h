@@ -46,6 +46,8 @@ class Processor
 
     std::size_t cachedCommandCount() const;
     std::size_t uncachedCommandCount() const;
+    bool isCommandCached(const CommandId id) const;
+    bool isCommandExecuted(const CommandId id) const;
     const BuildCache &buildCache() const;
 
     void checkProcessStates(); // Made public for Project to update futures
@@ -57,6 +59,8 @@ class Processor
     CompileCommands _compileCommands;
     std::size_t _cachedCommandCount = 0;
     std::size_t _uncachedCommandCount = 0;
+    std::unordered_set<CommandId> _cachedCommandIds;
+    std::unordered_set<CommandId> _executedCommandIds;
     bool _dryRun = false;
     bool _logProcessOutput = false;
     bool _generateCompileCommands = true;

@@ -112,4 +112,28 @@ TEST_F(BuildCacheTest, ProcessorReportsCachedAndUncachedCommands)
 
     EXPECT_EQ(processor.cachedCommandCount(), 1u);
     EXPECT_EQ(processor.uncachedCommandCount(), 0u);
+    EXPECT_TRUE(processor.isCommandCached(cached.id()));
+    EXPECT_FALSE(processor.isCommandExecuted(cached.id()));
+}
+
+TEST_F(BuildCacheTest, ProcessorReportsExecutedCommand)
+{
+    Processor processor;
+    processor.setDryRun(true);
+
+    Command source;
+    source.append("source");
+    source.append("main.cpp");
+    Paths paths;
+    paths.workingDirectory = _directory;
+    paths.buildDirectory = _directory;
+    source.finalize({}, paths);
+
+    processor.schedule(source);
+    processor.waitForFinished();
+
+    EXPECT_EQ(processor.cachedCommandCount(), 0u);
+    EXPECT_EQ(processor.uncachedCommandCount(), 1u);
+    EXPECT_FALSE(processor.isCommandCached(source.id()));
+    EXPECT_TRUE(processor.isCommandExecuted(source.id()));
 }

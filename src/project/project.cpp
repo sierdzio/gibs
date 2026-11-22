@@ -282,10 +282,8 @@ void Project::logCommandTree() const
         return;
     }
 
-    std::string result;
-
-    result.append("All project commands:");
-    result.append(Nl);
+    Log::information(Log::Color(Log::Standard::Foreground::Green),
+                     "All project commands:");
 
     // Group link commands (libraries/executables) and their source files by target
     auto keyOf = [](const TargetId &t)
@@ -356,7 +354,7 @@ void Project::logCommandTree() const
 
     for (const auto *link : linkCommands)
     {
-        logCommand(depth(*link), *link, &result);
+        logCommand(depth(*link), *link);
 
         // Print source files that belong to this target
         const auto key = keyOf(link->targetId);
@@ -366,7 +364,7 @@ void Project::logCommandTree() const
             sortByWhole(files);
             for (const auto *fileCmd : files)
             {
-                logCommand(depth(*fileCmd), *fileCmd, &result);
+                logCommand(depth(*fileCmd), *fileCmd);
             }
         }
     }
@@ -377,11 +375,9 @@ void Project::logCommandTree() const
         sortByWhole(unassignedSources);
         for (const auto *fileCmd : unassignedSources)
         {
-            logCommand(depth(*fileCmd), *fileCmd, &result);
+            logCommand(depth(*fileCmd), *fileCmd);
         }
     }
-
-    Log::information(Log::Color(Log::Standard::Foreground::Green), result);
 }
 
 void Project::generateDepths()
@@ -411,31 +407,46 @@ int Project::depth(const Command &command) const
     return _commandDepths.at(command.id());
 }
 
-void Project::logCommand(const int depth, const Command &command,
-                         std::string *string) const
+void Project::logCommand(const int depth, const Command &command) const
 {
+    std::string result;
+
     if (depth > 0)
     {
-        string->append(Vertical);
+        result.append(Vertical);
     }
 
     for (int i = 0; i < depth; ++i)
     {
-        string->append(Space + Space);
+        result.append(Space + Space);
     }
 
-    string->append(Branch + command.whole());
+    result.append(Branch);
+
+    Log::Color color = Log::Standard::Foreground::Green;
+
+    if (_processor->isCommandCached(command.id()))
+    {
+        result.append(" [cached] ");
+        color = Log::Standard::Foreground::BrightGreen;
+    }
+    else if (_processor->isCommandExecuted(command.id()))
+    {
+        result.append(" [executed] ");
+    }
+
+    result.append(command.whole());
 
     if (not command.object().defines.empty())
     {
-        string->append(" [defines:");
+        result.append(" [defines:");
         for (const auto &define : command.object().defines)
         {
-            string->append(" ");
-            string->append(define);
+            result.append(" ");
+            result.append(define);
         }
-        string->append("]");
+        result.append("]");
     }
 
-    string->append(Nl);
+    Log::information(color, result);
 }

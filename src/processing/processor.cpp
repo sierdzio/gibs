@@ -98,9 +98,11 @@ std::shared_future<void> Processor::schedule(const Command &command)
         if (not rebuiltDependency && _buildCache.isTargetUpToDate(output))
         {
             Log::verbose("Skipping target; output is up to date:", output.string());
+            _cachedCommandIds.insert(command.id());
             return completionForSkippedCommand();
         }
         ++_uncachedCommandCount;
+        _executedCommandIds.insert(command.id());
     }
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
@@ -140,9 +142,11 @@ std::shared_future<void> Processor::schedule(const Command &command)
         if (_buildCache.isSourceUpToDate(source, output))
         {
             Log::verbose("Skipping source; object is up to date:", source.string());
+            _cachedCommandIds.insert(command.id());
             return completionForSkippedCommand();
         }
         ++_uncachedCommandCount;
+        _executedCommandIds.insert(command.id());
     }
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
@@ -190,6 +194,8 @@ std::shared_future<void> Processor::schedule(const Command &command)
         return future;
     case Syntax::Command::Tool:
         Log::debug("Processing:", typeString, "command:", command.whole());
+        ++_uncachedCommandCount;
+        _executedCommandIds.insert(command.id());
         {
             CommandData toolCommand;
             toolCommand.command = command.tool().executable;
@@ -311,6 +317,16 @@ std::size_t Processor::cachedCommandCount() const
 std::size_t Processor::uncachedCommandCount() const
 {
     return _uncachedCommandCount;
+}
+
+bool Processor::isCommandCached(const CommandId id) const
+{
+    return _cachedCommandIds.contains(id);
+}
+
+bool Processor::isCommandExecuted(const CommandId id) const
+{
+    return _executedCommandIds.contains(id);
 }
 
 const BuildCache &Processor::buildCache() const

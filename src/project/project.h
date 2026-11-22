@@ -39,7 +39,7 @@ class Project
   private:
     void generateDepths();
     int depth(const Command &command) const;
-    void logCommand(const int depth, const Command &command, std::string *string) const;
+    void logCommand(const int depth, const Command &command) const;
 
     std::unordered_map<CommandId, int> _commandDepths;
     std::unordered_map<CommandId, std::shared_future<void>> _commandCompletionFutures;

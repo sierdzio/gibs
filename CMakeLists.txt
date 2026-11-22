@@ -4,6 +4,8 @@ project(gibs VERSION 0.3.0
         DESCRIPTION "gibs - generally-in-source build system"
         LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 option(SYNCHRONISE_LOG_MESSAGES "Use mutex to make sure log messages are not getting mixed between threads" OFF)
 option(BUILD_TESTS "Build gibs test suite" OFF)
 option(BUILD_SAMPLES "Build gibs samples" OFF)

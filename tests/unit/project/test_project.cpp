@@ -358,3 +358,19 @@ TEST_F(ProjectDependencyTest, LogCommandTreeShowsDefines)
     const auto output = buffer.str();
     EXPECT_NE(output.find("[defines: DEBUG MY_FEATURE]"), std::string::npos);
 }
+
+TEST_F(ProjectDependencyTest, LogCommandTreeShowsExecutedStatus)
+{
+    _project->addCommand(makeSourceCommand("main.cpp"));
+
+    Log::setLogLevel(Log::Type::Information);
+    Log::setUseColorfulLogs(false);
+
+    std::ostringstream buffer;
+    const auto previous = std::cout.rdbuf(buffer.rdbuf());
+    _project->logCommandTree();
+    std::cout.rdbuf(previous);
+
+    const auto output = buffer.str();
+    EXPECT_NE(output.find("[executed]"), std::string::npos);
+}
