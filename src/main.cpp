@@ -163,8 +163,16 @@ int main(int argc, char *argv[])
         std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 
     Log::information("gibs took:", duration, "ms of your time");
+    const auto cachedCount = processor->cachedCommandCount();
+    const auto uncachedCount = processor->uncachedCommandCount();
+    const auto totalCount = cachedCount + uncachedCount;
+    const auto percentage =
+        totalCount > 0
+            ? (static_cast<float>(cachedCount) / static_cast<float>(totalCount)) * 100.0
+            : 0.0;
     Log::information("gibs cache:", processor->cachedCommandCount(), "commands skipped,",
-                     processor->uncachedCommandCount(), "commands preformed");
+                     processor->uncachedCommandCount(), "commands performed (skipped",
+                     percentage, "% of total)");
     Log::debug("gibs cache location:", processor->buildCache().filePath().string());
 
     if (result == 0)
