@@ -18,7 +18,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -1455,6 +1457,12 @@ void Parser::parseTestProject(const std::filesystem::path &directory,
     if (useGtest)
     {
         const auto generatedMain = _paths.buildDirectory / "gtest_main.cpp";
+        constexpr std::string_view generatedMainContents =
+            "#include <gtest/gtest.h>\n"
+            "int main(int argc, char **argv) {\n"
+            "    ::testing::InitGoogleTest(&argc, argv);\n"
+            "    return RUN_ALL_TESTS();\n"
+            "}\n";
         std::error_code directoryError;
         std::filesystem::create_directories(generatedMain.parent_path(), directoryError);
         if (directoryError)
@@ -1465,19 +1473,56 @@ void Parser::parseTestProject(const std::filesystem::path &directory,
             return;
         }
 
-        std::ofstream output(generatedMain);
-        if (not output.is_open())
+        bool writeGeneratedMain = true;
+        std::error_code fileError;
+        const bool generatedMainExists =
+            std::filesystem::exists(generatedMain, fileError);
+        if (fileError)
         {
-            Log::error("Could not create generated GTest main:", generatedMain);
+            Log::error("Could not inspect generated GTest main:", generatedMain);
             _status = AppError::ConfigurationError;
             return;
         }
-        output << "#include <gtest/gtest.h>\n"
-                  "int main(int argc, char **argv) {\n"
-                  "    ::testing::InitGoogleTest(&argc, argv);\n"
-                  "    return RUN_ALL_TESTS();\n"
-                  "}\n";
-        output.close();
+
+        if (generatedMainExists)
+        {
+            std::ifstream input(generatedMain);
+            if (not input.is_open())
+            {
+                Log::error("Could not read generated GTest main:", generatedMain);
+                _status = AppError::ConfigurationError;
+                return;
+            }
+
+            const std::string existingContents{std::istreambuf_iterator<char>{input},
+                                               std::istreambuf_iterator<char>{}};
+            if (input.bad())
+            {
+                Log::error("Could not read generated GTest main:", generatedMain);
+                _status = AppError::ConfigurationError;
+                return;
+            }
+            writeGeneratedMain = existingContents != generatedMainContents;
+        }
+
+        if (writeGeneratedMain)
+        {
+            std::ofstream output(generatedMain);
+            if (not output.is_open())
+            {
+                Log::error("Could not create generated GTest main:", generatedMain);
+                _status = AppError::ConfigurationError;
+                return;
+            }
+            output << generatedMainContents;
+            output.close();
+            if (not output)
+            {
+                Log::error("Could not write generated GTest main:", generatedMain);
+                _status = AppError::ConfigurationError;
+                return;
+            }
+        }
 
         auto &testLink = _project->commandRef(linkId);
         testLink.addLinkObject("-lgtest");

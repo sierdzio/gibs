@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -271,4 +272,58 @@ TEST(parsing, ParserReadsQuotedTestDirectory)
 
     processor->waitForFinished();
     std::filesystem::remove_all(directory);
+}
+
+TEST(parsing, ParserDoesNotRewriteUnchangedGeneratedGTestMain)
+{
+    Log::setLogLevel(Log::Type::Silent);
+
+    const auto testName = "gtest-cache-" +
+                          std::to_string(testing::UnitTest::GetInstance()->random_seed());
+    const auto directory = std::filesystem::temp_directory_path() / testName;
+    const auto suiteDirectory = directory / testName;
+    std::filesystem::create_directories(suiteDirectory);
+    {
+        std::ofstream projectFile(directory / "main.gibs");
+        projectFile << "tests directory " << testName << " gtest\n";
+        std::ofstream testSource(suiteDirectory / "test.cpp");
+        testSource << "TEST(GeneratedMain, Exists) {}\n";
+    }
+
+    auto firstProcessor = std::make_shared<Processor>();
+    firstProcessor->setDryRun(true);
+    auto firstProject = std::make_shared<Project>(firstProcessor);
+    firstProject->setTestExecution(true, false);
+    Parser firstParser(directory / "main.gibs", false, {}, firstProject);
+    ASSERT_EQ(firstParser.status(), AppError::NoError);
+    firstParser.parse();
+
+    const auto generatedMainCommand =
+        std::find_if(firstProject->commands.begin(), firstProject->commands.end(),
+                     [](const Command &command)
+                     {
+                         return command.type == Syntax::Command::Source &&
+                                command.object().sourcePath.filename() == "gtest_main.cpp";
+                     });
+    ASSERT_NE(generatedMainCommand, firstProject->commands.end());
+    const auto generatedMain = generatedMainCommand->object().sourcePath;
+    ASSERT_TRUE(std::filesystem::exists(generatedMain));
+
+    const auto preservedTime =
+        std::filesystem::file_time_type::clock::now() - std::chrono::hours(24);
+    std::filesystem::last_write_time(generatedMain, preservedTime);
+
+    auto secondProcessor = std::make_shared<Processor>();
+    secondProcessor->setDryRun(true);
+    auto secondProject = std::make_shared<Project>(secondProcessor);
+    secondProject->setTestExecution(true, false);
+    Parser secondParser(directory / "main.gibs", false, {}, secondProject);
+    ASSERT_EQ(secondParser.status(), AppError::NoError);
+    secondParser.parse();
+
+    EXPECT_EQ(std::filesystem::last_write_time(generatedMain), preservedTime);
+
+    std::error_code error;
+    std::filesystem::remove_all(generatedMain.parent_path(), error);
+    std::filesystem::remove_all(directory, error);
 }
