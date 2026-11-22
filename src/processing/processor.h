@@ -4,11 +4,13 @@
 #include "compilerset.h"
 #include "project/command.h"
 #include "tool.h"
+#include "buildcache.h"
 
 #include <future>
 #include <memory>
 //i include libraries/process
 #include <process/processinterface.h>
+#include <unordered_set>
 #include <vector>
 
 struct RunningCommand
@@ -21,6 +23,8 @@ struct RunningCommand
         CompilerSet::CommandExecution::Sequential;
     std::string commandMeta;
     std::shared_ptr<std::promise<void>> completion;
+    std::filesystem::path sourcePath;
+    std::filesystem::path outputPath;
 };
 
 class Processor
@@ -38,10 +42,13 @@ class Processor
     bool isLogProcessOutput() const;
     void setGenerateCompileCommands(const bool enabled);
     void setCompilerSet(const CompilerSet &compilerSet);
+    void setBuildDirectory(const std::filesystem::path &buildDirectory);
 
     void checkProcessStates(); // Made public for Project to update futures
 
     std::vector<RunningCommand> _runningCommands;
+    std::unordered_set<std::string> _rebuiltOutputs;
+    BuildCache _buildCache;
     bool _dryRun = false;
     bool _logProcessOutput = false;
     bool _generateCompileCommands = true;

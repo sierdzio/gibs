@@ -91,7 +91,7 @@ Options:
   -d, --debug                     Compile in debug mode. By default, gibs compiles release binaries.
 
   -q, --quick                     'Convention over configuration' mode - parse files only up to first line of 'concrete code'. Do not check
-                                  file checksums when doing incremental builds.
+                                  incremental build cache checks.
 
   --verbose                       Sets log level to 'Verbose'. If more than one log level is specified, or log level is combined with
                                   --verbose, only the last flag is taken nto account
@@ -134,6 +134,11 @@ Gibs builds in *release* mode by default. If you want to compile a debug build,
 use `--debug` or `-d`.
 
 ### Path config / cache
+
+Gibs stores incremental-build state in `.gibs.cache` inside the build directory.
+The cache records source and output paths with their modification timestamps.
+Unchanged sources with existing object files, and targets with unchanged
+dependencies and existing outputs, are skipped on subsequent builds.
 
 ***Note: this is not implemented yet in C++ version***
 

@@ -101,6 +101,11 @@ void Project::addTestRunner(const std::filesystem::path &path)
     _testRunners.emplace_back(path);
 }
 
+void Project::setBuildDirectory(const std::filesystem::path &buildDirectory)
+{
+    _processor->setBuildDirectory(buildDirectory);
+}
+
 void Project::addTestTarget(const CommandId id)
 {
     _testTargets.insert(id);

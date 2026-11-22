@@ -58,7 +58,7 @@ constexpr std::string_view Q = "-q";
 constexpr std::string_view Quick = "--quick";
 constexpr std::string_view QuickExplanation =
     "'Convention over configuration' mode - parse files only up to first line of "
-    "'concrete code'. Do not check file checksums when doing incremental builds.";
+    "'concrete code'.";
 
 constexpr std::string_view Verbose = "--verbose";
 constexpr std::string_view VerboseExplanation =

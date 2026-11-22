@@ -20,6 +20,7 @@ set(gibs_srcs
     project/command.cpp project/command.h
     project/targetid.cpp project/targetid.h
     processing/compilecommands.cpp processing/compilecommands.h
+    processing/buildcache.cpp processing/buildcache.h
     processing/tool.h
     processing/compiler.cpp processing/compiler.h
     processing/compilerset.cpp processing/compilerset.h

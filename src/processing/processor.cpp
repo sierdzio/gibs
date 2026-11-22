@@ -11,11 +11,13 @@
 #include <process/dryrunprocess.h>
 #include <process/process.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <future>
 #include <memory>
 #include <string>
 #include <thread>
+#include <unordered_set>
 
 using namespace std::chrono_literals;
 
@@ -30,6 +32,12 @@ std::shared_future<void> Processor::schedule(const Command &command)
     std::vector<CommandData> pendingCommands;
     const auto sequential =
         _compilerSet.commandExecution == CompilerSet::CommandExecution::Sequential;
+
+    const auto completionForSkippedCommand = [&]() -> std::shared_future<void>
+    {
+        completion->set_value();
+        return future;
+    };
 
     const auto createProcess =
         [&](const CommandData &toolCommand) -> std::unique_ptr<ProcessInterface>
@@ -58,6 +66,40 @@ std::shared_future<void> Processor::schedule(const Command &command)
     {
     case Syntax::Command::Library:
     case Syntax::Command::Executable:
+    {
+        const auto output = command.type == Syntax::Command::Executable
+                                ? command.executable().outputPath
+                                : std::filesystem::path(command.object().name);
+        std::vector<std::string> dependencies;
+        if (command.type == Syntax::Command::Executable)
+        {
+            dependencies.insert(dependencies.end(), command.executable().objects.begin(),
+                                command.executable().objects.end());
+            dependencies.insert(dependencies.end(),
+                                command.executable().libraries.begin(),
+                                command.executable().libraries.end());
+        }
+        else
+        {
+            dependencies.insert(dependencies.end(), command.library().objects.begin(),
+                                command.library().objects.end());
+        }
+
+        const bool rebuiltDependency = std::any_of(
+            dependencies.begin(), dependencies.end(),
+            [&](const std::string &dependency)
+            {
+                std::error_code error;
+                auto path =
+                    std::filesystem::absolute(dependency, error).lexically_normal();
+                return _rebuiltOutputs.contains(path.string());
+            });
+        if (not rebuiltDependency && _buildCache.isTargetUpToDate(output))
+        {
+            Log::verbose("Skipping target; output is up to date:", output.string());
+            return completionForSkippedCommand();
+        }
+    }
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
             const Linker tool(command, _compilerSet);
@@ -85,6 +127,20 @@ std::shared_future<void> Processor::schedule(const Command &command)
         }
         break;
     case Syntax::Command::Source:
+    {
+        const auto &object = command.object();
+        const auto source =
+            object.sourcePath.empty()
+                ? std::filesystem::absolute(std::filesystem::path(object.source))
+                      .lexically_normal()
+                : object.sourcePath.lexically_normal();
+        const auto output = std::filesystem::path(object.name);
+        if (_buildCache.isSourceUpToDate(source, output))
+        {
+            Log::verbose("Skipping source; object is up to date:", source.string());
+            return completionForSkippedCommand();
+        }
+    }
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
             const Compiler tool(command, _compilerSet);
@@ -167,7 +223,19 @@ std::shared_future<void> Processor::schedule(const Command &command)
     {
         _runningCommands.push_back(
             {command.id(), std::move(processes), std::move(pendingCommands), 0,
-             _compilerSet.commandExecution, commandMeta, completion});
+             _compilerSet.commandExecution, commandMeta, completion,
+             command.type == Syntax::Command::Source
+                 ? (command.object().sourcePath.empty()
+                        ? std::filesystem::absolute(
+                              std::filesystem::path(command.object().source))
+                              .lexically_normal()
+                        : command.object().sourcePath.lexically_normal())
+                 : std::filesystem::path{},
+             command.type == Syntax::Command::Source
+                 ? std::filesystem::path(command.object().name)
+             : command.type == Syntax::Command::Executable
+                 ? command.executable().outputPath
+                 : std::filesystem::path(command.object().name)});
     }
 
     return future;
@@ -193,6 +261,8 @@ void Processor::waitForFinished()
     {
         Log::error("Failed to write compile_commands.json");
     }
+
+    _buildCache.save();
 }
 
 void Processor::setDryRun(const bool dryRun)
@@ -225,6 +295,11 @@ void Processor::setCompilerSet(const CompilerSet &compilerSet)
     _compilerSet = compilerSet;
 }
 
+void Processor::setBuildDirectory(const std::filesystem::path &buildDirectory)
+{
+    _buildCache.setDirectory(buildDirectory);
+}
+
 void Processor::checkProcessStates()
 {
     for (size_t index = 0; index < _runningCommands.size(); /* nothing */)
@@ -251,6 +326,30 @@ void Processor::checkProcessStates()
                         "Process finished successfully for command id:",
                         current.commandId, "executable:", process->executable(),
                         "arguments:", Tools::listToString(process->arguments()));
+
+                    if (not isDryRun())
+                    {
+                        if (not current.sourcePath.empty())
+                        {
+                            _buildCache.markSourceCompiled(current.sourcePath,
+                                                           current.outputPath);
+                            if (not current.outputPath.empty())
+                            {
+                                _rebuiltOutputs.insert(
+                                    std::filesystem::absolute(current.outputPath)
+                                        .lexically_normal()
+                                        .string());
+                            }
+                        }
+                        else if (not current.outputPath.empty())
+                        {
+                            _buildCache.markTargetLinked(current.outputPath);
+                            _rebuiltOutputs.insert(
+                                std::filesystem::absolute(current.outputPath)
+                                    .lexically_normal()
+                                    .string());
+                        }
+                    }
                 }
                 else
                 {

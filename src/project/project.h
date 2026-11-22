@@ -23,6 +23,7 @@ class Project
     bool addCommand(const Command &command);
     void addTestTarget(const CommandId id);
     void addTestRunner(const std::filesystem::path &path);
+    void setBuildDirectory(const std::filesystem::path &buildDirectory);
 
     CommandId linkCommandIdFor(const TargetId &id,
                                const std::filesystem::path &path) const;
