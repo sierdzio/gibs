@@ -14,6 +14,11 @@ void BuildCache::setDirectory(const std::filesystem::path &buildDirectory)
     _timestamps.clear();
 }
 
+std::filesystem::path BuildCache::filePath() const
+{
+    return (_directory / ".gibs.cache").lexically_normal();
+}
+
 std::filesystem::path BuildCache::normalized(const std::filesystem::path &path)
 {
     std::error_code error;
@@ -51,7 +56,7 @@ void BuildCache::load()
         _directory = std::filesystem::current_path() / "build";
     }
 
-    const auto cachePath = (_directory / ".gibs.cache").lexically_normal();
+    const auto cachePath = filePath();
     if (not std::filesystem::is_regular_file(cachePath))
     {
         return;
@@ -184,7 +189,7 @@ bool BuildCache::save()
 
     Ini<Object> cache;
     cache.insert("files", Value{files});
-    const auto saved = cache.write((_directory / ".gibs.cache").lexically_normal());
+    const auto saved = cache.write(filePath());
     if (saved)
     {
         _dirty = false;

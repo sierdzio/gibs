@@ -35,6 +35,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
 
     const auto completionForSkippedCommand = [&]() -> std::shared_future<void>
     {
+        ++_cachedCommandCount;
         completion->set_value();
         return future;
     };
@@ -99,6 +100,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
             Log::verbose("Skipping target; output is up to date:", output.string());
             return completionForSkippedCommand();
         }
+        ++_uncachedCommandCount;
     }
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
@@ -140,6 +142,7 @@ std::shared_future<void> Processor::schedule(const Command &command)
             Log::verbose("Skipping source; object is up to date:", source.string());
             return completionForSkippedCommand();
         }
+        ++_uncachedCommandCount;
     }
         Log::debug("Processing:", typeString, "command:", command.whole());
         {
@@ -298,6 +301,21 @@ void Processor::setCompilerSet(const CompilerSet &compilerSet)
 void Processor::setBuildDirectory(const std::filesystem::path &buildDirectory)
 {
     _buildCache.setDirectory(buildDirectory);
+}
+
+std::size_t Processor::cachedCommandCount() const
+{
+    return _cachedCommandCount;
+}
+
+std::size_t Processor::uncachedCommandCount() const
+{
+    return _uncachedCommandCount;
+}
+
+const BuildCache &Processor::buildCache() const
+{
+    return _buildCache;
 }
 
 void Processor::checkProcessStates()

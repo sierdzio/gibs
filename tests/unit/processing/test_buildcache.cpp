@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
 #include <processing/buildcache.h>
+#include <processing/processor.h>
+#include <project/command.h>
 
 #include <chrono>
 #include <filesystem>
@@ -80,4 +82,34 @@ TEST_F(BuildCacheTest, RequiresTargetOutputToExist)
 
     const auto target = _directory / "missing";
     EXPECT_FALSE(cache.isTargetUpToDate(target));
+}
+
+TEST_F(BuildCacheTest, ProcessorReportsCachedAndUncachedCommands)
+{
+    const auto source = _directory / "main.cpp";
+    const auto object = _directory / "main.o";
+    std::ofstream(source) << "int main() {}\n";
+    std::ofstream(object) << "object";
+
+    BuildCache cache;
+    cache.setDirectory(_directory);
+    cache.markSourceCompiled(source, object);
+    EXPECT_TRUE(cache.save());
+
+    Processor processor;
+    processor.setDryRun(true);
+    processor.setBuildDirectory(_directory);
+
+    Command cached;
+    cached.append("source");
+    cached.append("main.cpp");
+    Paths paths;
+    paths.workingDirectory = _directory;
+    paths.buildDirectory = _directory;
+    cached.finalize({}, paths);
+    processor.schedule(cached);
+    processor.waitForFinished();
+
+    EXPECT_EQ(processor.cachedCommandCount(), 1u);
+    EXPECT_EQ(processor.uncachedCommandCount(), 0u);
 }

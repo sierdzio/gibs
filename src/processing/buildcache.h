@@ -8,6 +8,7 @@ class BuildCache
 {
   public:
     void setDirectory(const std::filesystem::path &buildDirectory);
+    std::filesystem::path filePath() const;
 
     bool isSourceUpToDate(const std::filesystem::path &source,
                           const std::filesystem::path &output) const;
@@ -22,10 +23,10 @@ class BuildCache
     static std::string timestamp(const std::filesystem::path &path);
     static std::filesystem::path normalized(const std::filesystem::path &path);
 
+    void load();
+
     std::filesystem::path _directory;
     std::unordered_map<std::string, std::string> _timestamps;
     bool _loaded = false;
     bool _dirty = false;
-
-    void load();
 };

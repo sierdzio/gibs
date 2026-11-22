@@ -45,3 +45,5 @@ doc/html/
 
 .cache/
 .vscode/
+
+compile_commands.json

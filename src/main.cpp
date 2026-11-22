@@ -163,6 +163,9 @@ int main(int argc, char *argv[])
         std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 
     Log::information("gibs took:", duration, "ms of your time");
+    Log::information("gibs cache:", processor->cachedCommandCount(), "commands skipped,",
+                     processor->uncachedCommandCount(), "commands preformed");
+    Log::debug("gibs cache location:", processor->buildCache().filePath().string());
 
     if (result == 0)
     {
