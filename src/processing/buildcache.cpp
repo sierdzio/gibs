@@ -40,7 +40,7 @@ std::string BuildCache::timestamp(const std::filesystem::path &path)
         return {};
     }
 
-    return std::to_string(modified.time_since_epoch().count());
+    return std::to_string(static_cast<long long>(modified.time_since_epoch().count()));
 }
 
 void BuildCache::load()

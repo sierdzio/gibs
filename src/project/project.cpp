@@ -19,7 +19,6 @@ namespace
 constexpr std::string Branch = "|--";
 constexpr std::string Vertical = "|";
 constexpr std::string Space = " ";
-constexpr std::string Nl = "\n";
 
 bool isSubdirectoryOf(const std::filesystem::path &path,
                       const std::filesystem::path &base)
